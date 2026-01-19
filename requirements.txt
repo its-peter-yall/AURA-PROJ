@@ -1,0 +1,50 @@
+# Consolidated Requirements for AURA-PROJ
+# Combined from AURA-CHAT and AURA-NOTES-MANAGER
+
+# Core Dependencies
+# =================
+
+# Neo4j Graph Database
+neo4j>=5.15.0
+
+# Google Cloud / Vertex AI
+google-cloud-aiplatform>=1.39.0,<2.0.0
+vertexai>=1.0.0
+
+# Google Generative AI (Gemini)
+google-generativeai>=0.3.0
+
+# Document Processing
+PyPDF2>=3.0.0
+pdfplumber>=0.10.0
+python-docx>=0.8.11
+
+# FastAPI Web Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.9
+pydantic>=2.6.0
+pydantic-settings>=2.1.0
+
+# Data Processing
+numpy>=1.24.0
+tiktoken>=0.5.0
+
+# Audio / Transcription
+deepgram-sdk>=3.0.0
+
+# Firebase / Firestore
+firebase-admin>=6.0.0
+google-cloud-firestore>=2.0.0
+
+# HTTP / API
+requests>=2.31.0
+httpx>=0.25.0
+
+# Utilities
+python-dotenv>=1.0.0
+slowapi>=0.1.0
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0

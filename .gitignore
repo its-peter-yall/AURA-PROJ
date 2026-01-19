@@ -1,0 +1,285 @@
+# =============================================================================
+# AURA-PROJ .gitignore
+# Unified gitignore for AURA monorepo (AURA-CHAT + AURA-NOTES-MANAGER)
+# =============================================================================
+
+# =============================================================================
+# SENSITIVE / RESTRICTED - NEVER commit these!
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+config.json
+Neo4j-creds.txt
+*.creds.txt
+serviceAccountKey.json
+credentials.json
+*.key
+*.pem
+*.crt
+*.p12
+.secrets/
+private/
+docker-compose.override.yml
+docker-compose.local.yml
+
+# =============================================================================
+# PYTHON - Build artifacts, cache, and test outputs
+# =============================================================================
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Bytecode cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Python package distribution
+*.egg
+*.egg-info/
+eggs/
+.lib/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+develop-eggs/
+.installed.cfg
+
+# Compiled extensions
+*.so
+
+# Build output
+build/
+dist/
+.tox/
+.nox/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# Type checking
+.mypy_cache/
+.pytype/
+.pyre/
+
+# Editor tools
+.ruf*
+.ruff_cache/
+
+# =============================================================================
+# NODE.JS - Package management and build artifacts
+# =============================================================================
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+.parcel-cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Vite
+.vite/
+
+# ESLint/TypeScript
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+
+# =============================================================================
+# FIREBASE / FIRESTORE
+# =============================================================================
+.firebase/
+.firebase-secrets
+firestore-debug.log
+firestore-emulator/
+.firebase-cache/
+
+# =============================================================================
+# IDEs and EDITORS
+# =============================================================================
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+.sw?
+
+# VS
+*.user
+*.userosscache
+*.vcxproj
+
+# =============================================================================
+# OPERATING SYSTEM FILES
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.Trash-*/
+.directory
+
+# =============================================================================
+# PROJECT-SPECIFIC - Data, logs, and temporary files
+# =============================================================================
+data/*
+!data/.gitkeep
+
+logs/*
+!logs/.gitkeep
+*.log
+*.log.*
+
+server.log
+client.log
+run.bat
+
+test_pdf/*
+!test_pdf/.gitkeep
+
+.tmp/
+*.tmp
+*.temp
+
+# Neo4j and database
+neo4j_data/
+*.db
+*.sqlite
+
+# Uploads and processing
+uploads/
+processing/
+*.uploaded
+
+# API cache
+api/cache/
+api/__pycache__/
+api/modules/__pycache__/
+
+# =============================================================================
+# TESTS and TEST RESULTS
+# =============================================================================
+tests/
+!tests/.gitkeep
+test-results/
+.pytest_cache/
+
+# AURA-CHAT specific tests
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+__tests__/
+playwright-report/
+*.playwright-report/
+test_output.txt
+lint_output.json
+
+# AURA-NOTES-MANAGER specific
+test_women_empowerment.py
+e2e/
+
+# Test configs
+conftest.py
+pytest.ini
+
+# =============================================================================
+# DOCKER and CI/CD
+# =============================================================================
+.docker/
+.env.docker
+.env.production
+
+# =============================================================================
+# CACHE and TEMPORARY
+# =============================================================================
+.cache/
+.temp/
+tmp/
+temp/
+
+# =============================================================================
+# REPORTS and OUTPUTS
+# =============================================================================
+lint_report.txt
+git_history.txt
+git_log_utf8.txt
+IMPLEMENTATION_COMPLETE.txt
+nul
+
+# =============================================================================
+# BUILD ERRORS and CONDUCTOR
+# =============================================================================
+build_errors.log
+build_errors_2.log
+
+conductor/setup_state.json
+conductor/archive/
+conductor/code_styleguides/
+
+tools/__pycache__/
+
+# =============================================================================
+# DOCUMENTATIONS - All docs in documentations/ folder
+# =============================================================================
+documentations/
+.planning/
+
+# =============================================================================
+# EXCEPTIONS - AI agent guidance files (must stay in original locations)
+# =============================================================================
+!GEMINI.md
+!AGENTS.md
+!CLAUDE.md
+!AURA-CHAT/GEMINI.md
+!AURA-CHAT/AGENTS.md
+!AURA-CHAT/client/AGENTS.md
+!AURA-CHAT/client/CLAUDE.md
+!AURA-CHAT/client/GEMINI.md
+!AURA-NOTES-MANAGER/GEMINI.md
+
+# Claude Code settings
+.claude/
