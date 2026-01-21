@@ -29,8 +29,8 @@ docker-compose.local.yml
 # PYTHON - Build artifacts, cache, and test outputs
 # =============================================================================
 # Virtual environments
-venv/
-.venv/
+#venv/
+#.venv/
 env/
 .env/
 
@@ -200,8 +200,8 @@ api/modules/__pycache__/
 # =============================================================================
 # TESTS and TEST RESULTS
 # =============================================================================
-tests/
-!tests/.gitkeep
+# tests/  # Commented out - we want to track test files
+# !tests/.gitkeep
 test-results/
 .pytest_cache/
 
@@ -266,7 +266,7 @@ tools/__pycache__/
 # DOCUMENTATIONS - All docs in documentations/ folder
 # =============================================================================
 documentations/
-.planning/
+#.planning/
 
 # =============================================================================
 # EXCEPTIONS - AI agent guidance files (must stay in original locations)
