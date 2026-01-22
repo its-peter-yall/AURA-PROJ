@@ -1,0 +1,440 @@
+```
+<objective>
+Create Study Session UI for AURA-CHAT student portal with chat interface, session sidebar, and session management hooks. Extract MessageBubble and CitationPanel from ChatPage.tsx for reuse, extend types/api.ts and lib/api.ts.
+</objective>
+
+<context>
+@.planning/ROADMAP.md - Phase 6 (Frontend Implementation)
+@AURA-CHAT/client/src/types/api.ts - Extend with session types
+@AURA-CHAT/client/src/lib/api.ts - Extend with session API functions
+@AURA-CHAT/client/src/features/chat/ChatPage.tsx - Extract MessageBubble, CitationPanel, use chat mutation pattern
+@AURA-CHAT/client/src/features/modules/ - Module selector (06-02)
+@AURA-CHAT/backend/routers/sessions.py - Session API endpoints
+
+Previous: 06-01 AURA-NOTES-MANAGER Module Browser complete
+Previous: 06-02 AURA-CHAT Module Selector complete
+Current: AURA-CHAT Study Session UI
+</context>
+
+<requirements>
+1. Feature-based structure under features/study-sessions/
+2. Extract reusable components from ChatPage.tsx (MessageBubble, CitationPanel)
+3. Main session container component
+4. Chat interface with message display (reuse extracted components)
+5. Message input with query submission
+6. Session sidebar with history
+7. React Query hooks for session data
+8. Extend types/api.ts with session types (not new file)
+9. Extend lib/api.ts with session API functions (not new file)
+
+Reuse Strategy:
+- types/api.ts: Add StudySession, SessionMessage, SessionStats types
+- lib/api.ts: Add session CRUD API functions
+- features/chat/ChatPage.tsx: Extract MessageBubble, CitationPanel to components/
+- Chat mutation pattern: Extend for session queries
+
+Extract to components/ (2 files):
+- components/MessageBubble.tsx - Extracted from ChatPage.tsx MessageBubble
+- components/CitationPanel.tsx - Extracted from ChatPage.tsx CitationPanel
+
+Extended Files (2 total):
+- types/api.ts - Add session-related types
+- lib/api.ts - Add session API functions
+
+New Files to Create (5 total):
+- features/study-sessions/hooks/useStudySession.ts
+- features/study-sessions/hooks/useSessionQuery.ts
+- features/study-sessions/components/SessionSidebar.tsx
+- features/study-sessions/components/StudySession.tsx
+- features/study-sessions/components/SessionChat.tsx (uses extracted components)
+
+API Integration:
+- GET /api/sessions - List user sessions
+- POST /api/sessions - Create new session
+- GET /api/sessions/{id}/messages - Fetch message history
+- POST /api/sessions/{id}/query - Execute RAG query
+- GET /api/sessions/{id}/stats - Fetch session statistics
+</requirements>
+
+<tasks>
+<task>
+<type>extract</type>
+<file>AURA-CHAT/client/src/components/MessageBubble.tsx</file>
+<action>
+Extract MessageBubble component from ChatPage.tsx to components/ for reuse.
+
+Purpose:
+- Create reusable message bubble component
+- Enable reuse in study-sessions feature
+- Avoid duplication across chat interfaces
+
+Source:
+- Function MessageBubble from features/chat/ChatPage.tsx (lines 495-628)
+
+Features to Preserve:
+1. User/assistant message styling differentiation
+2. Markdown rendering with ReactMarkdown
+3. Citations display with click handlers
+4. Thinking content toggle/expansion
+5. Loading state with status phases
+6. Error display
+
+Props Interface:
+- message: Message with role, content, citations, thought_summary
+- onCitationClick: Callback for citation selection
+
+Integration:
+- Export from components/ for import in both chat and study-sessions
+</action>
+<verify>
+1. Web-search: Research React component extraction patterns
+2. Check syntax: Verify TypeScript compilation
+3. Verify component renders correctly in isolation
+</verify>
+<done>
+MessageBubble extracted to components/ for reuse
+</done>
+</task>
+
+<task>
+<type>extract</type>
+<file>AURA-CHAT/client/src/components/CitationPanel.tsx</file>
+<action>
+Extract CitationPanel component from ChatPage.tsx to components/ for reuse.
+
+Purpose:
+- Create reusable citation sidebar component
+- Enable reuse in study-sessions feature
+- Avoid duplication across chat interfaces
+
+Source:
+- Function CitationPanel from features/chat/ChatPage.tsx (lines 631-684)
+
+Features to Preserve:
+1. Document title display
+2. Chunk text with relevance score
+3. Close button
+4. Animated slide-in effect
+
+Props Interface:
+- citation: Citation object with document_title, chunk_text, relevance_score
+- onClose: Callback to close panel
+
+Integration:
+- Export from components/ for import in both chat and study-sessions
+</action>
+<verify>
+1. Web-search: Research React component extraction patterns
+2. Check syntax: Verify TypeScript compilation
+3. Verify panel renders correctly in isolation
+</verify>
+<done>
+CitationPanel extracted to components/ for reuse
+</done>
+</task>
+
+<task>
+<type>update</type>
+<file>AURA-CHAT/client/src/types/api.ts</file>
+<action>
+Extend existing types/api.ts with session-related TypeScript interfaces.
+
+Purpose:
+- Define interfaces for session data structures
+- Ensure type safety across components and API responses
+- Avoid creating duplicate type files
+
+Types to Add:
+1. StudySession interface: id, title, module_ids, user_id, status, message_count, created_at, updated_at
+2. SessionMessage interface: id, session_id, role, content, created_at, model_used, sources, thinking_content, token_count
+3. SessionStats interface: session_id, message_count, module_ids, user_messages, assistant_messages, created_at, updated_at
+4. SessionQueryRequest: query, enable_thinking, module_ids
+5. SessionQueryResponse: answer, sources, model_used, thought_summary, message_count
+
+Preserve existing types (APIResponse, Document types, Chat types, Graph types).
+
+Export types for use in components and hooks.
+</action>
+<verify>
+1. Web-search: Research TypeScript interface extension patterns
+2. Check syntax: Verify TypeScript compilation
+3. Verify all type interfaces are complete
+</verify>
+<done>
+types/api.ts extended with session types
+</done>
+</task>
+
+<task>
+<type>update</type>
+<file>AURA-CHAT/client/src/lib/api.ts</file>
+<action>
+Extend existing lib/api.ts with session API functions.
+
+Purpose:
+- Add session-related API calls to existing axios client
+- Avoid creating separate API file
+
+Functions to Add:
+1. getSessions() - Fetch list of user sessions
+2. getSession(session_id) - Fetch single session
+3. createSession(title, module_ids) - Create new session
+4. updateSession(session_id, data) - Update session
+5. deleteSession(session_id) - Delete session
+6. getSessionMessages(session_id) - Fetch message history
+7. getSessionStats(session_id) - Fetch session statistics
+8. executeSessionQuery(session_id, query, module_ids, enable_thinking) - Execute RAG query
+
+Use existing axios instance and error handling patterns.
+
+Integration:
+- Call /api/sessions endpoints
+- Return typed responses using extended types
+</action>
+<verify>
+1. Web-search: Research axios API client patterns
+2. Check syntax: Verify TypeScript compilation
+3. Verify all API functions are exported
+</verify>
+<done>
+lib/api.ts extended with session API functions
+</done>
+</task>
+
+<task>
+<type>create</type>
+<file>AURA-CHAT/client/src/features/study-sessions/hooks/useStudySession.ts</file>
+<action>
+Create React Query hook for session CRUD operations.
+
+Purpose:
+- Manage server state for session data
+- Provide session lifecycle operations
+
+Operations:
+1. useSessions - Fetch list of user sessions
+2. useSession(session_id) - Fetch single session with validation
+3. useCreateSession - Mutation for creating new session
+4. useUpdateSession - Mutation for updating session (title/status)
+5. useDeleteSession - Mutation for deleting session
+6. useSessionMessages(session_id) - Fetch message history
+7. useSessionStats(session_id) - Fetch session statistics
+
+Integration:
+- Call extended API functions from lib/api.ts
+- Handle loading, error, and success states
+- Provide optimistic updates for mutations
+- Invalidate queries after changes
+</action>
+<verify>
+1. Web-search: Research React Query hooks for chat applications and pagination
+2. Check syntax: Verify TypeScript compilation
+3. Verify all hook functions are exported
+</verify>
+<done>
+Session CRUD React Query hooks created
+</done>
+</task>
+
+<task>
+<type>create</type>
+<file>AURA-CHAT/client/src/features/study-sessions/hooks/useSessionQuery.ts</file>
+<action>
+Create React Query hook for RAG query operations within sessions.
+
+Purpose:
+- Execute RAG queries in session context
+- Manage query state and response
+- Extend chat mutation pattern from ChatPage.tsx
+
+Features:
+1. useSessionQuery - Mutation for executing queries
+2. Loading state during query execution
+3. Response handling with answer and sources
+4. Error handling for query failures
+5. Queue queries sequentially in session
+6. Preserve message history
+
+Integration:
+- Extend chatMutation pattern from ChatPage.tsx
+- Call POST /api/sessions/{id}/query
+- Automatically add user and assistant messages
+- Update local message cache after query
+- Use extracted MessageBubble for display
+</action>
+<verify>
+1. Web-search: Research React Query mutations for chat queries and response handling
+2. Check syntax: Verify TypeScript compilation
+3. Verify query mutation works correctly
+</verify>
+<done>
+Session RAG query hook created
+</done>
+</task>
+
+<task>
+<type>create</type>
+<file>AURA-CHAT/client/src/features/study-sessions/components/SessionSidebar.tsx</file>
+<action>
+Create SessionSidebar component for session history.
+
+Purpose:
+- Display list of user sessions
+- Allow session selection and navigation
+- Quick access to create new session
+
+Features:
+1. List of user sessions ordered by updated_at
+2. Session cards with title and message count
+3. Active session indicator
+4. Create new session button
+5. Delete session option
+6. Collapse/expand capability
+7. Empty state when no sessions
+
+Props Interface:
+- sessions: List of StudySession objects
+- current_session_id: Currently active session
+- onSelectSession: Callback when session is selected
+- onCreateSession: Callback for creating new session
+- onDeleteSession: Callback for deleting session
+
+Session Card Display:
+- Session title
+- Message count
+- Last updated time
+- Active state styling
+- Hover effects
+</action>
+<verify>
+1. Web-search: Research sidebar navigation patterns and list item interactions
+2. Check syntax: Verify TypeScript compilation
+3. Verify session navigation works correctly
+</verify>
+<done>
+SessionSidebar component created
+</done>
+</task>
+
+<task>
+<type>create</type>
+<file>AURA-CHAT/client/src/features/study-sessions/components/SessionChat.tsx</file>
+<action>
+Create SessionChat component as chat interface using extracted components.
+
+Purpose:
+- Main chat area with message display and input
+- Integration with RAG query hook
+- Reuse extracted MessageBubble and CitationPanel
+
+Features:
+1. Message display using extracted MessageBubble component
+2. Input area with text field and send button
+3. Thinking mode toggle
+4. Loading indicator during queries
+5. Error display for failed queries
+6. Citation sidebar using extracted CitationPanel
+
+Props Interface:
+- session_id: Current session identifier
+- messages: List of messages
+
+Input Handling:
+- Text input with submit on Enter
+- Disable during query execution
+- Clear input after submit
+
+Integration:
+- Use useSessionQuery for query execution
+- Import MessageBubble from components/
+- Import CitationPanel from components/
+- Display loading state during query
+- Show error with retry option
+</action>
+<verify>
+1. Web-search: Research chat input patterns and real-time update handling
+2. Check syntax: Verify TypeScript compilation
+3. Verify chat input and display work correctly
+</verify>
+<done>
+SessionChat component created with reused components
+</done>
+</task>
+
+<task>
+<type>create</type>
+<file>AURA-CHAT/client/src/features/study-sessions/components/StudySession.tsx</file>
+<action>
+Create StudySession component as main session container.
+
+Purpose:
+- Main container for study session feature
+- Combines sidebar and chat interface
+- Manages layout and responsive design
+
+Features:
+1. Sidebar (left) with session list
+2. Chat area (right) with messages and input
+3. Module selector integration (top bar)
+4. Session stats display
+5. Responsive layout (sidebar collapsible on mobile)
+
+Props Interface:
+- No props - uses hooks internally
+
+Layout Structure:
+- Flex container with sidebar and main content
+- Sidebar fixed width, chat flexible
+- Mobile: sidebar overlays or toggles
+
+State Management:
+- Current session state
+- Sidebar open/close state
+- Module selection state
+
+Integration:
+- Import SessionSidebar
+- Import SessionChat
+- Use useStudySession for session management
+- Use ModuleSelector from 06-02
+- Handle session creation and selection
+</action>
+<verify>
+1. Web-search: Research chat layout patterns and responsive container design
+2. Check syntax: Verify TypeScript compilation
+3. Verify layout and navigation work correctly
+</verify>
+<done>
+StudySession main container created
+</done>
+</task>
+</tasks>
+
+<output>
+SUMMARY.md in `.planning/phases/06-frontend/06-03-SUMMARY.md`
+</output>
+
+<success_criteria>
+- [ ] 9 files total (2 extracted + 2 extended + 5 new)
+- [ ] TypeScript types compile without errors
+- [ ] StudySession container displays layout
+- [ ] SessionChat shows messages and input
+- [ ] MessageBubble reused from components/
+- [ ] CitationPanel reused from components/
+- [ ] SessionSidebar shows session history
+- [ ] RAG queries execute within session
+- [ ] Message history persists and loads
+- [ ] Responsive layout on all screens
+</success_criteria>
+
+<checkpoint:human-verify>
+Test via browser:
+1. Navigate to study sessions page
+2. Create new session
+3. Type query and send
+4. Verify response appears with sources
+5. Create another session
+6. Switch between sessions
+7. Verify message history loads correctly
+8. Check session stats
+</checkpoint:human-verify>

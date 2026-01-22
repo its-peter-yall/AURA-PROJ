@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "-": "^0.0.1",
+    "@google/gemini-cli": "^0.1.22"
+  }
+}
