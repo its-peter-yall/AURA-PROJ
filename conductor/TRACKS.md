@@ -18,6 +18,3 @@ This file tracks all major tracks for the project. Each track has its own detail
   *Link: [./tracks/fix_07_03_auranotes_20260123/](./tracks/fix_07_03_auranotes_20260123/)*
   Create useKGProcessing.test.ts with 16 tests, add 23 missing store tests, fix FileSelectionBar verification, add warningTimeoutId clearing tests
 
-- [x] **Track: Fix 07-05 Performance Tests**
-  *Link: [./tracks/fix_07_05_performance_20260123/](./tracks/fix_07_05_performance_20260123/)*
-  Create AURA-NOTES benchmark/security tests, add prometheus.yml, Grafana provisioning, redis-exporter and neo4j-exporter configs, configure Trivy in CI/CD
