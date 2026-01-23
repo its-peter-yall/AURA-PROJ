@@ -1,0 +1,18 @@
+# Grafana dashboard provisioning configuration
+#
+# Configures automatic loading of AURA dashboards from the dashboards directory.
+# Dashboards are provisioned when Grafana container starts.
+#
+# @see: dashboards/ - Dashboard JSON files
+# @note: Set GF_DASHBOARDS_PROVISIONING_PATH in environment
+
+apiVersion: 1
+
+providers:
+  - name: 'AURA Dashboards'
+    type: file
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

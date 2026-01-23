@@ -1,0 +1,27 @@
+# Grafana datasource configuration for Prometheus
+#
+# Configures Prometheus as the default datasource for Grafana dashboards.
+# Auto-provisioned when Grafana container starts.
+#
+# @see: prometheus.yml - Prometheus scrape configuration
+# @note: This file is auto-loaded by Grafana at startup
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+      httpMethod: GET
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.47.0
+    secureJsonData:
+      # Add API key here for cloud deployments
+      # apiKey: ${GRAFANA_PROMETHEUS_API_KEY}
+    version: 1
+    editable: false

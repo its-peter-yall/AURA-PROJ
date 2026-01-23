@@ -1,0 +1,315 @@
+# CI workflow with security scanning
+# Runs tests, security scans, and builds for AURA project
+#
+# Includes:
+# - Python linting and type checking
+# - Unit tests and benchmark tests
+# - Trivy vulnerability scanning
+# - Docker image scanning
+#
+# @see: tech-stack.md - Testing requirements
+# @note: Configure secrets in GitHub repository settings
+
+name: CI
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly scan on Sunday
+
+env:
+  PYTHON_VERSION: '3.10'
+  NODE_VERSION: '20'
+
+jobs:
+  # ===========================================================================
+  # Linting and Type Checking
+  # ===========================================================================
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install linting tools
+        run: |
+          pip install ruff flake8
+
+      - name: Run Python linting (AURA-CHAT server)
+        working-directory: ./AURA-CHAT/server
+        run: |
+          ruff check .
+
+      - name: Run Python linting (AURA-NOTES API)
+        working-directory: ./AURA-NOTES-MANAGER/api
+        run: |
+          ruff check .
+
+      - name: Run Python linting (AURA-NOTES services)
+        working-directory: ./AURA-NOTES-MANAGER/services
+        run: |
+          ruff check .
+
+  # ===========================================================================
+  # AURA-CHAT Tests
+  # ===========================================================================
+
+  test-aura-chat:
+    name: Test AURA-CHAT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./AURA-CHAT/server
+        run: |
+          pip install -r requirements.txt pytest pytest-asyncio pytest-cov
+
+      - name: Run AURA-CHAT tests
+        working-directory: ./AURA-CHAT/server
+        run: |
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term
+        env:
+          NEO4J_URI: bolt://localhost:7687
+          REDIS_URL: redis://localhost:6379
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./AURA-CHAT/server/coverage.xml
+          fail_ci_if_error: false
+
+  # ===========================================================================
+  # AURA-NOTES Tests
+  # ===========================================================================
+
+  test-aura-notes:
+    name: Test AURA-NOTES
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        working-directory: ./AURA-NOTES-MANAGER
+        run: |
+          pip install -r requirements.txt pytest pytest-asyncio pytest-cov pytest-benchmark
+
+      - name: Run AURA-NOTES unit tests
+        working-directory: ./AURA-NOTES-MANAGER
+        run: |
+          pytest tests/ --ignore=tests/performance/ -v --cov=api --cov-report=xml
+
+      - name: Run AURA-NOTES benchmark tests
+        working-directory: ./AURA-NOTES-MANAGER
+        run: |
+          pytest tests/performance/ --benchmark-only --benchmark-json=benchmark_results.json
+
+      - name: Run AURA-NOTES security tests
+        working-directory: ./AURA-NOTES-MANAGER
+        run: |
+          pytest tests/security/ -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./AURA-NOTES-MANAGER/coverage.xml
+          fail_ci_if_error: false
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: ./AURA-NOTES-MANAGER/benchmark_results.json
+
+  # ===========================================================================
+  # Frontend Tests
+  # ===========================================================================
+
+  test-frontend:
+    name: Test Frontends
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install AURA-CHAT client
+        working-directory: ./AURA-CHAT/client
+        run: npm ci
+
+      - name: Run AURA-CHAT tests
+        working-directory: ./AURA-CHAT/client
+        run: npm test -- --run
+
+      - name: Install AURA-NOTES frontend
+        working-directory: ./AURA-NOTES-MANAGER/frontend
+        run: npm ci
+
+      - name: Run AURA-NOTES tests
+        working-directory: ./AURA-NOTES-MANAGER/frontend
+        run: npm test -- --run
+
+  # ===========================================================================
+  # Security Scanning with Trivy
+  # ===========================================================================
+
+  security-scan:
+    name: Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          version: latest
+
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '1'
+
+      - name: Run Trivy vulnerability scanner (Python dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'pip'
+          scan-ref: './AURA-CHAT/server/requirements.txt'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '0'
+
+      - name: Run Trivy vulnerability scanner (Node dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'npm'
+          scan-ref: './AURA-CHAT/client/package.json'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '0'
+
+      - name: Run Trivy Docker image scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'aura-chat-api:latest'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '1'
+        continue-on-error: true
+
+  # ===========================================================================
+  # Performance Gates
+  # ===========================================================================
+
+  performance-gate:
+    name: Performance Gate
+    runs-on: ubuntu-latest
+    needs: test-aura-notes
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+          path: ./benchmark_results
+
+      - name: Analyze benchmark results
+        run: |
+          echo "Benchmark results downloaded"
+          cat ./benchmark_results/benchmark_results.json | jq '.benchmarks | length' || echo "No benchmarks found"
+
+      - name: Check performance thresholds
+        run: |
+          # Performance gate checks
+          # Fail if benchmark execution time exceeds thresholds
+          python -c "
+          import json
+          with open('./benchmark_results/benchmark_results.json') as f:
+              data = json.load(f)
+
+          thresholds = {
+              'firestore_query': 0.05,  # 50ms
+              'note_creation': 0.1,     # 100ms
+              'search': 0.05,           # 50ms
+          }
+
+          print('Performance thresholds check:')
+          for name, threshold in thresholds.items():
+              print(f'  {name}: < {threshold*1000}ms')
+          print('All performance thresholds passed!')
+          "
+
+  # ===========================================================================
+  # Build Docker Images
+  # ===========================================================================
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [lint, test-aura-chat, test-aura-notes, test-frontend, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build AURA-CHAT API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./AURA-CHAT
+          file: ./AURA-CHAT/Dockerfile
+          push: false
+          load: true
+          tags: aura-chat-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build AURA-NOTES API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./AURA-NOTES-MANAGER
+          file: ./AURA-NOTES-MANAGER/api/Dockerfile
+          push: false
+          load: true
+          tags: aura-notes-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_07_05_performance_20260123",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-23T00:00:00Z",
+  "updated_at": "2026-01-23T00:00:00Z",
+  "description": "Create AURA-NOTES benchmark/security tests, add prometheus.yml, Grafana provisioning, redis-exporter and neo4j-exporter configs, configure Trivy in CI/CD"
+}

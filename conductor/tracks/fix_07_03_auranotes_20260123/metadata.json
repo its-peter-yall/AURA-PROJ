@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_07_03_auranotes_20260123",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-23T00:00:00Z",
+  "updated_at": "2026-01-23T00:00:00Z",
+  "description": "Create useKGProcessing.test.ts with 16 tests, add 23 missing store tests, fix FileSelectionBar verification, add warningTimeoutId clearing tests"
+}

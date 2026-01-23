@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_07_01_backend_20260123",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-23T00:00:00Z",
+  "updated_at": "2026-01-23T00:00:00Z",
+  "description": "Fix mock_neo4j_driver return type, add mock_chat_manager fixture, add 37 missing tests, achieve 90% coverage on session_manager.py and 88% on rag_engine.py"
+}

@@ -1,0 +1,113 @@
+# prometheus.yml
+# Prometheus configuration for AURA monitoring
+#
+# Configures scrape targets for all AURA services and exporters.
+# Includes AURA-CHAT, AURA-NOTES-MANAGER, Redis, Neo4j, and node exporters.
+#
+# @see: docker-compose.yml - Service definitions
+# @note: Run with: prometheus --config.file=prometheus.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'aura-cluster'
+    environment: 'development'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+# =============================================================================
+# Scrape Targets
+# =============================================================================
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+
+  # AURA-CHAT API metrics
+  - job_name: 'aura-chat-api'
+    static_configs:
+      - targets: ['api-chat:8000']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+):\d+'
+        replacement: '${1}'
+
+  # AURA-NOTES-MANAGER API metrics
+  - job_name: 'aura-notes-api'
+    static_configs:
+      - targets: ['api-notes:8001']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+):\d+'
+        replacement: '${1}'
+
+  # Redis Exporter (port 9121)
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Neo4j Exporter (port 2004)
+  - job_name: 'neo4j-exporter'
+    static_configs:
+      - targets: ['neo4j-exporter:2004']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Node Exporter (port 9100)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Process Exporter
+  - job_name: 'process-exporter'
+    static_configs:
+      - targets: ['process-exporter:9256']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+# =============================================================================
+# Recording Rules (for faster queries)
+# =============================================================================
+
+# API request rate by service
+- record: aura_api_requests:rate5m
+  expr: rate(http_requests_total[5m])
+
+# API error rate by service
+- record: aura_api_errors:rate5m
+  expr: rate(http_requests_total{status=~"5.."}[5m])
+
+# API latency percentiles by service
+- record: aura_api_latency_p99
+  expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+
+- record: aura_api_latency_p95
+  expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+# Redis memory usage
+- record: redis_memory_used_percent
+  expr: redis_memory_used_bytes / redis_memory_max_bytes * 100
+
+# Neo4j database size
+- record: neo4j_database_size_bytes
+  expr: neo4j_database_size
