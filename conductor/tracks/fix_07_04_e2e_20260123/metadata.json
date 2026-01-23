@@ -1,8 +1,0 @@
-{
-  "track_id": "fix_07_04_e2e_20260123",
-  "type": "chore",
-  "status": "new",
-  "created_at": "2026-01-23T00:00:00Z",
-  "updated_at": "2026-01-23T00:00:00Z",
-  "description": "Add mobile browser projects (iPhone 12, Pixel 5, iPad), create mobile.spec.ts and performance.spec.ts, add GitHub Actions/GitLab CI/Jenkins workflows"
-}

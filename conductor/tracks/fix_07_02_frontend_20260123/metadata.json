@@ -1,8 +1,0 @@
-{
-  "track_id": "fix_07_02_frontend_20260123",
-  "type": "chore",
-  "status": "new",
-  "created_at": "2026-01-23T00:00:00Z",
-  "updated_at": "2026-01-23T00:00:00Z",
-  "description": "Install MSW package, create handlers.ts file, add 53 missing tests to reach 140+ tests, fix placeholder files"
-}
