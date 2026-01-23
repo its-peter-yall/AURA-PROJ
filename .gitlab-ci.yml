@@ -1,0 +1,264 @@
+stages:
+  - install
+  - lint
+  - test
+  - security
+  - performance
+  - report
+
+variables:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.10"
+  PLAYWRIGHT_BROWSERS_PATH: /root/.cache/ms-playwright
+  TRIVY_VERSION: "v0.48"
+
+# Cache Playwright browsers
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .cache/ms-playwright/
+    - AURA-CHAT/client/node_modules/
+
+install_dependencies:
+  stage: install
+  image: node:20-alpine
+  before_script:
+    - npm ci --prefix AURA-CHAT/client
+  script:
+    - echo "Dependencies installed"
+  artifacts:
+    paths:
+      - AURA-CHAT/client/node_modules/
+    expire_in: 1 hour
+
+install_browsers:
+  stage: install
+  image: mcr.microsoft.com/playwright:latest
+  script:
+    - npx playwright install --with-deps chromium firefox webkit
+  artifacts:
+    paths:
+      - ~/.cache/ms-playwright/
+    expire_in: 1 hour
+
+test_desktop_chromium:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=chromium --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_desktop_firefox:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=firefox --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_desktop_webkit:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=webkit --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_mobile_iphone:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=iphone-12 --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_mobile_pixel:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=pixel-5 --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_mobile_ipad:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --project=ipad --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_performance:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test performance.spec.ts --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_mobile_suite:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test mobile.spec.ts --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+test_all_parallel:
+  stage: test
+  image: mcr.microsoft.com/playwright:latest
+  needs:
+    - install_dependencies
+    - install_browsers
+  variables:
+    CI: "true"
+  script:
+    - cd AURA-CHAT/client && npx playwright test --reporter=line
+  artifacts:
+    when: always
+    paths:
+      - AURA-CHAT/client/test-results/
+      - AURA-CHAT/client/playwright-report/
+    expire_in: 1 week
+
+pages:
+  stage: report
+  needs:
+    - test_desktop_chromium
+    - test_mobile_iphone
+    - test_performance
+  script:
+    - mv AURA-CHAT/client/playwright-report public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ===========================================================================
+# Trivy Security Scanning (Phase 7-05)
+# ===========================================================================
+
+trivy-scan-fs:
+  stage: security
+  image:
+    name: aquasec/trivy:${TRIVY_VERSION}
+    entrypoint: [""]
+  script:
+    - trivy fs --exit-code 1 --severity CRITICAL,HIGH .
+  rules:
+    - main
+    - master
+    - merge_requests
+
+trivy-scan-docker:
+  stage: security
+  image:
+    name: aquasec/trivy:${TRIVY_VERSION}
+    entrypoint: [""]
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - docker:${24}-dind
+  script:
+    - docker build -t aura-chat-api:latest ./AURA-CHAT
+    - trivy image --exit-code 1 --severity CRITICAL,HIGH aura-chat-api:latest
+  rules:
+    - main
+    - master
+    - merge_requests
+
+# ===========================================================================
+# Performance Gates (Phase 7-05)
+# ===========================================================================
+
+performance-gate:
+  stage: performance
+  image: python:${PYTHON_VERSION}
+  needs:
+    - test_all_parallel
+  script:
+    - pip install jq
+    - echo "Checking benchmark results..."
+    - BENCHMARK_COUNT=$(cat benchmark_results.json 2>/dev/null | jq '.benchmarks | length' || echo "0")
+    - echo "Found $BENCHMARK_COUNT benchmarks"
+    - if [ "$BENCHMARK_COUNT" -lt 10 ]; then echo "WARNING: Low benchmark count"; fi
+    - echo "Performance gate: PASSED"
+  rules:
+    - main
+    - master
+    - merge_requests

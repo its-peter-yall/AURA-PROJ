@@ -1,0 +1,294 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run weekly on Sunday at 2 AM
+    - cron: '0 2 * * 0'
+
+env:
+  NODE_VERSION: '20.x'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  install-dependencies:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: AURA-CHAT/client/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install AURA-CHAT dependencies
+        working-directory: AURA-CHAT/client
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('AURA-CHAT/client/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        working-directory: AURA-CHAT/client
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Upload dependency cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependencies
+          path: |
+            AURA-CHAT/client/node_modules
+            ~/.cache/ms-playwright
+
+  e2e-desktop:
+    name: E2E Desktop Tests
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        include:
+          - browser: chromium
+            playwright-browser: chromium
+          - browser: firefox
+            playwright-browser: firefox
+          - browser: webkit
+            playwright-browser: webkit
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dependency cache
+        uses: actions/download-artifact@v4
+        with:
+          name: dependencies
+
+      - name: Restore Playwright browsers
+        run: |
+          mkdir -p ~/.cache/ms-playwright
+          tar -xzf dependencies -C ~/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: AURA-CHAT/client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: AURA-CHAT/client
+        run: npm ci
+
+      - name: Run Playwright desktop tests
+        working-directory: AURA-CHAT/client
+        env:
+          CI: true
+        run: npx playwright test --project=${{ matrix.browser }} --reporter=line
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-desktop-${{ matrix.browser }}
+          path: AURA-CHAT/client/test-results
+
+      - name: Upload Playwright trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-desktop-${{ matrix.browser }}
+          path: AURA-CHAT/client/playwright-report
+
+  e2e-mobile:
+    name: E2E Mobile Tests
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iphone-12, pixel-5, ipad]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dependency cache
+        uses: actions/download-artifact@v4
+        with:
+          name: dependencies
+
+      - name: Restore Playwright browsers
+        run: |
+          mkdir -p ~/.cache/ms-playwright
+          tar -xzf dependencies -C ~/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: AURA-CHAT/client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: AURA-CHAT/client
+        run: npm ci
+
+      - name: Run Playwright mobile tests
+        working-directory: AURA-CHAT/client
+        env:
+          CI: true
+        run: npx playwright test --project=${{ matrix.device }} --reporter=line
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-mobile-${{ matrix.device }}
+          path: AURA-CHAT/client/test-results
+
+      - name: Upload Playwright trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-mobile-${{ matrix.device }}
+          path: AURA-CHAT/client/playwright-report
+
+  e2e-performance:
+    name: E2E Performance Tests
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dependency cache
+        uses: actions/download-artifact@v4
+        with:
+          name: dependencies
+
+      - name: Restore Playwright browsers
+        run: |
+          mkdir -p ~/.cache/ms-playwright
+          tar -xzf dependencies -C ~/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: AURA-CHAT/client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: AURA-CHAT/client
+        run: npm ci
+
+      - name: Run performance tests
+        working-directory: AURA-CHAT/client
+        env:
+          CI: true
+        run: npx playwright test performance.spec.ts --reporter=line
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: AURA-CHAT/client/playwright-report
+
+  e2e-mobile-suite:
+    name: E2E Mobile Suite
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dependency cache
+        uses: actions/download-artifact@v4
+        with:
+          name: dependencies
+
+      - name: Restore Playwright browsers
+        run: |
+          mkdir -p ~/.cache/ms-playwright
+          tar -xzf dependencies -C ~/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: AURA-CHAT/client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: AURA-CHAT/client
+        run: npm ci
+
+      - name: Run mobile tests
+        working-directory: AURA-CHAT/client
+        env:
+          CI: true
+        run: npx playwright test mobile.spec.ts --reporter=line
+
+      - name: Upload mobile test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-mobile-suite
+          path: AURA-CHAT/client/test-results
+
+  combine-results:
+    name: Combine Test Results
+    needs: [e2e-desktop, e2e-mobile, e2e-performance, e2e-mobile-suite]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+          merge-multiple: true
+
+      - name: Count test results
+        run: |
+          total_passed=$(find test-results -name "*.xml" -exec grep -o 'tests="[0-9]*"' {} \; | grep -o '[0-9]*' | awk '{s+=$1} END {print s}')
+          total_failed=$(find test-results -name "*.xml" -exec grep -o 'failures="[0-9]*"' {} \; | grep -o '[0-9]*' | awk '{s+=$1} END {print s}')
+          echo "Total tests passed: ${total_passed:-0}"
+          echo "Total tests failed: ${total_failed:-0}"
+
+          if [ "${total_failed:-0}" -gt 0 ]; then
+            echo "Some tests failed!"
+            exit 1
+          fi
+          echo "All tests passed!"
+
+      - name: Upload combined results
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-test-results
+          path: test-results
