@@ -499,7 +499,7 @@ PARENT_CHUNK_BOOST = 1.2
 ## Phase 11: Advanced Features & Integration
 
 **Duration:** 6-12 weeks
-**Status:** IN PROGRESS (1/6 plans complete)
+**Status:** IN PROGRESS (2/6 plans complete)
 **Project:** AURA-NOTES-MANAGER + AURA-CHAT integration
 **Prerequisites:** Phase 10 complete ✓
 **Plans:** `.planning/phases/11-kg-advanced/`
@@ -517,7 +517,7 @@ PARENT_CHUNK_BOOST = 1.2
 | Plan | Focus | Deliverables | Status |
 |------|-------|--------------|--------|
 | **11-01** | Auto Summarization | Module-level and note-level summaries via LLM | ✓ COMPLETE |
-| **11-02** | Trend Analysis | Cross-module concept frequency and evolution | Pending |
+| **11-02** | Trend Analysis | Cross-module concept frequency and evolution | ✓ COMPLETE |
 | **11-03** | Smart Templates | Structured extraction for different note types | Pending |
 | **11-04** | AURA-CHAT Schema Compat | Ensure shared KG schema compatibility | Pending |
 | **11-05** | Unified Graph Views | Module-level graph visualization across both apps | Pending |
@@ -616,6 +616,7 @@ AURA-NOTES-MANAGER                      AURA-CHAT
 | 1.1 | 2026-01-24 | Phase 09 completed, Phase 10 plans created |
 | 1.2 | 2026-01-24 | Phase 10 completed, Phase 11 plans created |
 | 1.3 | 2026-01-24 | Phase 11-01 Auto Summarization completed |
+| 1.4 | 2026-01-24 | Phase 11-02 Trend Analysis completed |
 
 ---
 
