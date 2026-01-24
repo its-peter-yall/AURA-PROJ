@@ -54,6 +54,21 @@ AURA-PROJ/
 - Dependency injection via `Depends()`
 - Global exception handler in `main.py`
 
+### Python Environment
+- **ALWAYS use the root venv** (`../.venv` or `../../.venv`) for all Python tasks
+- **NEVER install dependencies globally** or in subdirectory venvs
+- Run Python commands with the root venv:
+  ```bash
+  # Correct - use root venv
+  ../.venv/Scripts/python -m pytest tests/
+  ../.venv/Scripts/python -m pip install <package>
+
+  # Wrong - do NOT use global Python
+  python -m pytest tests/
+  pip install <package>
+  ```
+- Python test commands must always reference the root venv interpreter
+
 ### E2E Testing
 - **AURA-NOTES-MANAGER**: Sequential (`fullyParallel: false`) for DB consistency
 - **AURA-CHAT**: Parallel execution

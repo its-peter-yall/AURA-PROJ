@@ -307,9 +307,10 @@ Before marking any task complete:
 ## Phase 09: Foundation & Intelligence Layer
 
 **Duration:** 6-8 weeks
-**Status:** PENDING
+**Status:** COMPLETED ✓ (2026-01-24)
 **Project:** AURA-NOTES-MANAGER
 **Source:** KG-ENHANCEMENT-BRIEF.md + AURA-CHAT implementation
+**Review:** `.planning/phases/09-kg-foundation/09-09-REVIEW-SUMMARY.md`
 
 ### Objectives
 1. Update Neo4j schema with ParentChunk nodes and vector indices
@@ -438,9 +439,10 @@ EMBEDDING_DIMENSIONS = 768
 ## Phase 10: Processing & Interaction Capabilities
 
 **Duration:** 6-10 weeks
-**Status:** PENDING
+**Status:** READY FOR EXECUTION
 **Project:** AURA-NOTES-MANAGER
-**Prerequisites:** Phase 09 complete
+**Prerequisites:** Phase 09 complete ✓
+**Plans:** `.planning/phases/10-kg-interaction/`
 
 ### Objectives
 1. Add hybrid search (vector + fulltext weighted)
