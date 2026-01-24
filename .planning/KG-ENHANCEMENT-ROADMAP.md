@@ -499,10 +499,11 @@ PARENT_CHUNK_BOOST = 1.2
 ## Phase 11: Advanced Features & Integration
 
 **Duration:** 6-12 weeks
-**Status:** READY FOR EXECUTION
+**Status:** IN PROGRESS (1/6 plans complete)
 **Project:** AURA-NOTES-MANAGER + AURA-CHAT integration
 **Prerequisites:** Phase 10 complete ✓
-**Plans:** `.planning/phases/11-kg-advanced/` (to be created)
+**Plans:** `.planning/phases/11-kg-advanced/`
+**Overview:** `.planning/phases/11-kg-advanced/11-00-OVERVIEW.md`
 
 ### Objectives
 1. Automatic summarization at note/module levels
@@ -513,14 +514,14 @@ PARENT_CHUNK_BOOST = 1.2
 
 ### Atomic Plans (6 plans, 2-3 tasks each)
 
-| Plan | Focus | Deliverables |
-|------|-------|--------------|
-| **11-01** | Auto Summarization | Module-level and note-level summaries via LLM |
-| **11-02** | Trend Analysis | Cross-module concept frequency and evolution |
-| **11-03** | Smart Templates | Structured extraction for different note types |
-| **11-04** | AURA-CHAT Schema Compat | Ensure shared KG schema compatibility |
-| **11-05** | Unified Graph Views | Module-level graph visualization across both apps |
-| **11-06** | Multimodal Prep | Audio ingestion hooks (Deepgram/Whisper), OCR prep |
+| Plan | Focus | Deliverables | Status |
+|------|-------|--------------|--------|
+| **11-01** | Auto Summarization | Module-level and note-level summaries via LLM | ✓ COMPLETE |
+| **11-02** | Trend Analysis | Cross-module concept frequency and evolution | Pending |
+| **11-03** | Smart Templates | Structured extraction for different note types | Pending |
+| **11-04** | AURA-CHAT Schema Compat | Ensure shared KG schema compatibility | Pending |
+| **11-05** | Unified Graph Views | Module-level graph visualization across both apps | Pending |
+| **11-06** | Multimodal Prep | Audio ingestion hooks (Deepgram/Whisper), OCR prep | Pending |
 
 ### Integration Points
 
@@ -612,12 +613,14 @@ AURA-NOTES-MANAGER                      AURA-CHAT
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-01-24 | Initial roadmap from enhancement plan |
+| 1.1 | 2026-01-24 | Phase 09 completed, Phase 10 plans created |
+| 1.2 | 2026-01-24 | Phase 10 completed, Phase 11 plans created |
+| 1.3 | 2026-01-24 | Phase 11-01 Auto Summarization completed |
 
 ---
 
 ## Next Steps
 
-1. **Review Agent Behaviour section** - All implementers must read and follow behavioral guidelines
-2. Create `.planning/phases/09-kg-foundation/` directory
-3. Create 09-01-PLAN.md: Neo4j Schema Updates
-4. Execute Phase 09 plans sequentially
+1. **Review Phase 11 Overview** - Read `.planning/phases/11-kg-advanced/11-00-OVERVIEW.md`
+2. **Execute Phase 11 plans sequentially** - Start with 11-01-PLAN.md
+3. Run: `/run-plan .planning/phases/11-kg-advanced/11-01-PLAN.md`
