@@ -29,7 +29,7 @@ docker-compose.local.yml
 # PYTHON - Build artifacts, cache, and test outputs
 # =============================================================================
 # Virtual environments
-#venv/
+venv/
 #.venv/
 env/
 .env/
