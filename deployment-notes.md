@@ -1,7 +1,9 @@
 # AURA-CHAT Phase 1-3 Deployment Notes
 
 **Generated:** 2026-01-26
-**Commit:** `8c6c8dd`
+**Commits:**
+- Root: `82a4db3` - docs: update deployment notes with correct SDK version info
+- AURA-CHAT: `401ac9a` - chore: update google-genai requirement to 1.60.0
 **Branch:** `main`
 
 ---
@@ -102,10 +104,14 @@ git checkout 1e3cc7a
 
 ## Git Commit Information
 
-- **Commit Hash:** `8c6c8dd81b3a486821834499f3bf301c10fa41a2`
+### AURA-CHAT Submodule
+- **Latest Commit:** `401ac9a` - chore: update google-genai requirement to 1.60.0
+- **Phase 1-3 Fix Commit:** `8c6c8dd` - fix: refactor gemini 3 thinking mode to handle SDK limitations
 - **Author:** Peter Prabhu J <220191601045@crescent.education>
 - **Date:** Mon Jan 26 22:32:18 2026 +0530
-- **Message:** `fix: refactor gemini 3 thinking mode to handle SDK limitations`
+
+### Root Repository
+- **Latest Commit:** `82a4db3` - docs: update deployment notes with correct SDK version info
 
 ### Previous Related Commits (Phases 1-2):
 - `1e3cc7a` - fix: correct Gemini 3 thinking mode logging to show level instead of budget
