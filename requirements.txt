@@ -8,8 +8,9 @@
 neo4j>=5.15.0
 
 # Google Cloud / Vertex AI
-google-cloud-aiplatform>=1.39.0,<2.0.0
+google-cloud-aiplatform>=1.51.0,<2.0.0
 vertexai>=1.0.0
+google-genai>=1.59.0
 
 # Google Generative AI (Gemini)
 google-generativeai>=0.3.0
