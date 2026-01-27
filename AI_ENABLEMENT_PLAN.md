@@ -6,7 +6,9 @@
 
 ## 1. Executive Summary
 
-This plan outlines the steps to fully enable and verify the AI-powered document processing pipeline in `AURA-NOTES-MANAGER`. The goal is to ensure `kg_processor.py` and its dependencies correctly utilize Google Vertex AI (Gemini 2.5 Flash/Lite) for entity extraction and embeddings, mirroring the production-ready architecture of `AURA-CHAT`. We will also verify the existing Celery asynchronous pipeline.
+This plan outlines the steps to fully enable and verify the AI-powered document processing pipeline in `AURA-NOTES-MANAGER`. The goal is to ensure ALL AI model calls (entity extraction, embeddings, summarization) use **Google Vertex AI** via `services/vertex_ai_client.py`, not the direct `google.generativeai` API.
+
+**Key Objective:** Migrate from dual-client architecture (Vertex AI + direct Gemini API) to unified Vertex AI client for consistency, credential management, and enterprise authentication.
 
 ---
 
@@ -22,7 +24,13 @@ cd AURA-NOTES-MANAGER
 # 2. Check current hardcoded model strings in kg_processor.py
 grep -n "gemini\|text-embedding" api/kg_processor.py || echo "No model strings found"
 
-# 3. Verify Neo4j connection (adjust password as needed)
+# 3. CHECK: Find all google.generativeai usage (should be 0 after migration)
+grep -rn "import google.generativeai" api/ services/ || echo "No direct google.generativeai imports found - GOOD"
+
+# 4. CHECK: Verify vertex_ai_client.py is used
+grep -rn "from services.vertex_ai_client" api/ services/ | head -20
+
+# 5. Verify Neo4j connection (adjust password as needed)
 ../../.venv/Scripts/python -c "
 from neo4j import GraphDatabase
 driver = GraphDatabase.driver('bolt://127.0.0.1:7687', auth=('neo4j', 'password'))
@@ -30,10 +38,10 @@ driver.verify_connectivity()
 print('Neo4j connection OK')
 "
 
-# 4. Check if config.py exists and its contents
+# 6. Check if config.py exists and its contents
 cat api/config.py 2>/dev/null || echo "config.py does not exist"
 
-# 5. Verify Redis is running
+# 7. Verify Redis is running
 redis-cli ping 2>/dev/null || echo "Redis not running"
 ```
 
@@ -43,6 +51,8 @@ redis-cli ping 2>/dev/null || echo "Redis not running"
 |-------|---------|----------|---------|
 | Python imports | `python -c "import api.kg_processor"` | OK | ___ |
 | Model strings | `grep "gemini" api/kg_processor.py` | gemini-2.5-flash-lite | ___ |
+| **google.generativeai** | `grep -rn "import google.generativeai"` | 0 imports | ___ |
+| **vertex_ai_client usage** | `grep -rn "from services.vertex_ai_client"` | >0 imports | ___ |
 | Neo4j connection | `python -c "from neo4j import ..."` | OK | ___ |
 | Config exists | `cat api/config.py` | File exists | ___ |
 | Redis running | `redis-cli ping` | PONG | ___ |
@@ -105,7 +115,17 @@ ls -la AURA-NOTES-MANAGER/service_account.json 2>/dev/null && echo "EXISTS" || e
 
 ### Phase 1 Goal
 
-Remove hardcoded model names and use a centralized configuration, mirroring `AURA-CHAT/backend/utils/config.py`.
+**Migrate ALL AI services to use `services/vertex_ai_client.py`** instead of direct `google.generativeai` API. Remove hardcoded model names and use centralized configuration, mirroring `AURA-CHAT/backend/utils/config.py`.
+
+### Critical: Why Vertex AI Client?
+
+| Aspect | Direct `google.generativeai` | `services/vertex_ai_client.py` |
+|--------|------------------------------|-------------------------------|
+| **Auth** | API key in code | ADC credentials / Service Account |
+| **Enterprise** | Personal API key | Project-based authentication |
+| **Audit** | Per-user tracking | Project-level audit logs |
+| **Consistency** | Mixed pattern | Unified across all services |
+| **Billing** | Per-user quotas | Project-level quotas |
 
 ---
 
@@ -113,109 +133,61 @@ Remove hardcoded model names and use a centralized configuration, mirroring `AUR
 
 **File:** `AURA-NOTES-MANAGER/api/config.py`
 
-**If file does NOT exist:**
-```python
-# config.py
-# Centralized configuration for AURA-NOTES-MANAGER AI pipeline
-
-import os
-from pathlib import Path
-
-# Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load .env file if exists
-from dotenv import load_dotenv
-dotenv_path = BASE_DIR / ".env"
-if dotenv_path.exists():
-    load_dotenv(dotenv_path)
-
-
-# =============================================================================
-# LLM MODEL CONFIGURATION
-# =============================================================================
-
-LLM_ENTITY_EXTRACTION_MODEL = os.getenv(
-    "LLM_ENTITY_EXTRACTION_MODEL",
-    "gemini-2.5-flash-lite"
-)
-
-EMBEDDING_MODEL = os.getenv(
-    "EMBEDDING_MODEL",
-    "text-embedding-004"
-)
-
-LLM_ENTITY_MAX_PARALLEL = int(os.getenv("LLM_ENTITY_MAX_PARALLEL", "2"))
-
-
-# =============================================================================
-# GOOGLE CLOUD CONFIGURATION
-# =============================================================================
-
-GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
-GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
-    "GOOGLE_APPLICATION_CREDENTIALS",
-    str(BASE_DIR / "service_account.json")
-)
-
-
-# =============================================================================
-# NEO4J CONFIGURATION
-# =============================================================================
-
-NEO4J_URI = os.getenv("NEO4J_URI", "bolt://127.0.0.1:7687")
-NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
-
-
-# =============================================================================
-# REDIS/CELERY CONFIGURATION
-# =============================================================================
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
-
-
-# =============================================================================
-# APPLICATION SETTINGS
-# =============================================================================
-
-AURA_TEST_MODE = os.getenv("AURA_TEST_MODE", "true").lower() == "true"
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-```
+**If file does NOT exist:** (see previous content)
 
 **If file EXISTS:**
 Add only the LLM_MODEL_CONFIGURATION section if not present, otherwise merge carefully.
 
+**Update required env vars:**
+| Variable | Example Value | Description |
+|----------|---------------|-------------|
+| `VERTEX_PROJECT` | `lucky-processor-480412-n8` | GCP project ID (preferred over GOOGLE_CLOUD_PROJECT) |
+| `VERTEX_LOCATION` | `us-central1` | GCP region |
+| `VERTEX_CREDENTIALS` | `AURA-NOTES-MANAGER/service_account.json` | Service account path |
+| `GOOGLE_APPLICATION_CREDENTIALS` | (auto-set from VERTEX_CREDENTIALS) | Set automatically by vertex_ai_client |
+
+**Remove deprecated:**
+| Variable | Action |
+|----------|--------|
+| `GEMINI_API_KEY` | Remove - no longer used for model calls |
+| `GOOGLE_CLOUD_PROJECT` | Replaced by `VERTEX_PROJECT` |
+| `GOOGLE_CLOUD_LOCATION` | Replaced by `VERTEX_LOCATION` |
+
 ---
 
-### Step 1.2: Refactor `GeminiClient` in `api/kg_processor.py`
+### Step 1.2: Refactor `GeminiClient` in `api/kg_processor.py` to Use Vertex AI
 
 **File:** `AURA-NOTES-MANAGER/api/kg_processor.py`
 
-**BEFORE (Current State - approximate):**
+**BEFORE (Current State - DO NOT USE):**
 ```python
 class GeminiClient:
     def __init__(self, api_key=None):
         self.model = "gemini-2.5-flash-lite"  # Hardcoded
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        # ... rest of init
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")  # API key auth
+        # Uses google.generativeai - BAD
+
+    async def get_embedding(self, text: str):
+        import google.generativeai as genai  # WRONG
+        genai.configure(api_key=self.api_key)  # WRONG
+        result = genai.embed_content(model=self.embedding_model, ...)  # WRONG
 ```
 
-**AFTER (Target State):**
+**AFTER (Target State - USE VERTEX AI):**
 ```python
 # At the top of file, after other imports
 from api.config import (
     LLM_ENTITY_EXTRACTION_MODEL,
     EMBEDDING_MODEL,
-    GOOGLE_CLOUD_PROJECT,
-    GOOGLE_APPLICATION_CREDENTIALS,
-    GOOGLE_CLOUD_LOCATION,
     AURA_TEST_MODE
+)
+from services.vertex_ai_client import (
+    init_vertex_ai,
+    get_model,
+    generate_content,
+    block_none_safety_settings,
+    GenerationConfig,
+    normalize_model_name
 )
 
 
@@ -224,100 +196,156 @@ class GeminiClient:
         # Load from config instead of hardcoded
         self.extraction_model = LLM_ENTITY_EXTRACTION_MODEL
         self.embedding_model = EMBEDDING_MODEL
-        
-        # Use API key from config or parameter
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        
-        # Initialize Vertex AI client if not in test mode
+
+        # NO api_key - uses ADC credentials via vertex_ai_client
+        self._client = None
+
+        # Initialize Vertex AI if not in test mode
         if not AURA_TEST_MODE:
-            self._init_vertex_ai()
-        else:
-            self.client = None
-            self.embedding_client = None
-    
-    def _init_vertex_ai(self):
-        """Initialize Google Cloud Vertex AI clients."""
-        try:
-            from google.cloud import aiplatform
-            from google.oauth2 import service_account
-            
-            credentials = service_account.Credentials.from_service_account_file(
-                GOOGLE_APPLICATION_CREDENTIALS
+            init_vertex_ai()  # Uses VERTEX_PROJECT, VERTEX_LOCATION, VERTEX_CREDENTIALS
+
+    async def extract_entities(self, chunk_text: str, chunk_id: str):
+        """Extract entities using Vertex AI Gemini via vertex_ai_client."""
+        from services.vertex_ai_client import get_model, generate_content, GenerationConfig
+
+        model = get_model(f"models/{self.extraction_model}")
+
+        prompt = """Extract entities from the following academic text..."""
+
+        response = generate_content(
+            model=model,
+            contents=prompt,
+            generation_config=GenerationConfig(
+                temperature=0.1,
+                max_output_tokens=2048,
+                response_mime_type="application/json"
             )
-            
-            aiplatform.init(
-                project=GOOGLE_CLOUD_PROJECT,
-                location=GOOGLE_CLOUD_LOCATION,
-                credentials=credentials
-            )
-            
-            # Initialize prediction client for Gemini
-            self.client = aiplatform.PredictionServiceClient(
-                client_options={
-                    "api_endpoint": f"{GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com"
-                }
-            )
-            
-            # Initialize embedding client
-            self.embedding_client = aiplatform.TextEmbeddingModel(
-                name=self.embedding_model
-            )
-            
-        except Exception as e:
-            logging.error(f"Failed to initialize Vertex AI: {e}")
-            raise
-    
-    async def extract_entities(self, text: str) -> dict:
-        """Extract entities using configured Gemini model."""
-        # Use self.extraction_model (not hardcoded string)
-        # ... implementation
-        pass
-    
-    async def generate_embedding(self, text: str) -> list:
-        """Generate embedding using configured embedding model."""
-        # Use self.embedding_model (not hardcoded string)
-        # ... implementation
-        pass
+        )
+
+        # Parse JSON from response.text
+        entities = self._parse_entities_response(response.text, chunk_id)
+        return entities
+
+    async def get_embedding(self, text: str) -> list:
+        """Generate embedding using Vertex AI Text Embedding via vertex_ai_client."""
+        # Vertex AI embeddings require PredictionServiceClient
+        # Use the pattern from AURA-CHAT/backend/utils/vertex_ai_client.py
+        from google.cloud import aiplatform
+
+        # Initialize with project/location from env vars
+        aiplatform.init(
+            project=os.environ.get("VERTEX_PROJECT"),
+            location=os.environ.get("VERTEX_LOCATION", "us-central1")
+        )
+
+        # Get embedding model
+        embedding_model = aiplatform.TextEmbeddingModel(self.embedding_model)
+
+        # Generate embedding
+        embeddings = embedding_model.get_embeddings([text])
+        return embeddings[0].values
 ```
 
 **Key Changes:**
-1. Import from `api.config` at top of file
-2. Replace `"gemini-2.5-flash-lite"` with `LLM_ENTITY_EXTRACTION_MODEL`
-3. Replace `"text-embedding-004"` with `EMBEDDING_MODEL`
-4. Initialize Vertex AI properly using service account
+1. **REMOVE** `import google.generativeai` - delete entirely
+2. **ADD** `from services.vertex_ai_client import init_vertex_ai, get_model, generate_content`
+3. Replace `self.api_key = ...` with ADC credentials via `init_vertex_ai()`
+4. Use `get_model(f"models/{self.extraction_model}")` instead of `genai.GenerativeModel()`
+5. Use `generate_content(...)` instead of `model.generate_content(...)`
+6. Remove all `genai.configure(api_key=...)` calls
 
 ---
 
-### Step 1.3: Sync `services/embeddings.py`
+### Step 1.3: Audit and Migrate All Services to Vertex AI
+
+**Check all services for `google.generativeai` usage:**
+```bash
+# Find all direct Gemini API usage
+grep -rn "import google.generativeai" AURA-NOTES-MANAGER/
+
+# Expected: should find files that need migration
+```
+
+**Services to migrate:**
+
+| File | Current Pattern | Migrate To |
+|------|-----------------|------------|
+| `services/embeddings.py` | `google.generativeai` | `vertex_ai_client.py` or `aiplatform.TextEmbeddingModel` |
+| `services/llm_entity_extractor.py` | `google.generativeai` | `vertex_ai_client.py` |
+| `services/answer_synthesizer.py` | `google.generativeai` | `vertex_ai_client.py` |
+| `services/summary_service.py` | `google.generativeai` | `vertex_ai_client.py` |
+
+**Migration pattern for each service:**
+```python
+# BEFORE
+import google.generativeai as genai
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
+response = model.generate_content(prompt)
+
+# AFTER
+from services.vertex_ai_client import get_model, generate_content, GenerationConfig
+init_vertex_ai()  # Called once at module level or in __init__
+model = get_model("models/gemini-2.5-flash-lite")  # Use configured model
+response = generate_content(
+    model=model,
+    contents=prompt,
+    generation_config=GenerationConfig(temperature=0.1)
+)
+```
+
+---
+
+### Step 1.4: Sync `services/embeddings.py`
 
 **File:** `AURA-NOTES-MANAGER/services/embeddings.py`
-
-**BEFORE:**
-```python
-EMBEDDING_MODEL = "text-embedding-004"  # Hardcoded
-```
 
 **AFTER:**
 ```python
 from api.config import EMBEDDING_MODEL
-```
+from services.vertex_ai_client import init_vertex_ai
 
-**If `api.config` doesn't exist yet:**
-```python
-import os
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
+# Initialize Vertex AI at module level
+init_vertex_ai()
+
+# Use aiplatform.TextEmbeddingModel for embeddings
+from google.cloud import aiplatform
+
+embedding_model = aiplatform.TextEmbeddingModel(EMBEDDING_MODEL)
+
+async def get_embedding(text: str) -> list:
+    """Generate embedding using Vertex AI Text Embedding."""
+    embeddings = embedding_model.get_embeddings([text])
+    return embeddings[0].values
 ```
 
 ---
 
-### Step 1.4: Verify Phase 1 Completion
+### Step 1.5: Verify Phase 1 Completion
 
 **Run these commands:**
 ```bash
-# 1. Verify config imports work
-../../.venv/Scripts/python -c "from api.config import LLM_ENTITY_EXTRACTION_MODEL, EMBEDDING_MODEL; print(f'Extraction: {LLM_ENTITY_EXTRACTION_MODEL}, Embedding: {EMBEDDING_MODEL})"
+# 1. Verify NO google.generativeai imports remain
+echo "=== Checking for google.generativeai imports ==="
+count=$(grep -rn "import google.generativeai" AURA-NOTES-MANAGER/api AURA-NOTES-MANAGER/services 2>/dev/null | wc -l)
+echo "google.generativeai imports found: $count"
+if [ "$count" -eq 0 ]; then
+    echo "✅ PASS: No direct google.generativeai imports"
+else
+    echo "❌ FAIL: Found $count imports - needs migration"
+    grep -rn "import google.generativeai" AURA-NOTES-MANAGER/api AURA-NOTES-MANAGER/services
+fi
+echo ""
 
-# 2. Verify kg_processor uses config
+# 2. Verify vertex_ai_client is used
+echo "=== Checking vertex_ai_client usage ==="
+grep -rn "from services.vertex_ai_client" AURA-NOTES-MANAGER/api AURA-NOTES-MANAGER/services | head -10
+echo ""
+
+# 3. Verify config imports work
+../../.venv/Scripts/python -c "from api.config import LLM_ENTITY_EXTRACTION_MODEL, EMBEDDING_MODEL; print(f'Extraction: {LLM_ENTITY_EXTRACTION_MODEL}, Embedding: {EMBEDDING_MODEL}')"
+
+# 4. Verify kg_processor uses config
 ../../.venv/Scripts/python -c "
 from api.kg_processor import GeminiClient
 client = GeminiClient()
@@ -325,14 +353,32 @@ print(f'Extraction model: {client.extraction_model}')
 print(f'Embedding model: {client.embedding_model}')
 "
 
-# 3. Verify embeddings.py imports
-../../.venv/Scripts/python -c "from services.embeddings import EMBEDDING_MODEL; print(f'Embedding model: {EMBEDDING_MODEL})"
+# 5. Verify embeddings.py imports
+../../.venv/Scripts/python -c "from services.embeddings import EMBEDDING_MODEL; print(f'Embedding model: {EMBEDDING_MODEL}')"
 ```
 
 **Expected Output:**
 ```
+✅ PASS: No direct google.generativeai imports
 Extraction model: gemini-2.5-flash-lite
 Embedding model: text-embedding-004
+```
+
+---
+
+### Step 1.6: Remove GEMINI_API_KEY Dependency
+
+**After migration, delete or empty the `GEMINI_API_KEY` from `.env`:**
+```bash
+# In .env file, comment out or remove:
+# GEMINI_API_KEY=AIza...
+```
+
+**Verification:**
+```bash
+# Ensure no code reads GEMINI_API_KEY
+grep -rn "GEMINI_API_KEY" AURA-NOTES-MANAGER/api AURA-NOTES-MANAGER/services
+# Expected: no matches after Phase 1 completion
 ```
 
 ---
@@ -924,13 +970,17 @@ echo "=== Verification Complete ==="
 ## 7. Summary: All Validation Criteria
 
 - [ ] **Pre-Flight:** All environment checks pass (Python, Neo4j, Redis)
+- [ ] **Pre-Flight:** `google.generativeai` imports = 0
+- [ ] **Pre-Flight:** `vertex_ai_client.py` imports > 0
 - [ ] **Phase 1:** `api/config.py` created with centralized model configuration
 - [ ] **Phase 1:** `kg_processor.py` imports from config, no hardcoded model strings
 - [ ] **Phase 1:** `services/embeddings.py` synced with config
+- [ ] **Phase 1:** `GEMINI_API_KEY` removed from all code
+- [ ] **Phase 1:** All services use `services/vertex_ai_client.py` (not `google.generativeai`)
 - [ ] **Phase 2:** `chunk_text_hierarchical` matches AURA-CHAT logic
 - [ ] **Phase 2:** `llm_entity_extractor.py` uses XML prompt + JSON schema approach
-- [ ] **Phase 2:** Entity extraction uses `gemini-2.5-flash-lite`
-- [ ] **Phase 2:** Embeddings use `text-embedding-004`
+- [ ] **Phase 2:** Entity extraction uses `gemini-2.5-flash-lite` via Vertex AI
+- [ ] **Phase 2:** Embeddings use `text-embedding-004` via Vertex AI
 - [ ] **Phase 3:** Celery worker starts without errors
 - [ ] **Phase 3:** `test_celery_tasks.py` completes with SUCCESS
 - [ ] **Phase 3:** Neo4j contains Document, Entity, and Relationship nodes
@@ -943,6 +993,7 @@ echo "=== Verification Complete ==="
 
 | File | Purpose | Phase |
 |------|---------|-------|
+| `AURA-NOTES-MANAGER/services/vertex_ai_client.py` | **Unified Vertex AI client** | 1 |
 | `AURA-NOTES-MANAGER/api/config.py` | Centralized configuration | 1 |
 | `AURA-NOTES-MANAGER/api/kg_processor.py` | Main KG processing logic | 1, 2 |
 | `AURA-NOTES-MANAGER/services/embeddings.py` | Embedding generation | 1 |
@@ -954,3 +1005,34 @@ echo "=== Verification Complete ==="
 | `AURA-CHAT/backend/utils/vertex_ai_client.py` | Reference Vertex AI client | 1, 2 |
 | `AURA-CHAT/backend/llm_entity_extractor.py` | Reference entity extractor | 2 |
 | `AURA-CHAT/backend/entity_aware_chunker.py` | Reference chunking logic | 2 |
+
+---
+
+## 9. Migration Quick Reference
+
+### Before (Mixed Pattern - WRONG)
+```python
+# api/kg_processor.py
+import google.generativeai as genai
+api_key = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel("gemini-2.5-flash-lite")
+```
+
+### After (Unified Vertex AI - CORRECT)
+```python
+# api/kg_processor.py
+from services.vertex_ai_client import get_model, generate_content, GenerationConfig
+from api.config import LLM_ENTITY_EXTRACTION_MODEL
+
+model = get_model(f"models/{LLM_ENTITY_EXTRACTION_MODEL}")
+response = generate_content(model, prompt, generation_config=GenerationConfig(...))
+```
+
+### Environment Variables Change
+| Old Variable | New Variable | Notes |
+|--------------|--------------|-------|
+| `GEMINI_API_KEY` | (removed) | No longer used |
+| `GOOGLE_CLOUD_PROJECT` | `VERTEX_PROJECT` | Renamed |
+| `GOOGLE_CLOUD_LOCATION` | `VERTEX_LOCATION` | Renamed |
+| (new) | `VERTEX_CREDENTIALS` | Path to service account |
