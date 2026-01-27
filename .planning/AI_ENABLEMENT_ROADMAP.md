@@ -71,6 +71,9 @@ redis-cli ping 2>/dev/null || echo "Redis not running"
 - [ ] `.planning/ai_enablement_plans/01-config/01-03-PLAN.md` - Audit and Migrate Services
 - [ ] `.planning/ai_enablement_plans/01-config/01-04-PLAN.md` - Verify Phase 1 Completion
 
+Note (2026-01-28): 01-04 verification run failed due to missing ADC credentials
+(service account JSON). Plan remains incomplete until rerun passes.
+
 ### Objectives
 
 1. **Centralize Configuration:** Create/update `api/config.py` with LLM model settings, Google Cloud credentials, Neo4j connection, and Redis configuration.
