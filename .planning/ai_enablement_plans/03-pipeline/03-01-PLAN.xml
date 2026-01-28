@@ -291,6 +291,7 @@ for t in tasks:
             <note>All Celery configuration meets or exceeds enterprise standards</note>
             <note>Time limits were already implemented (better than plan requirement)</note>
             <note>Redis connectivity requires starting Redis server first</note>
+            <note>FIX APPLIED: Updated document_processing_tasks.py to import REDIS_URL and CELERY_RESULT_EXPIRES from api/config.py instead of duplicating env var logic (review feedback 2026-01-28)</note>
         </notes>
     </execution_results>
 </plan>
