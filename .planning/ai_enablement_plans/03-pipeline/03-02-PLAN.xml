@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+    <plan_id>03-02</plan_id>
+    <phase>3 - Celery Pipeline Verification</phase>
+    <status>PLANNED</status>
+    <created_date>2026-01-28</created_date>
+    <depends_on>03-01 (Celery Configuration Verified)</depends_on>
+
+    <objective>
+        <description>Audit the existing process_document_task in api/tasks/document_processing_tasks.py to ensure it properly integrates with Phase 2 services (entity-aware chunker, structured entity extractor, retry logic).</description>
+    </objective>
+
+    <context>
+        <description>The document_processing_tasks.py file already implements:</description>
+        <components>
+            <component>process_document_task - Single document processing</component>
+            <component>process_batch_task - Batch processing</component>
+            <component>ProcessingState enum - Progress tracking</component>
+            <component>KGProcessingTask base class - Shared processor logic</component>
+        </components>
+        <note>This plan will verify that these tasks use the new Phase 2 services and handle errors correctly.</note>
+    </context>
+
+    <prerequisites>
+        <prerequisite>Phase 2 completed (services ported)</prerequisite>
+        <prerequisite>Phase 3.1 completed (Celery configuration verified)</prerequisite>
+        <prerequisite>services/entity_aware_chunker.py exists</prerequisite>
+        <prerequisite>services/llm_entity_extractor.py exists</prerequisite>
+    </prerequisites>
+
+    <tasks>
+        <task>
+            <task_id>2.1</task_id>
+            <title>Read and Understand Current Implementation</title>
+            <file_path>AURA-NOTES-MANAGER/api/tasks/document_processing_tasks.py</file_path>
+            <verification_command>
+                <command>cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python -c "
+import inspect
+from api.tasks.document_processing_tasks import process_document_task
+print('process_document_task signature:')
+print(inspect.signature(process_document_task))
+print()
+print('Task configuration:')
+print(f'  Name: {process_document_task.name}')
+print(f'  Max retries: {process_document_task.max_retries}')
+print(f'  Rate limit: {process_document_task.rate_limit}')
+"</command>
+            </verification_command>
+        </task>
+
+        <task>
+            <task_id>2.2</task_id>
+            <title>Verify Integration with Phase 2 Services</title>
+            <description>Check that the task uses new Phase 2 services through kg_processor.py</description>
+            <verification_command>
+                <command># Check for Phase 2 service imports
+grep -n "entity_aware_chunker\|llm_entity_extractor" api/tasks/document_processing_tasks.py
+
+# Expected imports:
+# from services.entity_aware_chunker import EntityAwareChunker
+# from services.llm_entity_extractor import LLMEntityExtractor
+
+# If missing, check kg_processor.py imports them
+grep -n "entity_aware_chunker\|llm_entity_extractor" api/kg_processor.py</command>
+            </verification_command>
+            <verification_command>
+                <command># Check KnowledgeGraphProcessor uses Phase 2 services
+../../.venv/Scripts/python -c "
+from api.kg_processor import KnowledgeGraphProcessor
+import inspect
+
+# Get the process_document method
+source = inspect.getsource(KnowledgeGraphProcessor.process_document)
+
+# Check for Phase 2 service usage
+checks = {
+    'Uses EntityAwareChunker': 'EntityAwareChunker' in source or 'entity_aware_chunker' in source,
+    'Uses LLMEntityExtractor': 'LLMEntityExtractor' in source or 'extract_entities' in source,
+    'Has retry logic': 'retry' in source or 'tenacity' in source,
+}
+
+print('KnowledgeGraphProcessor.process_document integration:')
+for check, result in checks.items():
+    status = '✅' if result else '❌'
+    print(f'  {status} {check}')
+"</command>
+            </verification_command>
+        </task>
+
+        <task>
+            <task_id>2.3</task_id>
+            <title>Audit Error Handling</title>
+            <description>Check exception handling in process_document_task</description>
+            <verification_command>
+                <command># Find exception handling blocks
+grep -A5 "except" api/tasks/document_processing_tasks.py | head -50</command>
+            </verification_command>
+            <required_error_handling>
+                <handler>Catches SoftTimeLimitExceeded (from time limits)</handler>
+                <handler>Catches MaxRetriesExceededError (from retry exhaustion)</handler>
+                <handler>Catches general Exception (unexpected errors)</handler>
+                <handler>Updates Firestore document status on failure</handler>
+                <handler>Logs errors with context (document_id, user_id, etc.)</handler>
+            </required_error_handling>
+            <expected_task_decorator>
+<task_decorator>
+@app.task(
+    bind=True,
+    base=KGProcessingTask,
+    name='api.tasks.document_processing_tasks.process_document_task',
+    max_retries=3,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=600,  # 10 minutes
+    retry_jitter=True
+)
+</task_decorator>
+            </expected_task_decorator>
+        </task>
+
+        <task>
+            <task_id>2.4</task_id>
+            <title>Verify Progress Tracking</title>
+            <description>Check progress updates throughout pipeline</description>
+            <verification_command>
+                <command># Find all update_state calls
+grep -n "update_state\|update_progress" api/tasks/document_processing_tasks.py</command>
+            </verification_command>
+            <expected_stages>
+                <stage level="0">PENDING - Task queued</stage>
+                <stage level="5">RECEIVED - Task started</stage>
+                <stage level="10">PARSING - Text extraction</stage>
+                <stage level="30">CHUNKING - Entity-aware chunking</stage>
+                <stage level="50">EMBEDDING - Generating embeddings</stage>
+                <stage level="70">EXTRACTING - Entity extraction</stage>
+                <stage level="90">STORING - Storing to Neo4j</stage>
+                <stage level="100">COMPLETED - Success</stage>
+                <stage level="failed">FAILED - Error occurred</stage>
+            </expected_stages>
+        </task>
+
+        <task>
+            <task_id>2.5</task_id>
+            <title>Verify Firestore Status Sync</title>
+            <description>Check that task updates Firestore document status</description>
+            <verification_command>
+                <command># Find Firestore update calls
+grep -n "_find_note_by_id\|_update_note_status" api/tasks/document_processing_tasks.py</command>
+            </verification_command>
+            <required_firestore_updates>
+                <update>Sets processingStatus to "processing" on task start</update>
+                <update>Sets processingStatus to "completed" on success</update>
+                <update>Sets processingStatus to "failed" on error</update>
+                <update>Sets entityCount and chunkCount on completion</update>
+                <update>Updates lastProcessed timestamp</update>
+            </required_firestore_updates>
+        </task>
+
+        <task>
+            <task_id>2.6</task_id>
+            <title>Test Document Processing Function</title>
+            <deliverable_file>api/test_kg_processor.py</deliverable_file>
+            <template>
+<test_script>
+"""Test KnowledgeGraphProcessor integration with Phase 2 services."""
+
+import asyncio
+from kg_processor import KnowledgeGraphProcessor
+
+async def test_processor():
+    """Test basic processing flow."""
+    processor = KnowledgeGraphProcessor()
+    
+    # Test with small sample text
+    sample_text = """
+    Machine learning is a subset of artificial intelligence that enables systems
+    to learn and improve from experience. Neural networks, inspired by biological
+    neural networks, are a key technology in deep learning.
+    """
+    
+    print("Testing KnowledgeGraphProcessor...")
+    print(f"Input text: {len(sample_text)} characters")
+    
+    # Test chunking
+    print("\n1. Chunking...")
+    chunks = processor.chunk_text(sample_text)
+    print(f"   Generated {len(chunks)} chunks")
+    
+    # Test entity extraction (may require ADC credentials)
+    print("\n2. Entity extraction...")
+    try:
+        entities = await processor.extract_entities(chunks[0] if chunks else sample_text)
+        print(f"   Extracted {len(entities.get('entities', []))} entities")
+        print(f"   Extracted {len(entities.get('relationships', []))} relationships")
+    except Exception as e:
+        print(f"   ⚠️ Skipped (requires ADC): {e}")
+    
+    print("\n✅ Basic processor test passed")
+
+if __name__ == "__main__":
+    asyncio.run(test_processor())
+</test_script>
+            </template>
+            <verification_command>
+                <command>cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python api/test_kg_processor.py</command>
+            </verification_command>
+        </task>
+
+        <task>
+            <task_id>2.7</task_id>
+            <title>Update Task Documentation</title>
+            <description>Add comprehensive docstring to process_document_task</description>
+            <template>
+<docstring>
+@app.task(...)
+def process_document_task(self, document_id: str, module_id: str, user_id: str):
+    """
+    Process a single document and extract knowledge graph entities.
+    
+    This task orchestrates the full document processing pipeline:
+    1. Text extraction from document file
+    2. Entity-aware semantic chunking (Phase 2)
+    3. Embedding generation via Vertex AI (Phase 2)
+    4. Structured entity extraction with retry (Phase 2)
+    5. Knowledge graph storage in Neo4j
+    6. Firestore status synchronization
+    
+    Args:
+        document_id: Unique document/note identifier in Firestore
+        module_id: Module ID for scoping document lookup
+        user_id: User who initiated processing
+    
+    Returns:
+        dict: Processing result with status, entity_count, chunk_count
+        
+    Raises:
+        SoftTimeLimitExceeded: Task exceeded time limit (5 min)
+        MaxRetriesExceededError: All retry attempts exhausted
+        Exception: Unexpected processing error
+        
+    Progress States:
+        PENDING (0%) → RECEIVED (5%) → PARSING (10%) → CHUNKING (30%) →
+        EMBEDDING (50%) → EXTRACTING (70%) → STORING (90%) → COMPLETED (100%)
+        
+    Celery Configuration:
+        - Max retries: 3
+        - Retry backoff: Exponential (max 10 min)
+        - Time limit: 5 minutes
+        - Queue: kg_processing
+        
+    Phase 2 Integration:
+        - Uses services/entity_aware_chunker.py for semantic chunking
+        - Uses services/llm_entity_extractor.py for structured extraction
+        - Uses services/vertex_ai_client.py for Vertex AI authentication
+        - Implements tenacity retry logic for LLM calls
+    """
+</docstring>
+            </template>
+        </task>
+    </tasks>
+
+    <verification_commands>
+        <command>
+            <description>Verify task imports Phase 2 services (via kg_processor)</description>
+            <code>../../.venv/Scripts/python -c "
+from api.kg_processor import KnowledgeGraphProcessor
+from api.tasks.document_processing_tasks import process_document_task
+print('✅ Task and processor imports successful')
+"</code>
+        </command>
+        <command>
+            <description>Verify task configuration</description>
+            <code>../../.venv/Scripts/python -c "
+from api.tasks.document_processing_tasks import process_document_task
+print('Task Configuration:')
+print(f'  Name: {process_document_task.name}')
+print(f'  Max retries: {process_document_task.max_retries}')
+print(f'  Base class: {process_document_task.__class__.__bases__[0].__name__}')
+"</code>
+        </command>
+        <command>
+            <description>Test processor directly</description>
+            <code>../../.venv/Scripts/python api/test_kg_processor.py</code>
+        </command>
+    </verification_commands>
+
+    <success_criteria>
+        <criterion>Task uses KnowledgeGraphProcessor from Phase 2</criterion>
+        <criterion>Processor integrates Phase 2 services (chunker, extractor)</criterion>
+        <criterion>Error handling covers all failure modes</criterion>
+        <criterion>Retry configuration is appropriate (3 retries, exponential backoff)</criterion>
+        <criterion>Progress tracking updates at each stage</criterion>
+        <criterion>Firestore status sync implemented</criterion>
+        <criterion>Task documentation is comprehensive</criterion>
+        <criterion>test_kg_processor.py passes</criterion>
+    </success_criteria>
+
+    <deliverables>
+        <deliverable>Audit report (command outputs showing integration)</deliverable>
+        <deliverable>Updated api/tasks/document_processing_tasks.py (if improvements needed)</deliverable>
+        <deliverable>New api/test_kg_processor.py (basic processor test)</deliverable>
+        <deliverable>Documentation updates (task docstrings)</deliverable>
+    </deliverables>
+
+    <issues_to_watch>
+        <issue>
+            <symptom>Missing Phase 2 imports</symptom>
+            <cause>ImportError or old logic used</cause>
+            <fix>Update kg_processor.py imports</fix>
+        </issue>
+        <issue>
+            <symptom>No retry logic</symptom>
+            <cause>Tasks fail permanently on transient errors</cause>
+            <fix>Add retry decorator</fix>
+        </issue>
+        <issue>
+            <symptom>Missing progress updates</symptom>
+            <cause>Frontend shows stale status</cause>
+            <fix>Add update_state calls</fix>
+        </issue>
+        <issue>
+            <symptom>Firestore not synced</symptom>
+            <cause>Document status doesn't update</cause>
+            <fix>Verify _update_note_status calls</fix>
+        </issue>
+    </issues_to_watch>
+
+    <next_steps>
+        <step>After completion, proceed to: 03-03-PLAN.md - Enhance End-to-End Test Script</step>
+    </next_steps>
+
+    <notes>
+        <note>The task itself may not need changes if KnowledgeGraphProcessor is properly updated in Phase 2</note>
+        <note>Focus on verification first, only update if integration gaps found</note>
+        <note>Test mode (AURA_TEST_MODE=true) can be used to skip actual LLM calls during testing</note>
+    </notes>
+
+    <status>
+        <execution_status>Ready for execution</execution_status>
+        <checkpoint>Human review after Task 2.6 (processor test)</checkpoint>
+    </status>
+</plan>

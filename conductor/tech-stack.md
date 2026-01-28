@@ -204,7 +204,7 @@ AURA-PROJ/
 │   └── services/           # Audio processing
 ├── conductor/              # Conductor setup files
 ├── .planning/              # Project planning docs
-└── venv/                   # Python virtual environment
+└── .venv/                   # Python virtual environment
 ```
 
 ### Nested Git Repositories

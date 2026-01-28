@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+    <plan_id>03-05</plan_id>
+    <phase>3 - Celery Pipeline Verification</phase>
+    <status>PLANNED</status>
+    <created_date>2026-01-28</created_date>
+    <depends_on>03-01, 03-02, 03-03, 03-04</depends_on>
+
+    <objective>
+        <description>Create a comprehensive Phase 3 verification script that confirms:</description>
+        <objectives_list>
+            <objective>All Phase 3 plans executed successfully</objective>
+            <objective>Celery pipeline is production-ready</objective>
+            <objective>All services integrate correctly</objective>
+            <objective>Documentation is complete</objective>
+            <objective>Success criteria from roadmap met</objective>
+        </objectives_list>
+    </objective>
+
+    <context>
+        <description>This is the final verification step for Phase 3. It consolidates checks from previous plans and provides a go/no-go decision for Phase 3 completion.</description>
+    </context>
+
+    <prerequisites>
+        <prerequisite>Phase 3.1 completed (Celery configuration verified)</prerequisite>
+        <prerequisite>Phase 3.2 completed (Document processing task audited)</prerequisite>
+        <prerequisite>Phase 3.3 completed (E2E test script created)</prerequisite>
+        <prerequisite>Phase 3.4 completed (Neo4j verification script created)</prerequisite>
+    </prerequisites>
+
+    <tasks>
+        <task>
+            <task_id>5.1</task_id>
+            <title>Create Comprehensive Verification Script</title>
+            <file_path>AURA-NOTES-MANAGER/api/verify_phase_3.py</file_path>
+            <description>Create comprehensive Phase 3 verification script with 10 checks and summary reporting.</description>
+            <usage_modes>
+                <mode>Full verification: python api/verify_phase_3.py</mode>
+                <mode>Verbose mode: python api/verify_phase_3.py --verbose</mode>
+            </usage_modes>
+            <class_structure>
+<verification_class>
+class Phase3Verifier:
+    """Verifies Phase 3 completion."""
+    
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+        self.checks_passed = 0
+        self.checks_failed = 0
+        self.warnings = 0
+        self.results = []
+    
+    def check(self, name: str, func) -> Tuple[bool, str]:
+        """Run a verification check."""
+    
+    def warn(self, message: str):
+        """Print warning."""
+    
+    # Check methods
+    def check_files_exist(self) -> Tuple[bool, str]:
+        """Verify all required files exist."""
+    
+    def check_imports(self) -> Tuple[bool, str]:
+        """Verify all Python imports work."""
+    
+    def check_celery_config(self) -> Tuple[bool, str]:
+        """Verify Celery configuration."""
+    
+    def check_redis_connection(self) -> Tuple[bool, str]:
+        """Verify Redis connection."""
+    
+    def check_neo4j_connection(self) -> Tuple[bool, str]:
+        """Verify Neo4j connection."""
+    
+    def check_tasks_registered(self) -> Tuple[bool, str]:
+        """Verify Celery tasks are registered."""
+    
+    def check_phase_2_integration(self) -> Tuple[bool, str]:
+        """Verify Phase 2 services are integrated."""
+    
+    def check_documentation(self) -> Tuple[bool, str]:
+        """Verify documentation files exist."""
+    
+    def check_test_scripts(self) -> Tuple[bool, str]:
+        """Verify test scripts can be imported."""
+    
+    def check_environment_variables(self) -> Tuple[bool, str]:
+        """Verify required environment variables."""
+    
+    def run_all_checks(self):
+        """Run all verification checks."""
+</verification_class>
+            </class_structure>
+            <checks_list>
+                <check name="File Existence" method="check_files_exist">
+                    <description>Verify all required files exist</description>
+                    <files>
+                        <file>api/config.py</file>
+                        <file>api/kg_processor.py</file>
+                        <file>api/tasks/__init__.py</file>
+                        <file>api/tasks/document_processing_tasks.py</file>
+                        <file>api/test_celery_tasks.py</file>
+                        <file>api/test_celery_tasks_e2e.py</file>
+                        <file>api/verify_neo4j_data.py</file>
+                        <file>api/verify_phase_3.py</file>
+                        <file>services/vertex_ai_client.py</file>
+                        <file>services/entity_aware_chunker.py</file>
+                        <file>services/llm_entity_extractor.py</file>
+                    </files>
+                </check>
+                <check name="Python Imports" method="check_imports">
+                    <description>Verify all Python imports work</description>
+                    <imports>
+                        <module>api.config</module>
+                        <module>api.kg_processor</module>
+                        <module>api.tasks.document_processing_tasks</module>
+                        <module>services.vertex_ai_client</module>
+                        <module>services.entity_aware_chunker</module>
+                        <module>services.llm_entity_extractor</module>
+                    </imports>
+                </check>
+                <check name="Celery Configuration" method="check_celery_config">
+                    <description>Verify Celery configuration</description>
+                </check>
+                <check name="Redis Connection" method="check_redis_connection">
+                    <description>Verify Redis connection</description>
+                </check>
+                <check name="Neo4j Connection" method="check_neo4j_connection">
+                    <description>Verify Neo4j connection</description>
+                </check>
+                <check name="Celery Tasks Registered" method="check_tasks_registered">
+                    <description>Verify Celery tasks are registered</description>
+                </check>
+                <check name="Phase 2 Integration" method="check_phase_2_integration">
+                    <description>Verify Phase 2 services are integrated</description>
+                </check>
+                <check name="Documentation Files" method="check_documentation">
+                    <description>Verify documentation files exist</description>
+                </check>
+                <check name="Test Scripts" method="check_test_scripts">
+                    <description>Verify test scripts can be imported</description>
+                </check>
+                <check name="Environment Variables" method="check_environment_variables">
+                    <description>Verify required environment variables</description>
+                </check>
+            </checks_list>
+        </task>
+
+        <task>
+            <task_id>5.2</task_id>
+            <title>Create Phase 3 Summary Document</title>
+            <file_path>api/PHASE_3_SUMMARY.md</file_path>
+            <description>Create comprehensive Phase 3 completion summary with objectives achieved, deliverables, and sign-off section.</description>
+            <sections>
+                <section>Objectives Achieved</section>
+                <section>Deliverables</section>
+                <section>Verification Results</section>
+                <section>Success Criteria Met</section>
+                <section>Integration Points Verified</section>
+                <section>Known Issues &amp; Limitations</section>
+                <section>Performance Metrics</section>
+                <section>Next Steps</section>
+                <section>Team Notes</section>
+                <section>Sign-Off</section>
+            </sections>
+        </task>
+
+        <task>
+            <task_id>5.3</task_id>
+            <title>Create Post-Verification Checklist</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/PHASE_3_CHECKLIST.md</file_path>
+            <description>Create human verification checklist for Phase 3 completion sign-off.</description>
+            <checklist_sections>
+                <section>Pre-Verification</section>
+                <section>Core Functionality</section>
+                <section>Integration</section>
+                <section>Testing</section>
+                <section>Data Verification</section>
+                <section>Documentation</section>
+                <section>Verification Commands</section>
+                <section>Sign-Off</section>
+            </checklist_sections>
+        </task>
+    </tasks>
+
+    <verification_commands>
+        <command>
+            <description>Run comprehensive Phase 3 verification</description>
+            <code>cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python api/verify_phase_3.py</code>
+            <expected_result>All 10 checks pass, exit code 0</expected_result>
+        </command>
+        <command>
+            <description>Verbose mode (if needed)</description>
+            <code>../../.venv/Scripts/python api/verify_phase_3.py --verbose</code>
+        </command>
+        <command>
+            <description>Quick system check</description>
+            <code>../../.venv/Scripts/python -c "
+import sys
+sys.path.insert(0, 'api')
+
+# Quick imports
+from config import REDIS_URL, NEO4J_URI, LLM_ENTITY_EXTRACTION_MODEL
+from tasks.document_processing_tasks import app, process_document_task
+from kg_processor import KnowledgeGraphProcessor
+
+print('✅ Quick verification passed')
+print(f'   Redis: {REDIS_URL}')
+print(f'   Neo4j: {NEO4J_URI}')
+print(f'   Model: {LLM_ENTITY_EXTRACTION_MODEL}')
+print(f'   Tasks: {len(list(app.tasks.keys()))} registered')
+"</code>
+        </command>
+    </verification_commands>
+
+    <success_criteria>
+        <criterion>verify_phase_3.py created with 10 comprehensive checks</criterion>
+        <criterion>All checks pass (exit code 0)</criterion>
+        <criterion>PHASE_3_SUMMARY.md created and filled out</criterion>
+        <criterion>PHASE_3_CHECKLIST.md created for human verification</criterion>
+        <criterion>All Phase 3 deliverables confirmed present</criterion>
+        <criterion>Integration with Phase 1 and Phase 2 verified</criterion>
+        <criterion>No critical issues or failures</criterion>
+    </success_criteria>
+
+    <expected_output>
+<output_example>
+============================================================
+PHASE 3 VERIFICATION
+============================================================
+Timestamp: 2026-01-28T15:30:00
+
+Checking: File Existence...
+  ✅ PASS: All 11 required files exist
+
+Checking: Python Imports...
+  ✅ PASS: All 6 import groups successful
+
+Checking: Celery Configuration...
+  ✅ PASS: Celery configuration valid
+
+Checking: Redis Connection...
+  ✅ PASS: Redis connection OK (127.0.0.1:6379/0)
+
+Checking: Neo4j Connection...
+  ✅ PASS: Neo4j connection OK (bolt://127.0.0.1:7687)
+
+Checking: Celery Tasks Registered...
+  ✅ PASS: 1 Celery tasks registered
+
+Checking: Phase 2 Integration...
+  ✅ PASS: Phase 2 integration verified (EntityAwareChunker, LLMEntityExtractor)
+
+Checking: Documentation Files...
+  ✅ PASS: 3/3 documentation files present
+
+Checking: Test Scripts...
+  ✅ PASS: All 3 test scripts importable
+
+Checking: Environment Variables...
+  ✅ PASS: Environment variables configured (8 checks passed)
+
+============================================================
+VERIFICATION SUMMARY
+============================================================
+Checks passed:  10
+Checks failed:  0
+Warnings:       0
+
+Pass rate: 100.0%
+
+============================================================
+✅ PHASE 3 VERIFICATION PASSED
+============================================================
+
+Phase 3 is complete and production-ready!
+
+Next steps:
+1. Review Phase 3 deliverables
+2. Run E2E test with real document: python api/test_celery_tasks_e2e.py
+3. Proceed to next phase or production deployment
+</output_example>
+    </expected_output>
+
+    <deliverables>
+        <deliverable>New api/verify_phase_3.py - Comprehensive Phase 3 verification script</deliverable>
+        <deliverable>New api/PHASE_3_SUMMARY.md - Phase 3 completion summary</deliverable>
+        <deliverable>New .planning/ai_enablement_plans/03-pipeline/PHASE_3_CHECKLIST.md - Completion checklist</deliverable>
+        <deliverable>Verification report - Output from running verify_phase_3.py</deliverable>
+    </deliverables>
+
+    <roadmap_integration>
+        <phase_3_deliverables>
+            <deliverable>Verified api/celery_config.py matches standards</deliverable>
+            <deliverable>Verified api/tasks/document_processing_tasks.py</deliverable>
+            <deliverable>test_celery_tasks.py created and passes</deliverable>
+            <deliverable>post_verification.py (Comprehensive system check) - Implemented as verify_phase_3.py</deliverable>
+            <deliverable>Celery worker starts without errors</deliverable>
+            <deliverable>Neo4j contains Document, Entity, and Relationship nodes</deliverable>
+            <deliverable>verify_phase_3.py script passes</deliverable>
+        </phase_3_deliverables>
+        <success_criteria>
+            <criterion>All configuration is centralized (no hardcoded strings)</criterion>
+            <criterion>post_verification.py runs successfully</criterion>
+            <criterion>Celery worker processes a sample document without errors</criterion>
+            <criterion>All validation criteria pass</criterion>
+        </success_criteria>
+    </roadmap_integration>
+
+    <next_steps>
+        <step>After Phase 3 completion:</step>
+        <substep>Production Readiness Assessment - Evaluate system for production deployment</substep>
+        <substep>Performance Optimization - Tune parameters based on real-world usage</substep>
+        <substep>Monitoring &amp; Alerting - Set up production monitoring</substep>
+        <substep>Horizontal Scaling - Configure multi-worker deployment</substep>
+        <step>Or proceed to additional feature development phases</step>
+    </next_steps>
+
+    <notes>
+        <note>Phase 3 verification is automated - no manual checks required beyond running the script</note>
+        <note>All checks must pass for Phase 3 to be considered complete</note>
+        <note>Use --verbose flag for detailed debugging information</note>
+        <note>Summary document should be filled out after successful verification</note>
+    </notes>
+
+    <status>
+        <execution_status>Ready for execution</execution_status>
+        <checkpoint>Final human review after all checks pass</checkpoint>
+        <approval_required>Yes (for production deployment)</approval_required>
+    </status>
+</plan>

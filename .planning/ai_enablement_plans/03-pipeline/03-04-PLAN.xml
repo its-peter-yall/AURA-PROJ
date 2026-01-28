@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+    <plan_id>03-04</plan_id>
+    <phase>3 - Celery Pipeline Verification</phase>
+    <status>PLANNED</status>
+    <created_date>2026-01-28</created_date>
+    <depends_on>03-03 (E2E Test Script Created)</depends_on>
+
+    <objective>
+        <description>Create a standalone Neo4j verification script that validates the knowledge graph structure, data quality, and relationships after document processing. This script provides detailed insights into what was stored and helps diagnose issues.</description>
+    </objective>
+
+    <context>
+        <description>After documents are processed by the Celery pipeline, they should create:</description>
+        <node_types>
+            <node>Document nodes - Represent processed documents</node>
+            <node>Entity nodes - Extracted entities (Concept, Person, Organization, etc.)</node>
+            <node>Chunk nodes - Text chunks with embeddings</node>
+            <node>Relationships - Connections between entities and documents</node>
+        </node_types>
+        <note>This script will verify the structure and provide statistics.</note>
+    </context>
+
+    <prerequisites>
+        <prerequisite>Phase 3.3 completed (E2E test created)</prerequisite>
+        <prerequisite>Neo4j running at bolt://127.0.0.1:7687</prerequisite>
+        <prerequisite>At least one document processed (from E2E test or manual processing)</prerequisite>
+    </prerequisites>
+
+    <tasks>
+        <task>
+            <task_id>4.1</task_id>
+            <title>Create Neo4j Verification Script</title>
+            <file_path>AURA-NOTES-MANAGER/api/verify_neo4j_data.py</file_path>
+            <description>Create comprehensive verification script with statistics, data quality checks, and diagnostics.</description>
+            <usage_modes>
+                <mode>Full verification: python api/verify_neo4j_data.py</mode>
+                <mode>Specific document: python api/verify_neo4j_data.py --document-id &lt;id&gt;</mode>
+                <mode>Quick stats only: python api/verify_neo4j_data.py --stats-only</mode>
+            </usage_modes>
+            <class_structure>
+<verification_class>
+class Neo4jVerifier:
+    """Verifies Neo4j knowledge graph data."""
+    
+    def __init__(self):
+        """Initialize Neo4j connection."""
+        self.driver = GraphDatabase.driver(
+            NEO4J_URI,
+            auth=(NEO4J_USER, NEO4J_PASSWORD)
+        )
+    
+    def close(self):
+        """Close Neo4j connection."""
+        self.driver.close()
+    
+    def get_statistics(self) -> Dict[str, int]:
+        """Get overall knowledge graph statistics."""
+        # Returns: documents, entities, chunks, relationships, entity_types
+    
+    def get_recent_documents(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get most recently processed documents."""
+    
+    def verify_document(self, document_id: str) -> Dict[str, Any]:
+        """Verify a specific document's data."""
+        # Returns: document, entities, relationships, chunks
+    
+    def check_data_quality(self) -> Dict[str, Any]:
+        """Perform data quality checks."""
+        # Checks: documents without entities, entities without descriptions, etc.
+    
+    def print_statistics(self, stats: Dict[str, Any]):
+        """Print formatted statistics."""
+    
+    def print_recent_documents(self, documents: List[Dict[str, Any]]):
+        """Print recent documents table."""
+    
+    def print_document_details(self, data: Dict[str, Any]):
+        """Print detailed document verification results."""
+    
+    def print_data_quality(self, quality: Dict[str, Any]):
+        """Print data quality check results."""
+</verification_class>
+            </class_structure>
+        </task>
+
+        <task>
+            <task_id>4.2</task_id>
+            <title>Create Quick Verification Commands</title>
+            <file_path>api/verify_neo4j_quick.sh</file_path>
+            <description>Create shell script for quick Neo4j verification commands.</description>
+            <template>
+<quick_script>
+#!/bin/bash
+# Quick Neo4j verification commands
+
+echo "=========================================="
+echo "Quick Neo4j Verification"
+echo "=========================================="
+
+cd "$(dirname "$0")"
+
+echo ""
+echo "1. Testing Neo4j connection..."
+python -c "
+from neo4j import GraphDatabase
+from config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+try:
+    driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+    driver.verify_connectivity()
+    print('✅ Neo4j connection OK')
+    driver.close()
+except Exception as e:
+    print(f'❌ Neo4j connection failed: {e}')
+"
+
+echo ""
+echo "2. Quick statistics..."
+python verify_neo4j_data.py --stats-only
+
+echo ""
+echo "3. Recent documents..."
+python verify_neo4j_data.py --limit 5
+
+echo ""
+echo "=========================================="
+echo "Verification complete"
+echo "=========================================="
+</quick_script>
+            </template>
+        </task>
+
+        <task>
+            <task_id>4.3</task_id>
+            <title>Create Cypher Query Reference</title>
+            <file_path>api/NEO4J_QUERIES.md</file_path>
+            <description>Document useful Cypher queries for Neo4j exploration and debugging.</description>
+            <query_categories>
+                <category name="Basic Queries">
+                    <query>Count All Nodes</query>
+                    <query>Recent Documents</query>
+                    <query>All Entity Types</query>
+                    <query>Sample Entities</query>
+                </category>
+                <category name="Document-Specific Queries">
+                    <query>Find Document by ID</query>
+                    <query>Document's Entities</query>
+                    <query>Document's Relationships</query>
+                    <query>Document's Chunks</query>
+                </category>
+                <category name="Analysis Queries">
+                    <query>Most Connected Entities</query>
+                    <query>Entity Relationship Graph</query>
+                    <query>Documents Without Entities</query>
+                    <query>Orphaned Entities</query>
+                </category>
+                <category name="Data Quality Queries">
+                    <query>Entities Without Descriptions</query>
+                    <query>Chunks Without Embeddings</query>
+                    <query>Duplicate Entities</query>
+                </category>
+                <category name="Cleanup Queries">
+                    <query>Delete Specific Document and Related Nodes</query>
+                    <query>Delete All Test Documents</query>
+                    <query>Clear Entire Database (DANGEROUS!)</query>
+                </category>
+            </query_categories>
+        </task>
+    </tasks>
+
+    <verification_commands>
+        <command>
+            <description>Run full verification</description>
+            <code>cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python api/verify_neo4j_data.py</code>
+        </command>
+        <command>
+            <description>Quick stats only</description>
+            <code>../../.venv/Scripts/python api/verify_neo4j_data.py --stats-only</code>
+        </command>
+        <command>
+            <description>Verify specific document</description>
+            <code>../../.venv/Scripts/python api/verify_neo4j_data.py --document-id test_doc_1234567890</code>
+        </command>
+        <command>
+            <description>Quick verification script</description>
+            <code>bash api/verify_neo4j_quick.sh</code>
+        </command>
+    </verification_commands>
+
+    <success_criteria>
+        <criterion>verify_neo4j_data.py created with all verification methods</criterion>
+        <criterion>Script connects to Neo4j successfully</criterion>
+        <criterion>Statistics reporting works (documents, entities, chunks, relationships)</criterion>
+        <criterion>Recent documents listing works</criterion>
+        <criterion>Document-specific verification works</criterion>
+        <criterion>Data quality checks implemented</criterion>
+        <criterion>Quick verification script created (verify_neo4j_quick.sh)</criterion>
+        <criterion>Cypher query reference created (NEO4J_QUERIES.md)</criterion>
+        <criterion>All verification commands pass</criterion>
+    </success_criteria>
+
+    <expected_output>
+<output_example>
+✅ Connected to Neo4j: bolt://127.0.0.1:7687
+
+============================================================
+KNOWLEDGE GRAPH STATISTICS
+============================================================
+Documents:     5
+Entities:      47
+Chunks:        23
+Relationships: 31
+
+Entity Types:
+  Concept: 25
+  Person: 10
+  Organization: 8
+  Location: 4
+
+============================================================
+RECENT DOCUMENTS
+============================================================
+
+Document ID: test_doc_1706396400
+  Filename: sample.pdf
+  Status: processed
+  Entities: 12
+  Chunks: 5
+  Created: 2026-01-28 10:30:00
+
+============================================================
+DATA QUALITY CHECKS
+============================================================
+✅ No data quality issues found
+
+============================================================
+✅ VERIFICATION COMPLETE
+============================================================
+</output_example>
+    </expected_output>
+
+    <deliverables>
+        <deliverable>New api/verify_neo4j_data.py - Comprehensive verification script</deliverable>
+        <deliverable>New api/verify_neo4j_quick.sh - Quick verification commands</deliverable>
+        <deliverable>New api/NEO4J_QUERIES.md - Cypher query reference</deliverable>
+        <deliverable>Verification report - Output from running verification script</deliverable>
+    </deliverables>
+
+    <next_steps>
+        <step>After completion, proceed to: 03-05-PLAN.md - Verify Phase 3 Completion</step>
+    </next_steps>
+
+    <notes>
+        <note>Verification script should work even if no documents processed yet</note>
+        <note>Use --document-id flag to inspect specific documents from E2E test</note>
+        <note>Cypher queries can be run directly in Neo4j Browser for exploration</note>
+    </notes>
+
+    <status>
+        <execution_status>Ready for execution</execution_status>
+        <checkpoint>Human review after Task 4.1 (verification script)</checkpoint>
+    </status>
+</plan>

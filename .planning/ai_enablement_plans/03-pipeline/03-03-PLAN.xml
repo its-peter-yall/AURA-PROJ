@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+    <plan_id>03-03</plan_id>
+    <phase>3 - Celery Pipeline Verification</phase>
+    <status>PLANNED</status>
+    <created_date>2026-01-28</created_date>
+    <depends_on>03-02 (Document Processing Task Audited)</depends_on>
+
+    <objective>
+        <description>Enhance the existing test_celery_tasks.py to provide comprehensive end-to-end verification of the Celery document processing pipeline, including:</description>
+        <objectives_list>
+            <objective>Worker startup verification</objective>
+            <objective>Task submission and progress tracking</objective>
+            <objective>Result validation</objective>
+            <objective>Error handling scenarios</objective>
+            <objective>Neo4j data persistence checks</objective>
+        </objectives_list>
+    </objective>
+
+    <context>
+        <description>The existing api/test_celery_tasks.py file has basic import tests and mock-based verification.</description>
+        <enhancements>
+            <enhancement>Test actual Redis/Celery integration (not just mocks)</enhancement>
+            <enhancement>Verify full pipeline: text extraction → chunking → embedding → entity extraction → Neo4j storage</enhancement>
+            <enhancement>Provide clear success/failure reporting</enhancement>
+            <enhancement>Support both test mode (mock LLM) and production mode (real Vertex AI)</enhancement>
+        </enhancements>
+    </context>
+
+    <prerequisites>
+        <prerequisite>Phase 3.2 completed (task audited and documented)</prerequisite>
+        <prerequisite>Redis server running (redis-cli ping returns PONG)</prerequisite>
+        <prerequisite>Neo4j running (bolt://127.0.0.1:7687 accessible)</prerequisite>
+        <prerequisite>Celery worker started (or will be started by test script)</prerequisite>
+    </prerequisites>
+
+    <tasks>
+        <task>
+            <task_id>3.1</task_id>
+            <title>Read Existing Test File</title>
+            <verification_command>
+                <command>cd AURA-NOTES-MANAGER
+
+# Review current test structure
+head -100 api/test_celery_tasks.py
+
+# Check what tests already exist
+grep "^def test_" api/test_celery_tasks.py</command>
+            </verification_command>
+        </task>
+
+        <task>
+            <task_id>3.2</task_id>
+            <title>Create Enhanced Test Script</title>
+            <file_path>AURA-NOTES-MANAGER/api/test_celery_tasks_e2e.py</file_path>
+            <structure>
+<test_structure>
+import os
+import sys
+import time
+import pytest
+from pathlib import Path
+
+# Test configuration
+REDIS_REQUIRED = True
+NEO4J_REQUIRED = True
+TEST_MODE = os.getenv("AURA_TEST_MODE", "false").lower() == "true"
+
+# Test phases
+def test_phase_1_redis_connection():
+    """Verify Redis is running and accessible."""
+    pass
+
+def test_phase_2_worker_startup():
+    """Verify Celery worker can start (manual check)."""
+    pass
+
+def test_phase_3_task_submission():
+    """Submit a test document processing task."""
+    pass
+
+def test_phase_4_progress_tracking():
+    """Monitor task progress through all stages."""
+    pass
+
+def test_phase_5_result_validation():
+    """Verify task result contains expected data."""
+    pass
+
+def test_phase_6_neo4j_persistence():
+    """Verify Neo4j contains document, entities, and relationships."""
+    pass
+
+def test_phase_7_error_handling():
+    """Test error scenarios and retry logic."""
+    pass
+</test_structure>
+            </structure>
+        </task>
+
+        <task>
+            <task_id>3.3</task_id>
+            <title>Implement Test Phases</title>
+            <phase name="Phase 1: Redis Connection Test">
+<test_phase>
+def test_phase_1_redis_connection():
+    """Verify Redis is running and accessible."""
+    import redis
+    from api.config import REDIS_HOST, REDIS_PORT, REDIS_DB
+    
+    print(f"\n{'='*60}")
+    print("PHASE 1: Redis Connection")
+    print(f"{'='*60}")
+    
+    try:
+        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+        result = r.ping()
+        assert result is True, "Redis ping failed"
+        
+        print(f"✅ Redis connection successful")
+        print(f"   Host: {REDIS_HOST}")
+        print(f"   Port: {REDIS_PORT}")
+        print(f"   DB: {REDIS_DB}")
+        return True
+        
+    except redis.ConnectionError as e:
+        print(f"❌ Redis connection failed: {e}")
+        if REDIS_REQUIRED:
+            pytest.fail("Redis is required for E2E tests")
+        return False
+</test_phase>
+            </phase>
+            <phase name="Phase 2: Worker Startup Check">
+<test_phase>
+def test_phase_2_worker_startup():
+    """Verify Celery worker can start (manual check)."""
+    from api.tasks.document_processing_tasks import app
+    
+    print(f"\n{'='*60}")
+    print("PHASE 2: Worker Startup Check")
+    print(f"{'='*60}")
+    
+    print("Worker startup command:")
+    print("  cd AURA-NOTES-MANAGER")
+    print("  ../../.venv/Scripts/celery -A api.tasks worker -l info -Q kg_processing -P solo")
+    
+    # Check if worker is running
+    try:
+        inspector = app.control.inspect()
+        workers = inspector.active()
+        
+        if workers:
+            print(f"✅ Found {len(workers)} active worker(s):")
+            for worker_name, tasks in workers.items():
+                print(f"   - {worker_name}: {len(tasks)} active tasks")
+            return True
+        else:
+            print("⚠️ No active workers found")
+            return False
+            
+    except Exception as e:
+        print(f"⚠️ Could not inspect workers: {e}")
+        return False
+</test_phase>
+            </phase>
+            <phase name="Phase 3: Task Submission">
+<test_phase>
+def test_phase_3_task_submission():
+    """Submit a test document processing task."""
+    from api.tasks.document_processing_tasks import process_document_task
+    
+    print(f"\n{'='*60}")
+    print("PHASE 3: Task Submission")
+    print(f"{'='*60}")
+    
+    # Create test payload
+    test_document_id = f"test_doc_{int(time.time())}"
+    test_module_id = "test_module"
+    test_user_id = "test_user"
+    
+    print(f"Submitting task...")
+    print(f"  Document ID: {test_document_id}")
+    
+    # Submit task (async)
+    result = process_document_task.delay(
+        document_id=test_document_id,
+        module_id=test_module_id,
+        user_id=test_user_id
+    )
+    
+    print(f"✅ Task submitted")
+    print(f"   Task ID: {result.id}")
+    print(f"   State: {result.state}")
+    
+    return result
+</test_phase>
+            </phase>
+            <phase name="Phase 4: Progress Tracking">
+<test_phase>
+def test_phase_4_progress_tracking(task_result):
+    """Monitor task progress through all stages."""
+    print(f"\n{'='*60}")
+    print("PHASE 4: Progress Tracking")
+    print(f"{'='*60}")
+    
+    stages_seen = set()
+    timeout = 120  # 2 minutes
+    start_time = time.time()
+    
+    print("Monitoring task progress...")
+    
+    while time.time() - start_time < timeout:
+        state = task_result.state
+        info = task_result.info
+        
+        if state not in stages_seen:
+            stages_seen.add(state)
+            print(f"  [{state}]", end="")
+            if isinstance(info, dict):
+                progress = info.get('progress', 0)
+                stage = info.get('stage', '')
+                print(f" {progress}% - {stage}")
+            else:
+                print()
+        
+        if state in ['SUCCESS', 'FAILURE']:
+            break
+        
+        time.sleep(1)
+    
+    print(f"\n✅ Task completed with state: {task_result.state}")
+    print(f"   Stages seen: {', '.join(sorted(stages_seen))}")
+    
+    return task_result.state == 'SUCCESS'
+</test_phase>
+            </phase>
+            <phase name="Phase 5: Result Validation">
+<test_phase>
+def test_phase_5_result_validation(task_result):
+    """Verify task result contains expected data."""
+    print(f"\n{'='*60}")
+    print("PHASE 5: Result Validation")
+    print(f"{'='*60}")
+    
+    result = task_result.get(timeout=10)
+    
+    print("Task result:")
+    print(f"  Status: {result.get('status')}")
+    print(f"  Document ID: {result.get('document_id')}")
+    print(f"  Entities: {result.get('entities_count', 0)}")
+    print(f"  Chunks: {result.get('chunks_count', 0)}")
+    
+    # Validate result structure
+    assert result.get('status') == 'SUCCESS', f"Expected SUCCESS, got {result.get('status')}"
+    assert result.get('document_id'), "Missing document_id in result"
+    
+    print("✅ Result validation passed")
+    return result
+</test_phase>
+            </phase>
+            <phase name="Phase 6: Neo4j Persistence Check">
+<test_phase>
+def test_phase_6_neo4j_persistence(result):
+    """Verify Neo4j contains document, entities, and relationships."""
+    from neo4j import GraphDatabase
+    from api.config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+    
+    print(f"\n{'='*60}")
+    print("PHASE 6: Neo4j Data Persistence")
+    print(f"{'='*60}")
+    
+    document_id = result.get('document_id')
+    
+    try:
+        driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+        
+        with driver.session() as session:
+            # Check for document node
+            doc_result = session.run(
+                "MATCH (d:Document {document_id: $doc_id}) RETURN d",
+                doc_id=document_id
+            )
+            doc = doc_result.single()
+            
+            if doc:
+                print(f"✅ Document node found in Neo4j")
+            
+            # Check for entity nodes
+            entity_result = session.run(
+                "MATCH (d:Document {document_id: $doc_id})-[:HAS_ENTITY]->(e:Entity) RETURN count(e) as count",
+                doc_id=document_id
+            )
+            entity_count = entity_result.single()['count']
+            print(f"   Entities: {entity_count}")
+        
+        driver.close()
+        return True
+        
+    except Exception as e:
+        print(f"⚠️ Neo4j check failed: {e}")
+        return False
+</test_phase>
+            </phase>
+        </task>
+
+        <task>
+            <task_id>3.4</task_id>
+            <title>Add Test Runner</title>
+            <template>
+<test_runner>
+def run_e2e_test():
+    """Run full end-to-end test."""
+    print("\n" + "="*60)
+    print("CELERY PIPELINE END-TO-END TEST")
+    print("="*60)
+    
+    # Phase 1: Redis
+    redis_ok = test_phase_1_redis_connection()
+    if not redis_ok:
+        return False
+    
+    # Phase 2: Worker
+    worker_ok = test_phase_2_worker_startup()
+    if not worker_ok:
+        print("\n⚠️ Warning: No active workers found")
+        return False
+    
+    # Phase 3: Submit task
+    task_result = test_phase_3_task_submission()
+    
+    # Phase 4: Track progress
+    success = test_phase_4_progress_tracking(task_result)
+    if not success:
+        return False
+    
+    # Phase 5: Validate result
+    result = test_phase_5_result_validation(task_result)
+    
+    # Phase 6: Check Neo4j
+    test_phase_6_neo4j_persistence(result)
+    
+    print("\n" + "="*60)
+    print("✅ END-TO-END TEST PASSED")
+    print("="*60)
+    return True
+
+
+if __name__ == "__main__":
+    success = run_e2e_test()
+    sys.exit(0 if success else 1)
+</test_runner>
+            </template>
+        </task>
+
+        <task>
+            <task_id>3.5</task_id>
+            <title>Create Test Documentation</title>
+            <file_path>api/tests/E2E_TEST_GUIDE.md</file_path>
+            <template>
+<test_guide>
+# End-to-End Celery Pipeline Test Guide
+
+## Prerequisites
+
+1. **Redis Server Running**
+   ```bash
+   redis-cli ping  # Should return PONG
+   ```
+
+2. **Neo4j Running**
+   ```bash
+   # Check Neo4j at http://localhost:7474
+   ```
+
+3. **Environment Variables Set**
+   ```env
+   VERTEX_PROJECT=lucky-processor-480412-n8
+   VERTEX_LOCATION=us-central1
+   ```
+
+## Running Tests
+
+### Option 1: Full E2E Test (Requires Worker)
+
+```bash
+# Terminal 1: Start Celery worker
+cd AURA-NOTES-MANAGER
+../../.venv/Scripts/celery -A api.tasks worker -l info -Q kg_processing -P solo
+
+# Terminal 2: Run E2E test
+cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python api/test_celery_tasks_e2e.py
+```
+
+### Option 2: Test Mode (Mock LLM Calls)
+
+```bash
+export AURA_TEST_MODE=true
+../../.venv/Scripts/python api/test_celery_tasks_e2e.py
+```
+</test_guide>
+            </template>
+        </task>
+    </tasks>
+
+    <verification_commands>
+        <command>
+            <description>Verify test file exists and imports work</description>
+            <code>../../.venv/Scripts/python -c "import api.test_celery_tasks_e2e; print('✅ E2E test imports OK')"</code>
+        </command>
+        <command>
+            <description>Check Redis</description>
+            <code>redis-cli ping</code>
+        </command>
+        <command>
+            <description>Check Neo4j</description>
+            <code>../../.venv/Scripts/python -c "from neo4j import GraphDatabase; driver = GraphDatabase.driver('bolt://127.0.0.1:7687', auth=('neo4j', 'password')); driver.verify_connectivity(); print('✅ Neo4j OK')"</code>
+        </command>
+        <command>
+            <description>Run E2E test (requires worker)</description>
+            <code>../../.venv/Scripts/python api/test_celery_tasks_e2e.py</code>
+        </command>
+    </verification_commands>
+
+    <success_criteria>
+        <criterion>test_celery_tasks_e2e.py created</criterion>
+        <criterion>All 6 test phases implemented</criterion>
+        <criterion>Redis connection test passes</criterion>
+        <criterion>Worker startup check implemented</criterion>
+        <criterion>Task submission works</criterion>
+        <criterion>Progress tracking monitors all stages</criterion>
+        <criterion>Result validation checks structure</criterion>
+        <criterion>Neo4j persistence verified</criterion>
+        <criterion>Test documentation created (E2E_TEST_GUIDE.md)</criterion>
+        <criterion>Full E2E test passes (with worker running)</criterion>
+    </success_criteria>
+
+    <deliverables>
+        <deliverable>New api/test_celery_tasks_e2e.py - Enhanced E2E test script</deliverable>
+        <deliverable>New api/tests/E2E_TEST_GUIDE.md - Test execution guide</deliverable>
+        <deliverable>Test execution report - Command outputs and screenshots</deliverable>
+        <deliverable>Updated api/test_celery_tasks.py - Unit tests (if improvements needed)</deliverable>
+    </deliverables>
+
+    <next_steps>
+        <step>After completion, proceed to: 03-04-PLAN.md - Create Neo4j Data Verification Script</step>
+    </next_steps>
+
+    <notes>
+        <note>E2E test requires manual worker startup (not automated)</note>
+        <note>Test mode (AURA_TEST_MODE=true) skips real LLM calls for faster testing</note>
+        <note>Use REDIS_REQUIRED=False and NEO4J_REQUIRED=False flags to skip those checks</note>
+    </notes>
+
+    <status>
+        <execution_status>Ready for execution</execution_status>
+        <checkpoint>Human review after Task 3.4 (test runner)</checkpoint>
+    </status>
+</plan>

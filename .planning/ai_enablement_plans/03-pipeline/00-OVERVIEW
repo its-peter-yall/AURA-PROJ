@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phase_overview>
+    <phase_number>3</phase_number>
+    <phase_name>Celery Pipeline Verification</phase_name>
+    <status>PLANS_CREATED</status>
+    <created_date>2026-01-28</created_date>
+    <ready_for_execution>true</ready_for_execution>
+
+    <overview>
+        <description>Phase 3 focuses on verifying and testing the Celery-based asynchronous document processing pipeline. All plans have been created and are ready for sequential execution.</description>
+    </overview>
+
+    <plans_list>
+        <plan>
+            <id>03-01</id>
+            <title>Verify and Document Celery Configuration</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/03-01-PLAN.xml</file_path>
+            <objectives>
+                <objective>Audit existing Celery configuration in document_processing_tasks.py</objective>
+                <objective>Verify Redis configuration integration</objective>
+                <objective>Document configuration best practices</objective>
+                <objective>Add time limits (recommended)</objective>
+            </objectives>
+            <deliverables>
+                <deliverable>Updated api/tasks/document_processing_tasks.py (if improvements needed)</deliverable>
+                <deliverable>Verified api/config.py (Redis settings)</deliverable>
+                <deliverable>New api/tasks/CELERY_CONFIG.md (documentation)</deliverable>
+            </deliverables>
+        </plan>
+        <plan>
+            <id>03-02</id>
+            <title>Audit and Update Document Processing Task</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/03-02-PLAN.xml</file_path>
+            <objectives>
+                <objective>Verify integration with Phase 2 services (chunker, extractor)</objective>
+                <objective>Audit error handling and retry logic</objective>
+                <objective>Verify progress tracking through all stages</objective>
+                <objective>Test processor integration</objective>
+            </objectives>
+            <deliverables>
+                <deliverable>Audit report (integration verification)</deliverable>
+                <deliverable>Updated api/tasks/document_processing_tasks.py (if needed)</deliverable>
+                <deliverable>New api/test_kg_processor.py (processor test)</deliverable>
+            </deliverables>
+        </plan>
+        <plan>
+            <id>03-03</id>
+            <title>Enhance End-to-End Test Script</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/03-03-PLAN.xml</file_path>
+            <objectives>
+                <objective>Create comprehensive E2E test with 6 test phases</objective>
+                <objective>Test full pipeline: Redis → Worker → Task → Neo4j</objective>
+                <objective>Verify progress tracking and result validation</objective>
+                <objective>Document testing procedures</objective>
+            </objectives>
+            <deliverables>
+                <deliverable>New api/test_celery_tasks_e2e.py (E2E test script)</deliverable>
+                <deliverable>New api/tests/E2E_TEST_GUIDE.md (testing guide)</deliverable>
+                <deliverable>Test execution report</deliverable>
+            </deliverables>
+        </plan>
+        <plan>
+            <id>03-04</id>
+            <title>Create Neo4j Data Verification Script</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/03-04-PLAN.xml</file_path>
+            <objectives>
+                <objective>Create standalone Neo4j verification script</objective>
+                <objective>Provide statistics, data quality checks, diagnostics</objective>
+                <objective>Document useful Cypher queries</objective>
+                <objective>Enable document-specific verification</objective>
+            </objectives>
+            <deliverables>
+                <deliverable>New api/verify_neo4j_data.py (verification script)</deliverable>
+                <deliverable>New api/verify_neo4j_quick.sh (quick commands)</deliverable>
+                <deliverable>New api/NEO4J_QUERIES.md (Cypher reference)</deliverable>
+            </deliverables>
+        </plan>
+        <plan>
+            <id>03-05</id>
+            <title>Verify Phase 3 Completion</title>
+            <file_path>.planning/ai_enablement_plans/03-pipeline/03-05-PLAN.xml</file_path>
+            <objectives>
+                <objective>Comprehensive Phase 3 verification (10 checks)</objective>
+                <objective>Confirm all deliverables present</objective>
+                <objective>Verify integration with Phase 1 and Phase 2</objective>
+                <objective>Document completion status</objective>
+            </objectives>
+            <deliverables>
+                <deliverable>New api/verify_phase_3.py (comprehensive verification)</deliverable>
+                <deliverable>New api/PHASE_3_SUMMARY.md (completion summary)</deliverable>
+                <deliverable>New .planning/ai_enablement_plans/03-pipeline/PHASE_3_CHECKLIST.md</deliverable>
+            </deliverables>
+        </plan>
+    </plans_list>
+
+    <execution_order>
+        <step number="1">Execute: .planning/ai_enablement_plans/03-pipeline/03-01-PLAN.xml</step>
+        <step number="2">Execute: .planning/ai_enablement_plans/03-pipeline/03-02-PLAN.xml</step>
+        <step number="3">Execute: .planning/ai_enablement_plans/03-pipeline/03-03-PLAN.xml</step>
+        <step number="4">Execute: .planning/ai_enablement_plans/03-pipeline/03-04-PLAN.xml</step>
+        <step number="5">Execute: .planning/ai_enablement_plans/03-pipeline/03-05-PLAN.xml</step>
+    </execution_order>
+
+    <prerequisites>
+        <prerequisite status="COMPLETE">Phase 1 complete (Configuration centralized)</prerequisite>
+        <prerequisite status="COMPLETE">Phase 2 complete (Services ported and integrated)</prerequisite>
+        <prerequisite status="REQUIRED">Redis server running (redis-cli ping → PONG)</prerequisite>
+        <prerequisite status="REQUIRED">Neo4j running (bolt://127.0.0.1:7687 accessible)</prerequisite>
+        <prerequisite status="REQUIRED">Environment variables configured in .env</prerequisite>
+    </prerequisites>
+
+    <key_files_created>
+        <category name="Configuration &amp; Documentation">
+            <file>api/tasks/CELERY_CONFIG.md</file>
+            <file>api/tests/E2E_TEST_GUIDE.md</file>
+            <file>api/NEO4J_QUERIES.md</file>
+            <file>api/PHASE_3_SUMMARY.md</file>
+        </category>
+        <category name="Test Scripts">
+            <file>api/test_celery_tasks_e2e.py</file>
+            <file>api/test_kg_processor.py</file>
+        </category>
+        <category name="Verification Tools">
+            <file>api/verify_neo4j_data.py</file>
+            <file>api/verify_neo4j_quick.sh</file>
+            <file>api/verify_phase_3.py</file>
+        </category>
+        <category name="Planning Documents">
+            <file>.planning/ai_enablement_plans/03-pipeline/PHASE_3_CHECKLIST.md</file>
+        </category>
+    </key_files_created>
+
+    <success_criteria>
+        <criterion>Celery worker starts without errors</criterion>
+        <criterion>test_celery_tasks.py completes with SUCCESS</criterion>
+        <criterion>Neo4j contains Document, Entity, and Relationship nodes</criterion>
+        <criterion>Verified api/celery_config.py matches standards</criterion>
+        <criterion>Verified api/tasks/document_processing_tasks.py</criterion>
+        <criterion>test_celery_tasks.py created and passes</criterion>
+        <criterion>verify_phase_3.py passes</criterion>
+        <criterion>All Phase 3 deliverables created</criterion>
+    </success_criteria>
+
+    <verification_commands>
+        <command>
+            <description>Comprehensive Phase 3 verification</description>
+            <code>cd AURA-NOTES-MANAGER
+../../.venv/Scripts/python api/verify_phase_3.py</code>
+            <expected_result>All 10 checks pass, exit code 0</expected_result>
+        </command>
+        <command>
+            <description>Neo4j data verification</description>
+            <code>../../.venv/Scripts/python api/verify_neo4j_data.py</code>
+            <expected_result>Statistics displayed, data quality checks pass</expected_result>
+        </command>
+        <command>
+            <description>E2E test (requires worker running)</description>
+            <code># Terminal 1: Start worker
+../../.venv/Scripts/celery -A api.tasks worker -l info -Q kg_processing -P solo
+
+# Terminal 2: Run E2E test
+../../.venv/Scripts/python api/test_celery_tasks_e2e.py</code>
+            <expected_result>All 6 phases pass, task completes successfully</expected_result>
+        </command>
+    </verification_commands>
+
+    <next_steps>
+        <step>Execute Plans: Run plans 03-01 through 03-05 sequentially</step>
+        <step>Verify Completion: Ensure verify_phase_3.py passes all checks</step>
+        <step>Run E2E Test: Validate full pipeline with real document</step>
+        <step>Review Summary: Complete PHASE_3_SUMMARY.md</step>
+        <step>Sign-Off: Get team approval using PHASE_3_CHECKLIST.md</step>
+        <step>Proceed: Move to next phase or production deployment</step>
+    </next_steps>
+
+    <notes>
+        <note>Redis Required: Must be running before executing plans</note>
+        <note>Neo4j Required: Must be accessible at bolt://127.0.0.1:7687</note>
+        <note>Worker Manual: E2E test requires manual Celery worker startup</note>
+        <note>Test Mode: Can use AURA_TEST_MODE=true to skip real LLM calls</note>
+        <note>Time Estimate: ~2-3 hours for complete Phase 3 execution</note>
+    </notes>
+
+    <related_documents>
+        <document type="master_roadmap">.planning/AI_ENABLEMENT_ROADMAP.md</document>
+        <document type="phase_2_summary">.planning/ai_enablement_plans/02-processor/02-05-SUMMARY.md</document>
+        <document type="conventions">AGENTS.md</document>
+    </related_documents>
+
+    <status_summary>
+        <plans_created>5/5</plans_created>
+        <ready_for_execution>true</ready_for_execution>
+        <status_text>READY FOR EXECUTION</status_text>
+    </status_summary>
+</phase_overview>

@@ -36,12 +36,12 @@ echo  Step 1: Creating Python Virtual Environment
 echo ==============================================================
 echo.
 
-if not exist "venv" (
+if not exist ".venv" (
     echo [INFO] Creating virtual environment...
-    python -m venv venv
+    python -m venv .venv
 )
 
-if not exist "venv\Scripts\activate.bat" (
+if not exist ".venv\\Scripts\activate.bat" (
     echo [ERROR] Failed to create virtual environment.
     pause
     exit /b 1
@@ -55,7 +55,7 @@ echo  Step 2: Installing Python Dependencies
 echo ==============================================================
 echo.
 
-call venv\Scripts\activate.bat
+call .venv\\Scripts\activate.bat
 
 echo [INFO] Upgrading pip...
 python -m pip install --upgrade pip --quiet
