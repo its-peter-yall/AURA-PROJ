@@ -15,9 +15,9 @@ This roadmap consolidates RAG/query functionality by removing duplicate services
 
 ## Phases
 
-- [ ] **Phase 1: Dependency Mapping** - Map all dependencies, verify removal safety
-- [ ] **Phase 2: Graph API Consolidation** - Create simplified graph preview API in NOTES-MANAGER
-- [ ] **Phase 3: Frontend Migration** - Move EntityGraph to AURA-CHAT
+- [x] **Phase 1: Dependency Mapping** - Map all dependencies, verify removal safety
+- [x] **Phase 2: Graph API Consolidation** - Create simplified graph preview API in NOTES-MANAGER
+- [ ] **Phase 3: Frontend Verification + Module Filtering** - Verify AURA-CHAT graph, add module filtering
 - [ ] **Phase 4: RAG Removal** - Remove dead RAG code from NOTES-MANAGER
 - [ ] **Phase 5: Verification** - Integration testing, cleanup
 
@@ -78,17 +78,19 @@ Plans:
 
 ---
 
-### Phase 3: Frontend Verification (REVISED)
-**Goal**: Verify AURA-CHAT's existing graph visualization meets requirements
+### Phase 3: Frontend Verification (REVISED + EXTENDED)
+**Goal**: Verify AURA-CHAT's existing graph visualization and add module filtering
 **Depends on**: Phase 2
 **Project**: AURA-CHAT
-**Plans**: 2 plans (reduced from 3)
+**Plans**: 4 plans (extended from 2 after decision)
 
 **Discovery:** AURA-CHAT already has a complete 3D graph visualization (`features/graph/GraphPage.tsx`, 712 lines) using Reagraph with multiple layouts, filters, and node details. EntityGraph migration is **NOT NEEDED**.
 
 Plans:
-- [ ] RC-03-01: Verify AURA-CHAT graph visualization works with current backend
-- [ ] RC-03-02: Add module filtering to AURA-CHAT graph if needed
+- [x] RC-03-01: Verify AURA-CHAT graph visualization works with current backend
+- [ ] RC-03-02: Assess module filtering necessity (decision plan)
+- [ ] RC-03-03: Backend module filtering implementation
+- [ ] RC-03-04: Frontend module filtering implementation
 
 **AURA-CHAT GraphPage Features (already implemented):**
 ```
@@ -100,7 +102,24 @@ Plans:
 - Full test coverage (GraphPage.test.tsx)
 ```
 
-**Decision:** Skip EntityGraph migration - AURA-CHAT's Reagraph solution is superior to the SVG-based EntityGraph in NOTES-MANAGER. EntityGraph will be deleted with the kg-query feature in Phase 4.
+**Decision 1:** Skip EntityGraph migration - AURA-CHAT's Reagraph solution is superior to the SVG-based EntityGraph in NOTES-MANAGER. EntityGraph will be deleted with the kg-query feature in Phase 4.
+
+**Decision 2 (MODULE-FILTERING-DECISION.md):** **Add module filtering** to AURA-CHAT graph visualization for architectural consistency. Graph will respect module selection, matching chat behavior. Implementation split into backend (RC-03-03) and frontend (RC-03-04) plans.
+
+**New Plans:**
+
+**RC-03-03: Backend module filtering**
+- Add `module_id` parameter to `/graph/data` endpoint (server/routers/graph.py)
+- Update Cypher query to filter by module: `MATCH (:Module {id: $module_id})-[:HAS_DOCUMENT]->(doc)-[*1..depth]->(entity)`
+- Add tests for module filtering logic
+- Estimated effort: 2-3 hours
+
+**RC-03-04: Frontend module filtering**
+- Update `GraphQueryParams` to include `module_id` (client/src/types/api.ts)
+- Read selected module from localStorage in GraphPage
+- Display module name in header, add "Clear Module Filter" option
+- Update tests for module-aware graph behavior
+- Estimated effort: 2-3 hours
 
 ---
 
@@ -170,7 +189,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
-| 3. Frontend Verification | 1/2 | In Progress | - |
+| 3. Frontend Verification | 1/4 | In Progress | - |
 | 4. RAG Removal | 0/3 | Not started | - |
 | 5. Verification | 0/2 | Not started | - |
 
