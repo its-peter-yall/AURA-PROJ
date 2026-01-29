@@ -55,6 +55,62 @@ None - All tasks completed successfully. Neo4j connection warnings during testin
 - Query router (api/routers/query.py) will be removed in Phase RC-04 as planned
 
 ---
+
+## ADDENDUM: Post-Implementation Review Fixes (2026-01-29)
+
+**Review conducted after initial implementation identified 4 security and efficiency issues in graph_preview.py:**
+
+### Security Fixes
+
+**Issue 1: Unsafe Cypher Label Interpolation (CRITICAL)**
+- **Problem:** `entity_types` parameter directly interpolated into Cypher query without validation
+- **Risk:** Cypher injection attack vector
+- **Fix:** Added `ALLOWED_ENTITY_TYPES` whitelist (`{"Topic", "Concept", "Methodology", "Finding"}`)
+- **Implementation:** Validate user input against whitelist, return 400 error for invalid types
+- **Location:** graph_preview.py:32, 71-79
+
+### Correctness Fixes
+
+**Issue 2: Wrong Source for Node Type**
+- **Problem:** Used `entity.element_id.split(":")[-1]` which returns internal Neo4j ID, not entity type
+- **Fix:** Changed Cypher query to return `labels(entity)[0]` directly in query results
+- **Impact:** Nodes now have correct type (Topic/Concept/Methodology/Finding) instead of element IDs
+- **Location:** graph_preview.py:105, 143
+
+**Issue 4: Dangling Edge References**
+- **Problem:** After limiting nodes, edges could reference trimmed nodes (invalid graph)
+- **Fix:** Track returned node IDs in set, filter edges to only include those with both endpoints in set
+- **Impact:** Graph visualization will never receive invalid edge references
+- **Location:** graph_preview.py:132, 158
+
+### Performance Fixes
+
+**Issue 3: Post-fetch Limit Enforcement**
+- **Problem:** Fetched ALL entities, then applied limit in Python (`entities[:limit]`)
+- **Risk:** Performance degradation with large graphs (1000+ nodes)
+- **Fix:** Apply `LIMIT $limit` in Cypher query before collecting entities
+- **Impact:** Database only returns requested nodes, reducing memory and network overhead
+- **Location:** graph_preview.py:96, 120
+
+### Plan Alignment Note
+
+**Direct Cypher vs GraphManager Methods:**
+- **Plan stated:** "Use graph_manager methods identified in Task 1"
+- **Implementation:** Used direct Cypher queries in endpoints
+- **Rationale:** 
+  - `GraphManager.get_subgraph()` doesn't support module_id filtering at query level
+  - Direct Cypher provides better control over module scoping and entity type filtering
+  - Stats endpoint aggregation requires custom queries not available in GraphManager
+- **Conclusion:** Implementation approach is justified but represents deviation from plan wording
+
+### Commits
+
+- **Fix commit:** Applied all 4 fixes in single commit (next)
+- **Verification:** Python syntax validated, all issues resolved
+
+---
+
 *Phase: rc-02-graph-api*
 *Plan: RC-02-01*
 *Completed: 2026-01-29*
+*Review fixes: 2026-01-29*
