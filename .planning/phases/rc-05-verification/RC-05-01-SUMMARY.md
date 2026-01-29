@@ -16,13 +16,13 @@
 #### Backend Tests (pytest)
 | Metric | Count | Notes |
 |--------|-------|-------|
-| **Total Tests** | 228 | |
-| **Passed** | 209 | 91.7% pass rate |
-| **Failed** | 19 | Pre-existing failures |
+| **Total Tests** | 229 | (209 passed + 19 failed + 1 skipped) |
+| **Passed** | 209 | 91.3% pass rate |
+| **Failed** | 19 | Pre-existing failures (verified at commit 4687b1b) |
 | **Skipped** | 1 | |
 | **Duration** | 148.05s | |
 
-**Failed Tests (19) - All Pre-existing:**
+**Failed Tests (19) - All Pre-existing (verified at baseline commit 4687b1b before RAG consolidation):**
 1. `test_benchmark_document_processing` - KnowledgeGraphProcessor missing `_generate_entity_id` attribute
 2. `test_benchmark_batch_processing` - Same KG processor issue
 3. `test_extraction_from_pdf` - PDF parsing/extraction issue
@@ -87,7 +87,7 @@
 | **Failed** | 37 | Pre-existing failures |
 | **Duration** | ~30s | |
 
-**Failed Tests (37) - All Pre-existing:**
+**Failed Tests (37) - All Pre-existing (verified at baseline commit 4687b1b before RAG consolidation):**
 - **Integration tests** (13 failures) - `integration.test.tsx` - Mock configuration issues
 - **useGraphQuery hook** (15 failures) - `useGraphQuery.test.tsx` - Mock function issues
 - **ErrorBoundary** (8 failures) - `ErrorBoundary.test.tsx` - UI component test issues
@@ -123,6 +123,35 @@ grep -r "rag_engine\|query_analyzer\|answer_synthesizer" AURA-NOTES-MANAGER/test
 
 ## Deleted Test Files
 **None** - No test files needed deletion (no RAG tests existed)
+
+---
+
+## Pre-existing Failure Verification
+
+To ensure all reported failures are truly pre-existing and not caused by RAG consolidation refactoring, baseline testing was performed at commit `4687b1b` (immediately before RAG consolidation work began).
+
+### Baseline Test Results (Commit 4687b1b)
+
+**AURA-NOTES-MANAGER Backend:**
+- Command: `cd AURA-NOTES-MANAGER && ../.venv/Scripts/python -m pytest tests/ -v --tb=short`
+- Result: **19 failed, 209 passed, 1 skipped** (130.78s)
+- Failures: Identical to current - same 19 tests fail
+
+**AURA-CHAT Frontend:**
+- Command: `cd AURA-CHAT/client && npm test -- --run`
+- Result: **37 failed, 180 passed** (7.50s)
+- Failures: Identical to current - same 37 tests fail
+
+### Verification Conclusion
+
+✅ **All 56 test failures are PRE-EXISTING**
+- Exact same failures exist before any RAG consolidation code changes
+- Zero new failures introduced by refactoring
+- Zero regressions from RAG removal (RC-04)
+- Zero regressions from module filtering (RC-03)
+- Zero regressions from graph preview API (RC-02)
+
+**Baseline commit tested:** `4687b1b` - "chore: update planning docs and add phase 3 verification files" (before RC-01 mapping phase began)
 
 ---
 
@@ -198,7 +227,29 @@ grep -r "rag_engine\|query_analyzer\|answer_synthesizer" AURA-NOTES-MANAGER/test
 
 ## Issues Encountered
 
-**None** - All tasks completed successfully. Pre-existing test failures documented but do not block verification.
+### Test Failures (56 total - all pre-existing)
+1. **AURA-NOTES-MANAGER Backend**: 19 failures (8.7% failure rate)
+   - KG processor missing method (2)
+   - PDF/TXT parsing issues (4)
+   - Batch delete behavior (2)
+   - Summarizer GenAI config (11)
+   
+2. **AURA-CHAT Frontend**: 37 failures (17.1% failure rate)
+   - Integration test wrapper (13)
+   - useGraphQuery mocks (15)
+   - ErrorBoundary (8)
+   - GraphPage layout (1)
+
+**Verification:** All 56 failures confirmed pre-existing by testing at baseline commit `4687b1b` (before RAG consolidation work began). Exact same failures exist at baseline.
+
+### E2E Tests Skipped
+- **AURA-CHAT E2E**: Skipped - requires running backend/frontend infrastructure
+- **AURA-NOTES-MANAGER E2E**: Skipped - requires running backend/frontend infrastructure
+- **Impact**: Full user-flow verification gap, but plan explicitly allows skip when infrastructure unavailable
+
+### Math Reconciliation
+- **Original discrepancy**: NOTES-MANAGER backend reported 228 total vs 209+19+1=229
+- **Resolution**: Corrected to 229 total tests (arithmetic error in initial summary)
 
 ---
 
