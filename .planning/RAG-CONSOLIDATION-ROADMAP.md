@@ -18,7 +18,7 @@ This roadmap consolidates RAG/query functionality by removing duplicate services
 - [x] **Phase 1: Dependency Mapping** - Map all dependencies, verify removal safety
 - [x] **Phase 2: Graph API Consolidation** - Create simplified graph preview API in NOTES-MANAGER
 - [x] **Phase 3: Frontend Verification + Module Filtering** - Verify AURA-CHAT graph, add module filtering
-- [ ] **Phase 4: RAG Removal** - Remove dead RAG code from NOTES-MANAGER
+- [x] **Phase 4: RAG Removal** - Remove dead RAG code from NOTES-MANAGER
 - [ ] **Phase 5: Verification** - Integration testing, cleanup
 
 ---
@@ -133,8 +133,8 @@ Safely removes all RAG-related code. EntityGraph migration was SKIPPED because A
 
 Plans:
 - [x] RC-04-01: Remove backend RAG services (rag_engine.py, query.py, answer_synthesizer.py, query_analyzer.py)
-- [ ] RC-04-02: Remove frontend kg-query feature (entire directory, 9 files, ~3,751 lines)
-- [ ] RC-04-03: Update main.py router registration, clean imports, final verification
+- [x] RC-04-02: Remove frontend kg-query feature (entire directory, 9 files, ~3,751 lines)
+- [x] RC-04-03: Update main.py router registration, clean imports, final verification
 
 **Execution Order:** RC-04-01 → RC-04-02 → RC-04-03 (sequential, dependencies between plans)
 
@@ -198,7 +198,7 @@ Plans:
 | 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
 | 3. Frontend Verification | 4/4 | Complete | 2026-01-29 |
-| 4. RAG Removal | 1/3 | In progress | - |
+| 4. RAG Removal | 3/3 | Complete | 2026-01-29 |
 | 5. Verification | 0/2 | Not started | - |
 
 ---
