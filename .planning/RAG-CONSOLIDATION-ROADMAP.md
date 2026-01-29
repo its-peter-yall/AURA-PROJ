@@ -170,15 +170,33 @@ api/schemas/graph_preview.py   # Response schemas (RC-02)
 
 ### Phase 5: Verification
 **Goal**: Ensure both applications work correctly after refactoring
-**Depends on**: Phase 4
+**Depends on**: Phase 4 (Complete)
 **Project**: Both
 **Plans**: 2 plans
 
 Final verification that the refactoring is complete and both apps function correctly.
 
 Plans:
-- [ ] RC-05-01: Run all existing tests, fix any failures
-- [ ] RC-05-02: Integration test: module creation → KG processing → graph visualization
+- [ ] RC-05-01: Run all existing tests, fix any failures (remove stale tests)
+- [ ] RC-05-02: Integration test: full end-to-end verification of both apps
+
+**Execution Order:** RC-05-01 → RC-05-02 (sequential)
+
+**RC-05-01 Tasks:**
+- Run NOTES-MANAGER backend/frontend tests
+- Remove stale tests referencing deleted RAG code
+- Run AURA-CHAT backend/frontend tests
+- Run E2E tests for both apps
+- Document test results
+
+**RC-05-02 Tasks:**
+- Start both applications
+- Verify NOTES-MANAGER: Module CRUD, Graph Preview API
+- Verify kg-query removal (404, no endpoints)
+- Verify AURA-CHAT: Graph visualization, RAG chat
+- Test module_id filtering in graph API
+- Cross-application verification
+- Complete final checklist
 
 **Verification checklist:**
 - [ ] NOTES-MANAGER: Module CRUD works
@@ -199,7 +217,7 @@ Plans:
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
 | 3. Frontend Verification | 4/4 | Complete | 2026-01-29 |
 | 4. RAG Removal | 3/3 | Complete | 2026-01-29 |
-| 5. Verification | 0/2 | Not started | - |
+| 5. Verification | 1/2 | In Progress | - |
 
 ---
 
@@ -248,10 +266,11 @@ client/src/types/api.ts  (GraphQueryParams.module_id)
 
 ## Next Action
 
-Start **Phase 4: RAG Removal** - Delete duplicate RAG services from AURA-NOTES-MANAGER.
+Start **Phase 5: Verification** - Final testing and integration verification.
 
 Execute plans in order:
 
-1. `.planning/phases/rc-04-rag-removal/RC-04-01-PLAN.md` (Backend: delete 4 files)
-2. `.planning/phases/rc-04-rag-removal/RC-04-02-PLAN.md` (Frontend: delete 9 files)
-3. `.planning/phases/rc-04-rag-removal/RC-04-03-PLAN.md` (main.py cleanup, verification)
+1. `.planning/phases/rc-05-verification/RC-05-01-PLAN.md` (Run all tests, remove stale tests)
+2. `.planning/phases/rc-05-verification/RC-05-02-PLAN.md` (E2E integration testing)
+
+After Phase 5 completion, the RAG Consolidation refactoring will be **COMPLETE**.
