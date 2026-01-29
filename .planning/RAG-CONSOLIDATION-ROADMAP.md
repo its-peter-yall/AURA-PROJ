@@ -78,29 +78,29 @@ Plans:
 
 ---
 
-### Phase 3: Frontend Migration
-**Goal**: Move EntityGraph visualization component to AURA-CHAT
+### Phase 3: Frontend Verification (REVISED)
+**Goal**: Verify AURA-CHAT's existing graph visualization meets requirements
 **Depends on**: Phase 2
-**Project**: AURA-CHAT, AURA-NOTES-MANAGER
-**Plans**: 3 plans
+**Project**: AURA-CHAT
+**Plans**: 2 plans (reduced from 3)
 
-Migrates the graph visualization from NOTES-MANAGER to CHAT, adapting it for student use.
+**Discovery:** AURA-CHAT already has a complete 3D graph visualization (`features/graph/GraphPage.tsx`, 712 lines) using Reagraph with multiple layouts, filters, and node details. EntityGraph migration is **NOT NEEDED**.
 
 Plans:
-- [ ] RC-03-01: Copy EntityGraph component to AURA-CHAT
-- [ ] RC-03-02: Create graph feature in AURA-CHAT (`client/src/features/graph/`)
-- [ ] RC-03-03: Integrate graph visualization with CHAT's study session UI
+- [ ] RC-03-01: Verify AURA-CHAT graph visualization works with current backend
+- [ ] RC-03-02: Add module filtering to AURA-CHAT graph if needed
 
-**Files to migrate:**
+**AURA-CHAT GraphPage Features (already implemented):**
 ```
-FROM: AURA-NOTES-MANAGER/frontend/src/features/kg-query/components/EntityGraph.tsx
-TO:   AURA-CHAT/client/src/features/graph/components/EntityGraph.tsx
+- 5 layout options (radial, hierarchical, circular, force-directed)
+- Filter sidebar with node type toggles
+- Node detail panel with properties
+- WebGL error boundary
+- Depth and limit controls
+- Full test coverage (GraphPage.test.tsx)
 ```
 
-**Adaptations needed:**
-- Connect to CHAT's API endpoints
-- Style to match CHAT's Cyber Yellow theme
-- Integrate with module selection context
+**Decision:** Skip EntityGraph migration - AURA-CHAT's Reagraph solution is superior to the SVG-based EntityGraph in NOTES-MANAGER. EntityGraph will be deleted with the kg-query feature in Phase 4.
 
 ---
 
@@ -170,7 +170,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
-| 3. Frontend Migration | 0/3 | Not started | - |
+| 3. Frontend Verification | 1/2 | In Progress | - |
 | 4. RAG Removal | 0/3 | Not started | - |
 | 5. Verification | 0/2 | Not started | - |
 
