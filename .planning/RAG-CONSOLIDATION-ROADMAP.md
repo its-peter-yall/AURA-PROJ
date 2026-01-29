@@ -88,9 +88,9 @@ Plans:
 
 Plans:
 - [x] RC-03-01: Verify AURA-CHAT graph visualization works with current backend
-- [ ] RC-03-02: Assess module filtering necessity (decision plan)
-- [ ] RC-03-03: Backend module filtering implementation
-- [ ] RC-03-04: Frontend module filtering implementation
+- [x] RC-03-02: Assess module filtering necessity (decision: ADD module filtering)
+- [x] RC-03-03: Backend module filtering (server/routers/graph.py)
+- [ ] RC-03-04: Frontend module filtering (GraphPage.tsx integration)
 
 **AURA-CHAT GraphPage Features (already implemented):**
 ```
@@ -189,7 +189,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
-| 3. Frontend Verification | 1/4 | In Progress | - |
+| 3. Frontend Verification | 2/4 | In Progress | - |
 | 4. RAG Removal | 0/3 | Not started | - |
 | 5. Verification | 0/2 | Not started | - |
 
@@ -237,6 +237,10 @@ client/src/features/graph/
 
 ## Next Action
 
-Start with **Phase 1: Dependency Mapping** to verify the removal scope is accurate and identify any unexpected dependencies before making changes.
+Continue with **Phase 3: Module Filtering** - Backend implementation to add `module_id` parameter to graph API.
 
-Execute: `.planning/phases/rc-01-dependency-mapping/RC-01-01-PLAN.md`
+Execute: `.planning/phases/rc-03-frontend-migration/RC-03-03-PLAN.md`
+
+Then follow with frontend integration:
+
+Execute: `.planning/phases/rc-03-frontend-migration/RC-03-04-PLAN.md`
