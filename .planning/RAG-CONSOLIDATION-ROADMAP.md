@@ -62,7 +62,7 @@ frontend/src/features/kg-query/  # Find: route registration, navigation
 Extracts the graph visualization logic into a standalone, lightweight API that doesn't require the full RAG engine.
 
 Plans:
-- [ ] RC-02-01: Create graph preview router (`api/routers/graph_preview.py`)
+- [x] RC-02-01: Create graph preview router (`api/routers/graph_preview.py`)
 - [ ] RC-02-02: Add tests for graph preview endpoints
 
 **New API Endpoints:**
@@ -168,8 +168,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Dependency Mapping | 1/2 | In progress | - |
-| 2. Graph API Consolidation | 0/2 | Not started | - |
+| 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
+| 2. Graph API Consolidation | 1/2 | In progress | - |
 | 3. Frontend Migration | 0/3 | Not started | - |
 | 4. RAG Removal | 0/3 | Not started | - |
 | 5. Verification | 0/2 | Not started | - |
