@@ -35,7 +35,7 @@ This phase maps all imports and usages of the files to be removed, identifying a
 
 Plans:
 - [ ] RC-01-01: Backend dependency mapping (rag_engine, answer_synthesizer, query.py)
-- [ ] RC-01-02: Frontend dependency mapping (kg-query feature)
+- [x] RC-01-02: Frontend dependency mapping (kg-query feature)
 
 **Files to analyze:**
 ```python
@@ -168,7 +168,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Dependency Mapping | 0/2 | Not started | - |
+| 1. Dependency Mapping | 1/2 | In progress | - |
 | 2. Graph API Consolidation | 0/2 | Not started | - |
 | 3. Frontend Migration | 0/3 | Not started | - |
 | 4. RAG Removal | 0/3 | Not started | - |
