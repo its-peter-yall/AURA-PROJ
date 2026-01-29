@@ -17,7 +17,7 @@ This roadmap consolidates RAG/query functionality by removing duplicate services
 
 - [x] **Phase 1: Dependency Mapping** - Map all dependencies, verify removal safety
 - [x] **Phase 2: Graph API Consolidation** - Create simplified graph preview API in NOTES-MANAGER
-- [ ] **Phase 3: Frontend Verification + Module Filtering** - Verify AURA-CHAT graph, add module filtering
+- [x] **Phase 3: Frontend Verification + Module Filtering** - Verify AURA-CHAT graph, add module filtering
 - [ ] **Phase 4: RAG Removal** - Remove dead RAG code from NOTES-MANAGER
 - [ ] **Phase 5: Verification** - Integration testing, cleanup
 
@@ -90,7 +90,7 @@ Plans:
 - [x] RC-03-01: Verify AURA-CHAT graph visualization works with current backend
 - [x] RC-03-02: Assess module filtering necessity (decision: ADD module filtering)
 - [x] RC-03-03: Backend module filtering (server/routers/graph.py)
-- [ ] RC-03-04: Frontend module filtering (GraphPage.tsx integration)
+- [x] RC-03-04: Frontend module filtering (GraphPage.tsx integration)
 
 **AURA-CHAT GraphPage Features (already implemented):**
 ```
@@ -125,37 +125,45 @@ Plans:
 
 ### Phase 4: RAG Removal
 **Goal**: Remove duplicate RAG services from NOTES-MANAGER
-**Depends on**: Phase 3
+**Depends on**: Phase 3 (Complete)
 **Project**: AURA-NOTES-MANAGER
 **Plans**: 3 plans
 
-Safely removes all RAG-related code now that graph visualization is migrated.
+Safely removes all RAG-related code. EntityGraph migration was SKIPPED because AURA-CHAT already has a superior Reagraph-based implementation.
 
 Plans:
-- [ ] RC-04-01: Remove backend RAG services
-- [ ] RC-04-02: Remove frontend kg-query feature
-- [ ] RC-04-03: Update main.py router registration, clean imports
+- [x] RC-04-01: Remove backend RAG services (rag_engine.py, query.py, answer_synthesizer.py, query_analyzer.py)
+- [ ] RC-04-02: Remove frontend kg-query feature (entire directory, 9 files, ~3,751 lines)
+- [ ] RC-04-03: Update main.py router registration, clean imports, final verification
+
+**Execution Order:** RC-04-01 → RC-04-02 → RC-04-03 (sequential, dependencies between plans)
 
 **Files to remove:**
 ```
-# Backend
-api/rag_engine.py              # DELETE
-api/routers/query.py           # DELETE
-services/answer_synthesizer.py # DELETE
-services/query_analyzer.py     # DELETE
+# Backend (4 files)
+api/rag_engine.py              # DELETE - RAG engine core
+api/routers/query.py           # DELETE - Query router
+services/answer_synthesizer.py # DELETE - Response generation
+services/query_analyzer.py     # DELETE - Dead code (zero imports)
 
-# Frontend
-frontend/src/features/kg-query/pages/        # DELETE
-frontend/src/features/kg-query/hooks/        # DELETE
-frontend/src/features/kg-query/api/          # DELETE
-frontend/src/features/kg-query/components/   # DELETE (after migration)
+# Frontend (9 files, ~3,751 lines)
+frontend/src/features/kg-query/api/kg-query.api.ts
+frontend/src/features/kg-query/components/EntityGraph.tsx
+frontend/src/features/kg-query/components/GraphFilterPanel.tsx
+frontend/src/features/kg-query/components/KGSearchBar.tsx
+frontend/src/features/kg-query/components/SearchResultsList.tsx
+frontend/src/features/kg-query/components/UnifiedGraphView.tsx
+frontend/src/features/kg-query/hooks/useKGQuery.ts
+frontend/src/features/kg-query/pages/KGQueryPage.tsx
+frontend/src/features/kg-query/types/kg-query.types.ts
 ```
 
 **Keep:**
 ```
-api/graph_manager.py      # Used by graph preview
-api/graph_visualizer.py   # Used by graph preview
-api/routers/graph_preview.py  # New minimal API
+api/graph_manager.py           # Used by graph preview
+api/graph_visualizer.py        # Used by graph preview
+api/routers/graph_preview.py   # New minimal API (RC-02)
+api/schemas/graph_preview.py   # Response schemas (RC-02)
 ```
 
 ---
@@ -189,8 +197,8 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Dependency Mapping | 2/2 | Complete | 2026-01-29 |
 | 2. Graph API Consolidation | 2/2 | Complete | 2026-01-29 |
-| 3. Frontend Verification | 2/4 | In Progress | - |
-| 4. RAG Removal | 0/3 | Not started | - |
+| 3. Frontend Verification | 4/4 | Complete | 2026-01-29 |
+| 4. RAG Removal | 1/3 | In progress | - |
 | 5. Verification | 0/2 | Not started | - |
 
 ---
@@ -221,26 +229,29 @@ frontend/src/features/kg-query/
 ```
 api/graph_manager.py
 api/graph_visualizer.py
-api/routers/graph_preview.py  (NEW)
+api/routers/graph_preview.py  (NEW - RC-02)
+api/schemas/graph_preview.py  (NEW - RC-02)
 ```
 
-### To Create (AURA-CHAT)
+### Already Complete (AURA-CHAT)
 ```
-client/src/features/graph/
-  ├── components/EntityGraph.tsx  (migrated)
-  ├── hooks/useGraphData.ts
-  ├── api/graph.api.ts
-  └── index.ts
+# Graph visualization already exists - no migration needed
+client/src/features/graph/GraphPage.tsx  (712 lines, Reagraph 3D)
+client/src/hooks/useGraphQuery.ts
+
+# Module filtering added in RC-03
+server/routers/graph.py  (module_id parameter added)
+client/src/types/api.ts  (GraphQueryParams.module_id)
 ```
 
 ---
 
 ## Next Action
 
-Continue with **Phase 3: Module Filtering** - Backend implementation to add `module_id` parameter to graph API.
+Start **Phase 4: RAG Removal** - Delete duplicate RAG services from AURA-NOTES-MANAGER.
 
-Execute: `.planning/phases/rc-03-frontend-migration/RC-03-03-PLAN.md`
+Execute plans in order:
 
-Then follow with frontend integration:
-
-Execute: `.planning/phases/rc-03-frontend-migration/RC-03-04-PLAN.md`
+1. `.planning/phases/rc-04-rag-removal/RC-04-01-PLAN.md` (Backend: delete 4 files)
+2. `.planning/phases/rc-04-rag-removal/RC-04-02-PLAN.md` (Frontend: delete 9 files)
+3. `.planning/phases/rc-04-rag-removal/RC-04-03-PLAN.md` (main.py cleanup, verification)
