@@ -170,6 +170,8 @@ logs/*
 !logs/.gitkeep
 *.log
 *.log.*
+docs-for-review/
+docs
 
 server.log
 client.log
