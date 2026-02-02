@@ -8,7 +8,7 @@ Verify Phase 1 configuration and client unification for AURA-NOTES-MANAGER.
 
 ## Execution
 - Created verification script in `AURA-NOTES-MANAGER/api/verify_phase_1.py` using Python file scanning.
-- Ran verification with root venv: `D:\Peter\AURA Proto review 1\AURA-PROJ\venv\Scripts\python.exe`.
+- Ran verification with root venv: `D:\Peter\AURA Twin Proj\AURA-PROJ\venv\Scripts\python.exe`.
 - Checked `.env` for deprecated variables (none present, no changes).
 
 ## Verification Results

@@ -1,5 +1,9 @@
 # Project Workflow
 
+**Version:** 2.0  
+**Last Updated:** 2026-02-02  
+**Project:** AURA Twin (AURA-CHAT + AURA-NOTES-MANAGER)
+
 ## Guiding Principles
 
 1. **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
@@ -134,10 +138,11 @@ All tasks follow a strict lifecycle:
 
 10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
 
-### Quality Gates
+## Quality Gates
 
 Before marking any task complete, verify:
 
+### General Quality Gates
 - [ ] All tests pass
 - [ ] Code coverage meets requirements (>80%)
 - [ ] Code follows project's code style guidelines (as defined in `code_styleguides/`)
@@ -148,29 +153,81 @@ Before marking any task complete, verify:
 - [ ] Documentation updated if needed
 - [ ] No security vulnerabilities introduced
 
+### Project-Specific Quality Gates
+
+#### TypeScript/React Quality Gates
+- [ ] File headers present on all new files (required for `.ts`, `.tsx`, `.js`, `.jsx`)
+- [ ] No `any` types in TypeScript (Google TypeScript Style Guide enforced)
+- [ ] Named exports only (no default exports)
+- [ ] Path alias `@/*` used consistently instead of relative imports
+- [ ] Custom "Cyber Yellow" theme (`#FFD400`) applied correctly
+
+#### Python Quality Gates
+- [ ] File headers present on all new files (required for `.py`, `.pyi`)
+- [ ] 4-space indentation, 80-character line limits (Google Python Style Guide)
+- [ ] Router pattern used: `router = APIRouter(prefix="/path", tags=["Tag"])`
+- [ ] Dependency injection via `Depends()` in FastAPI
+- [ ] Use `127.0.0.1` not `localhost` in code (IPv6 compatibility)
+- [ ] No global Python or pip usage - always use root venv (`../.venv/Scripts/python`)
+
 ## Development Commands
 
-**AI AGENT INSTRUCTION: This section should be adapted to the project's specific language, framework, and build tools.**
-
 ### Setup
+
 ```bash
-# Example: Commands to set up the development environment (e.g., install dependencies, configure database)
-# e.g., for a Node.js project: npm install
-# e.g., for a Go project: go mod tidy
+# AURA-CHAT Frontend
+ cd AURA-CHAT/client && npm install
+
+# AURA-NOTES-MANAGER Frontend
+cd AURA-NOTES-MANAGER/frontend && npm install
+
+# Python Dependencies (use ROOT venv, never global)
+../.venv/Scripts/pip install -r requirements.txt
 ```
 
 ### Daily Development
+
 ```bash
-# Example: Commands for common daily tasks (e.g., start dev server, run tests, lint, format)
-# e.g., for a Node.js project: npm run dev, npm test, npm run lint
-# e.g., for a Go project: go run main.go, go test ./..., go fmt ./...
+# AURA-CHAT Frontend (React 19 + Vite) - Port 5173
+cd AURA-CHAT/client && npm run dev
+
+# AURA-CHAT Backend (FastAPI) - Port 8000
+cd AURA-CHAT/server && python main.py
+
+# AURA-NOTES-MANAGER Frontend (React 18 + Vite) - Port 5173
+cd AURA-NOTES-MANAGER/frontend && npm run dev
+
+# AURA-NOTES-MANAGER Backend (FastAPI) - Port 8001
+cd AURA-NOTES-MANAGER/api && python main.py
+```
+
+### Testing
+
+```bash
+# AURA-CHAT E2E Tests (parallel execution allowed)
+cd AURA-CHAT/client && npm run test:e2e
+
+# AURA-NOTES-MANAGER E2E Tests (sequential - DB consistency)
+cd AURA-NOTES-MANAGER && npm run test:e2e
+
+# Python Tests (always use root venv)
+../.venv/Scripts/python -m pytest
 ```
 
 ### Before Committing
+
 ```bash
-# Example: Commands to run all pre-commit checks (e.g., format, lint, type check, run tests)
-# e.g., for a Node.js project: npm run check
-# e.g., for a Go project: make check (if a Makefile exists)
+# ESLint check
+npm run lint
+
+# TypeScript type check (no emit)
+npx tsc --noEmit
+
+# Python linting (use root venv)
+../.venv/Scripts/python -m pylint <module_name>
+
+# Or run from within project directory
+../.venv/Scripts/python -m pylint src/
 ```
 
 ## Testing Requirements
@@ -187,12 +244,58 @@ Before marking any task complete, verify:
 - Test authentication and authorization
 - Check form submissions
 
+### E2E Testing Specifics
+
+**AURA-CHAT E2E:**
+- Parallel execution allowed (`fullyParallel: true`)
+- Uses modern React 19 + TanStack Query patterns
+- Tests knowledge graph functionality
+
+**AURA-NOTES-MANAGER E2E:**
+- Sequential execution required (`fullyParallel: false`) for DB consistency
+- Playwright tests in `e2e/` directory
+- Tests staff hierarchy and note management flows
+
 ### Mobile Testing
-- Test on actual iPhone when possible
+- Test on actual iPhone when possible (Safari browser required)
 - Use Safari developer tools
 - Test touch interactions
 - Verify responsive layouts
 - Check performance on 3G/4G
+- **Critical:** Both AURA-CHAT and AURA-NOTES-MANAGER must work on iPhone Safari
+
+### Python Environment
+- **ALWAYS use the root venv** (`../.venv/Scripts/python`) for all Python tasks
+- **NEVER install dependencies globally** or in subdirectory venvs
+- Correct: `../.venv/Scripts/python -m pytest tests/`
+- Wrong: `python -m pytest tests/` or `pip install <package>`
+
+## Nested Git Repos Warning
+
+**⚠️ CRITICAL WARNING ⚠️**
+
+This repository contains **nested Git repositories**:
+
+- `AURA-CHAT/` has its own `.git/` directory
+- `AURA-NOTES-MANAGER/` has its own `.git/` directory
+
+### Important Guidelines:
+- **Never perform cross-repo git operations** (e.g., running `git add` from root that affects both sub-repos)
+- **Always run git commands from within each subdirectory** (`AURA-CHAT/` or `AURA-NOTES-MANAGER/`)
+- Each sub-project is managed independently
+- Plan files should reference which sub-project is being modified
+- Be extra careful with git status/add/commit to ensure you're in the correct directory
+
+### Project Structure Reminder:
+```
+AURA-PROJ/
+├── .git/                    # Root repo
+├── AURA-CHAT/
+│   └── .git/                # Separate repo!
+├── AURA-NOTES-MANAGER/
+│   └── .git/                # Separate repo!
+└── ...
+```
 
 ## Code Review Process
 
@@ -260,6 +363,93 @@ git commit -m "test(comments): Add tests for emoji reaction limits"
 git commit -m "style(mobile): Improve button touch targets"
 ```
 
+## Dual Project Considerations
+
+When working on AURA Twin, remember these key differences:
+
+### Port Configuration
+- **AURA-CHAT Backend:** Port 8000
+- **AURA-NOTES-MANAGER Backend:** Port 8001
+- Both frontends use Port 5173 (run separately)
+
+### Technology Differences
+| Aspect | AURA-CHAT | AURA-NOTES-MANAGER |
+|--------|-----------|-------------------|
+| React Version | 19 (latest) | 18 |
+| State Management | TanStack Query | Zustand + TanStack Query |
+| Backend | `server/` (modern FastAPI) | `api/` (FastAPI) |
+| Database | Neo4j (knowledge graph) + optional | Firestore (NoSQL) |
+| AI Provider | Vertex AI | Gemini + Deepgram |
+| E2E | Parallel | Sequential (DB consistency) |
+
+### Shared Resources
+- **Neo4j database** for knowledge graph (shared between both apps)
+- **Google AI stack** (both use Google's AI services)
+- **Root Python venv** (`../.venv/`)
+- Path alias `@/*` convention
+
+### Development Workflow
+- Each project has independent dev servers
+- Test commands differ between projects
+- ESLint configs are project-specific
+- Be aware of which project you're modifying when reading/writing files
+
+## AI Agent Workflow Notes
+
+### Research-First Principle
+- **ALWAYS web-search before implementing** unfamiliar libraries, APIs, or patterns
+- **NEVER assume** library behavior - verify with official documentation
+- **Search first** when encountering: new npm packages, Python libraries, framework features, or external APIs
+- Use `librarian` agent for documentation lookup, `explore` agent for codebase patterns
+
+### Code Modification Protocol
+- **Always read existing code before modifying** - understand context first
+- **Run diagnostics before completing tasks** - verify no new errors introduced
+- **Use sub-agents for complex tasks**:
+  - `frontend-ui-ux-engineer` for visual/UI changes
+  - `explore` for finding existing implementations
+  - `librarian` for external documentation
+  - `oracle` for architecture decisions or debugging after 2+ failed attempts
+
+### File Header Requirements
+**MANDATORY for every code file created or updated:**
+
+```typescript
+// {FILE_NAME}
+// {Brief 1-line description of what this file does}
+
+// Longer description (2-4 lines):
+// - What problem does this solve?
+// - What are the key functions/classes?
+// - Any important context for future maintainers
+
+// @see: {Related files}
+// @note: {Important caveats or gotchas}
+```
+
+**Enforcement:**
+- File headers are REQUIRED for: `.ts`, `.tsx`, `.py`, `.pyi`, `.js`, `.jsx`
+- Existing files without headers: Add when modifying significantly (>30% changes)
+- New files: ALWAYS add header before first write
+
+### Verification Requirements
+Task is NOT complete without:
+- [ ] `lsp_diagnostics` clean on changed files
+- [ ] Build passes (if applicable)
+- [ ] Tests pass (or explicit note of pre-existing failures)
+- [ ] User's original request fully addressed
+- [ ] File headers present
+- [ ] No new TypeScript errors
+- [ ] No new linting errors
+
+### Best Practices
+- **Write tests BEFORE or WITH code**, not after
+- **Minimal changes:** Fix bugs without refactoring unrelated code
+- **Never suppress type errors** with `as any`, `@ts-ignore`
+- **Never leave empty catch blocks** `catch(e) {}`
+- **Never be lazy:** Don't skip verification, don't guess, don't assume knowledge
+- **Certainty before conclusion:** Never declare complete without 100% confidence
+
 ## Definition of Done
 
 A task is complete when:
@@ -273,6 +463,9 @@ A task is complete when:
 7. Implementation notes added to `plan.md`
 8. Changes committed with proper message
 9. Git note with task summary attached to the commit
+10. File headers present on all new/modified files
+11. No type errors or linting violations
+12. Diagnostics run and clean
 
 ## Emergency Procedures
 

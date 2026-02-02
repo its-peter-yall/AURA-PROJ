@@ -1,6 +1,7 @@
 # AURA Technology Stack
 
-> **Version:** 1.0
+> **Version:** 2.0
+> **Last Updated:** 2026-02-02
 > **Type:** Technical Architecture Document
 
 ## Overview
@@ -21,6 +22,8 @@ AURA is a dual-application monorepo with separate frontend and backend stacks op
 | **Styling** | TailwindCSS | 4.1.18 | Utility-first CSS |
 | **Graph Visualization** | Reagraph | 4.30.7 | 3D WebGL knowledge graph |
 | **HTTP Client** | Axios | 1.13.2 | API requests |
+| **Markdown Rendering** | React Markdown | 10.1.0 | Render markdown content |
+| **API Mocking** | MSW (Mock Service Worker) | 2.12.7 | Mock API for testing |
 | **Testing** | Vitest | 3.2.4 | Unit testing |
 | **E2E Testing** | Playwright | 1.49.0 | Browser automation |
 
@@ -42,6 +45,22 @@ AURA is a dual-application monorepo with separate frontend and backend stacks op
 
 ## Backend Architecture
 
+### AURA-CHAT Backend Structure
+
+The AURA-CHAT backend is split into two components:
+
+| Component | Location | Technology | Purpose |
+|-----------|----------|------------|---------|
+| **Modern API** | `server/` | FastAPI 0.115.0+ | Primary REST API, router pattern |
+| **Legacy AI Logic** | `backend/` | Python | Document processing, RAG engine, entity extraction |
+
+### AURA-NOTES-MANAGER Backend Structure
+
+| Component | Location | Technology | Purpose |
+|-----------|----------|------------|---------|
+| **REST API** | `api/` | FastAPI 0.115.0+ | Main API endpoints |
+| **AI/ML Services** | `services/` | Python | STT (Deepgram), summarization, PDF generation |
+
 ### Shared Backend Stack
 
 | Component | Technology | Version | Purpose |
@@ -51,10 +70,8 @@ AURA is a dual-application monorepo with separate frontend and backend stacks op
 | **ASGI Server** | Uvicorn | 0.32.0+ | ASGI server |
 | **Task Queue** | Celery | 5.4.0 | Async task processing |
 | **Broker** | Redis | 7+ | Message broker |
-| **Graph Database** | Neo4j | 5.15+ | Knowledge graph storage + vector search |
+| **Graph Database** | Neo4j | 5.25.0+ | Knowledge graph storage + vector search |
 | **NoSQL Database** | Firestore | - | Hierarchical note storage |
-| **AI/Embeddings** | Google Gemini | Latest | LLM responses |
-| **AI Platform** | Vertex AI | 1.39+ | Enterprise AI features |
 | **Audio** | Deepgram SDK | 3.5.0 | Speech-to-text |
 
 ### Python Dependencies
@@ -67,7 +84,7 @@ python-multipart>=0.0.9
 python-dotenv>=1.0.0
 
 # Database
-neo4j>=5.15.0
+neo4j>=5.25.0
 redis>=5.0.0
 firebase-admin>=6.0.0
 google-cloud-firestore>=2.0.0
@@ -81,7 +98,8 @@ google-cloud-aiplatform>=1.39.0
 PyPDF2>=3.0.0
 pdfplumber>=0.10.0
 python-docx>=0.8.11
-PyMuPDF>=1.24.0
+PyMuPDF>=1.24.10
+fpdf2>=2.7.9
 
 # Task Queue
 celery>=5.4.0
@@ -95,6 +113,32 @@ slowapi>=0.1.0
 PyJWT>=2.8.0
 ```
 
+## AI/ML Stack
+
+### Gemini Models
+
+| Model | Version | Use Case |
+|-------|---------|----------|
+| **Gemini 2.5 Flash** | 2.5-flash | Fast, cost-effective responses |
+| **Gemini 2.5 Flash Lite** | 2.5-flash-lite | Lightweight inference |
+| **Gemini 2.0 Flash** | 2.0-flash | Balanced performance |
+| **Gemini 2.5 Pro** | 2.5-pro | High-quality reasoning |
+| **Gemini 3 Flash Preview** | 3-flash-preview | Latest preview features |
+| **Text Embedding** | text-embedding-004 | 768-dimensional embeddings |
+
+### AI SDKs
+
+| SDK | Version | Application | Purpose |
+|-----|---------|-------------|---------|
+| **Google Generative AI SDK** | >=0.3.0 | AURA-CHAT | Thinking mode, chat responses |
+| **Vertex AI SDK** | >=1.39.0 | Both | Enterprise AI, embeddings, enterprise features |
+| **Deepgram SDK** | 3.5.0 | AURA-NOTES-MANAGER | Speech-to-text transcription |
+
+### AI Capabilities
+
+- **AURA-CHAT**: Hybrid RAG with vector search + graph traversal, thinking mode support
+- **AURA-NOTES-MANAGER**: Audio transcription, document summarization, PDF generation
+
 ## Database Architecture
 
 ### Neo4j Graph Database
@@ -103,7 +147,7 @@ PyJWT>=2.8.0
 
 **Key Features:**
 - Node types: Document, Chunk, Concept, Topic, Finding, Methodology, Other
-- HNSW vector index for semantic search (768-dimensional embeddings)
+- HNSW vector index for semantic search (768-dimensional embeddings via text-embedding-004)
 - Module tagging for scoped queries
 - Cross-module concept discovery
 
@@ -160,6 +204,31 @@ DELETE /api/resources/:id      # Delete resource
 | AURA-CHAT | 5173 | `http://localhost:5173` |
 | AURA-NOTES-MANAGER | 5173 | `http://localhost:5173` |
 
+## Testing Stack
+
+### Frontend Testing
+
+| Type | Technology | Version | Purpose |
+|------|------------|---------|---------|
+| **Unit Testing** | Vitest | 3.2.4 | Component and hook testing |
+| **E2E Testing** | Playwright | 1.49.0/1.50.0 | Browser automation, full workflow testing |
+| **API Mocking** | MSW | 2.12.7 | Mock API responses for tests |
+
+### Backend Testing
+
+| Type | Technology | Version | Purpose |
+|------|------------|---------|---------|
+| **Unit Testing** | pytest | 8.3.3 | Python function and API testing |
+| **Async Testing** | pytest-asyncio | Latest | Async/await test support |
+| **Coverage** | pytest-cov | Latest | Test coverage reporting |
+| **Performance** | pytest-benchmark | Latest | Performance regression testing |
+| **Load Testing** | Locust | Latest | API load and stress testing |
+
+### Testing Configuration
+
+- **AURA-CHAT**: Parallel E2E execution for speed
+- **AURA-NOTES-MANAGER**: Sequential E2E (`fullyParallel: false`) for database consistency
+
 ## Development Tools
 
 ### Code Quality
@@ -170,15 +239,6 @@ DELETE /api/resources/:id      # Delete resource
 | Ruff | Python linting (fast, modern) |
 | TypeScript | Type checking |
 | Pydantic | Python validation |
-
-### Testing
-
-| Type | Tools |
-|------|-------|
-| Unit (Python) | pytest, pytest-asyncio, pytest-cov |
-| Unit (JS) | Vitest |
-| E2E | Playwright |
-| Benchmark | pytest-benchmark, locust |
 
 ### Package Management
 
@@ -196,20 +256,39 @@ DELETE /api/resources/:id      # Delete resource
 ```
 AURA-PROJ/
 ├── AURA-CHAT/              # Student-facing app
-│   ├── client/             # React 19 frontend
-│   └── server/             # FastAPI backend
+│   ├── client/             # React 19 frontend (modern)
+│   ├── server/             # FastAPI backend (modern API)
+│   ├── backend/            # Legacy AI processing (rag_engine, entity_extractor)
+│   └── tests/              # Test suites
 ├── AURA-NOTES-MANAGER/     # Staff portal
 │   ├── frontend/           # React 18 frontend
 │   ├── api/                # FastAPI backend
-│   └── services/           # Audio processing
+│   ├── services/           # AI/ML layer (STT, summarization, PDF generation)
+│   ├── e2e/                # Playwright E2E tests
+│   └── tools/              # Utility scripts
 ├── conductor/              # Conductor setup files
-├── .planning/              # Project planning docs
-└── .venv/                   # Python virtual environment
+├── .planning/              # Project planning docs (BRIEF.md, ROADMAP.md)
+├── .github/workflows/      # CI/CD (GitHub Actions)
+└── .venv/                  # Python virtual environment (root level)
 ```
 
 ### Nested Git Repositories
 
 **Important:** Both `AURA-CHAT/` and `AURA-NOTES-MANAGER/` contain their own `.git/` directories. Avoid cross-repo operations.
+
+### Python Environment
+
+**Always use the root venv** (`../.venv` or `../../.venv`) for all Python tasks. Never install dependencies globally or in subdirectory venvs.
+
+```bash
+# Correct - use root venv
+../.venv/Scripts/python -m pytest tests/
+../.venv/Scripts/python -m pip install <package>
+
+# Wrong - do NOT use global Python
+python -m pytest tests/
+pip install <package>
+```
 
 ### Environment Variables
 
