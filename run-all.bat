@@ -20,6 +20,9 @@ set REDIS_ENABLED=true
 echo Starting AURA-CHAT Backend on port 8000...
 start "AURA-CHAT Backend" cmd /k "call .venv\\Scripts\activate && set REDIS_HOST=127.0.0.1 && set REDIS_PORT=6379 && set REDIS_DB=0 && set REDIS_ENABLED=true && cd AURA-CHAT && python -m uvicorn server.main:app --reload --port 8000"
 
+echo Starting AURA-CHAT ARQ Worker for document processing...
+start "AURA-CHAT ARQ Worker" cmd /k "call .venv\\Scripts\activate && set REDIS_HOST=127.0.0.1 && set REDIS_PORT=6379 && set REDIS_DB=0 && set REDIS_ENABLED=true && cd AURA-CHAT\server && arq backend.tasks.worker.WorkerSettings"
+
 echo Starting AURA-CHAT Frontend on port 5173...
 start "AURA-CHAT Frontend" cmd /k "cd AURA-CHAT\client && npm run dev -- --port 5173"
 
@@ -37,10 +40,12 @@ echo ============================================
 echo   All services started!
 echo ============================================
 echo   Redis:        WSL Redis on port 6379
-echo   AURA-CHAT:    http://127.0.0.1:8000 (API)
-echo   AURA-CHAT:    http://127.0.0.1:5173 (Frontend)
-echo   AURA-NOTES:   http://127.0.0.1:8001 (API)
-echo   AURA-NOTES:   http://127.0.0.1:5174 (Frontend)
+   echo   AURA-CHAT:    http://127.0.0.1:8000 (API)
+   echo   AURA-CHAT:    http://127.0.0.1:5173 (Frontend)
+   echo   AURA-CHAT:    ARQ Worker (document processing)
+   echo   AURA-NOTES:   http://127.0.0.1:8001 (API)
+   echo   AURA-NOTES:   http://127.0.0.1:5174 (Frontend)
+   echo   AURA-NOTES:   Celery Worker (KG processing)
 echo ============================================
 echo   Note: Close all windows to stop all services
 echo ============================================
