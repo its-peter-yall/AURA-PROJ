@@ -24,6 +24,7 @@ from model_router.providers.vertex_ai import (
 from model_router.types import (
     GenerateRequest,
     GenerateResponse,
+    ModelInfo,
     ProviderType,
     StreamChunk,
 )
@@ -81,6 +82,20 @@ class ModelRouter:
         """Register the deployment-wide embedding provider."""
         self._embedding_provider = provider
 
+    def get_provider(
+        self,
+        provider_type: ProviderType | str,
+    ) -> BaseProvider:
+        """Return a registered provider for provider-specific operations."""
+        resolved_type = _coerce_provider_type(provider_type)
+        provider = self._providers.get(resolved_type)
+        if provider is None:
+            raise ModelUnavailableError(
+                f'No provider registered for {resolved_type.value}',
+                provider=resolved_type.value,
+            )
+        return provider
+
     def _determine_provider_type(self, request: GenerateRequest) -> ProviderType:
         """Determine which provider should handle a generation request."""
         if request.provider:
@@ -131,6 +146,37 @@ class ModelRouter:
         resolved_request = self._build_request(request, kwargs)
         provider = self._resolve_provider(resolved_request)
         return await provider.generate(resolved_request)
+
+    async def list_models(
+        self,
+        provider: ProviderType | str | None = None,
+    ) -> list[ModelInfo]:
+        """List available models from one or all registered providers."""
+        if provider is not None:
+            resolved_provider = self.get_provider(provider)
+            return await resolved_provider.list_models()
+
+        all_models: list[ModelInfo] = []
+        for registered_provider in self._providers.values():
+            all_models.extend(await registered_provider.list_models())
+        return all_models
+
+    async def health_check(
+        self,
+        provider: ProviderType | str | None = None,
+    ) -> dict[ProviderType, bool]:
+        """Check one or all registered providers for availability."""
+        if provider is not None:
+            resolved_type = _coerce_provider_type(provider)
+            registered_provider = self._providers.get(resolved_type)
+            if registered_provider is None:
+                return {resolved_type: False}
+            return {resolved_type: await registered_provider.health_check()}
+
+        results: dict[ProviderType, bool] = {}
+        for provider_type, registered_provider in self._providers.items():
+            results[provider_type] = await registered_provider.health_check()
+        return results
 
     async def embed(
         self,

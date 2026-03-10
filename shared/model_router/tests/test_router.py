@@ -245,3 +245,111 @@ async def test_router_stream_delegates_to_openrouter() -> None:
     assert len(chunks) == 1
     assert chunks[0].type == 'content'
     assert chunks[0].text == 'Test-mode stream output.'
+
+
+@pytest.mark.asyncio
+async def test_router_list_models_all_providers() -> None:
+    """list_models() with no filter aggregates from all providers."""
+    router = ModelRouter(make_config())
+
+    models = await router.list_models()
+
+    assert len(models) >= 10
+    providers_seen = {model.provider for model in models}
+    assert ProviderType.VERTEX_AI in providers_seen
+    assert ProviderType.OPENROUTER in providers_seen
+
+
+@pytest.mark.asyncio
+async def test_router_list_models_single_provider() -> None:
+    """list_models(provider=...) filters to a single provider."""
+    router = ModelRouter(make_config())
+
+    vertex_models = await router.list_models(provider=ProviderType.VERTEX_AI)
+    openrouter_models = await router.list_models(
+        provider=ProviderType.OPENROUTER
+    )
+
+    assert all(
+        model.provider is ProviderType.VERTEX_AI for model in vertex_models
+    )
+    assert all(
+        model.provider is ProviderType.OPENROUTER
+        for model in openrouter_models
+    )
+    assert len(vertex_models) == 3
+    assert len(openrouter_models) >= 5
+
+
+@pytest.mark.asyncio
+async def test_router_list_models_unregistered_provider_raises() -> None:
+    """list_models() raises when a requested provider is not registered."""
+    router = ModelRouter(RouterConfig())
+
+    with pytest.raises(ModelUnavailableError):
+        await router.list_models(provider=ProviderType.VERTEX_AI)
+
+
+@pytest.mark.asyncio
+async def test_router_health_check_all_providers() -> None:
+    """health_check() returns a status entry for each provider."""
+    router = ModelRouter(make_config())
+
+    health = await router.health_check()
+
+    assert health[ProviderType.VERTEX_AI] is True
+    assert health[ProviderType.OPENROUTER] is True
+
+
+@pytest.mark.asyncio
+async def test_router_health_check_single_provider() -> None:
+    """health_check(provider=...) scopes the result to one provider."""
+    router = ModelRouter(make_config())
+
+    health = await router.health_check(provider=ProviderType.OPENROUTER)
+
+    assert health == {ProviderType.OPENROUTER: True}
+
+
+@pytest.mark.asyncio
+async def test_router_health_check_unregistered_returns_false() -> None:
+    """health_check() returns False for unregistered providers."""
+    router = ModelRouter(RouterConfig())
+
+    health = await router.health_check(provider=ProviderType.VERTEX_AI)
+
+    assert health == {ProviderType.VERTEX_AI: False}
+
+
+def test_router_get_provider_returns_instance() -> None:
+    """get_provider() returns registered provider instances."""
+    router = ModelRouter(make_config())
+
+    vertex = router.get_provider(ProviderType.VERTEX_AI)
+    openrouter = router.get_provider(ProviderType.OPENROUTER)
+
+    assert isinstance(vertex, VertexAIProvider)
+    assert isinstance(openrouter, OpenRouterProvider)
+
+
+def test_router_get_provider_unregistered_raises() -> None:
+    """get_provider() raises when the provider is not registered."""
+    router = ModelRouter(RouterConfig())
+
+    with pytest.raises(ModelUnavailableError):
+        router.get_provider(ProviderType.VERTEX_AI)
+
+
+@pytest.mark.asyncio
+async def test_router_openrouter_credit_balance_via_get_provider() -> None:
+    """OpenRouter credit balance is accessible through router.get_provider()."""
+    router = ModelRouter(make_config())
+
+    provider = router.get_provider(ProviderType.OPENROUTER)
+
+    assert isinstance(provider, OpenRouterProvider)
+    credits = await provider.get_credit_balance()
+
+    assert 'usage' in credits
+    assert 'limit' in credits
+    assert 'is_free_tier' in credits
