@@ -21,6 +21,8 @@ AURA-PROJ/
 │   ├── e2e/                         # Playwright suite and reports
 │   ├── pdfs/                        # Generated and uploaded note PDFs
 │   └── tools/                       # Utility scripts and one-off helpers
+├── shared/                          # Cross-application runtime packages
+│   └── model_router/                # Shared model router package (contracts, config, providers, tests)
 ├── conductor/                       # Cross-project reference docs
 ├── .github/workflows/               # CI definitions
 ├── package.json                     # Workspace-level Node tooling
@@ -74,6 +76,11 @@ AURA-PROJ/
 - Contains: `tests/`, `playwright.config.ts`, `playwright-report/`, `test-results/`.
 - Key files: `AURA-NOTES-MANAGER/e2e/tests/explorer.spec.ts`, `AURA-NOTES-MANAGER/e2e/tests/audio.spec.ts`.
 
+**`shared/`:**
+- Purpose: Host installable cross-application Python packages shared by both AURA apps.
+- Contains: `shared/model_router/` with `src/model_router/`, `tests/`, and package metadata in `pyproject.toml`.
+- Key files: `shared/model_router/pyproject.toml`, `shared/model_router/src/model_router/__init__.py`, `shared/model_router/src/model_router/providers/base.py`.
+
 ## Key File Locations
 
 **Entry Points:**
@@ -86,6 +93,7 @@ AURA-PROJ/
 **Configuration:**
 - `package.json`: Workspace-level Node dependencies and helper scripts.
 - `requirements.txt`: Workspace-level Python dependencies.
+- `shared/model_router/pyproject.toml`: Shared Python package metadata and editable-install entry point.
 - `AURA-CHAT/pyproject.toml`: Chat-specific Python tooling/config.
 - `AURA-NOTES-MANAGER/package.json`: Notes Manager frontend/E2E commands.
 - `AURA-NOTES-MANAGER/firebase.json`: Firebase emulator/hosting configuration.
@@ -152,6 +160,7 @@ AURA-PROJ/
 **Utilities:**
 - Shared frontend helpers: `AURA-CHAT/client/src/lib/` or `AURA-NOTES-MANAGER/frontend/src/lib/`
 - Shared Python helpers inside app boundaries: `AURA-CHAT/backend/utils/` or `AURA-NOTES-MANAGER/services/`
+- Cross-app Python runtime packages: `shared/<package>/src/<package>/` with tests in the package-local `shared/<package>/tests/` folder
 - Cross-workspace documentation or planning helpers: `.planning/` or `conductor/`, not inside app runtime directories.
 
 ## Special Directories

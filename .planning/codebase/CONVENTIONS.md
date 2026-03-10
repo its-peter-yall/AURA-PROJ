@@ -156,6 +156,7 @@
 - Put remote data logic in API helpers and hooks, not directly in pages.
 - Put persistent UI/auth state in Zustand, and invalidate TanStack Query caches from mutation callbacks.
 - For FastAPI work, define request/response models near the router and wire services through `Depends(...)`.
+- For cross-app Python runtime code, create an installable package under `shared/<package>/src/<package>/` and expose the supported surface from that package's `__init__.py`.
 
 ---
 

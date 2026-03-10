@@ -20,6 +20,7 @@
 **Package Manager:**
 - npm with lockfiles present in `package-lock.json`, `AURA-CHAT/client/package-lock.json`, `AURA-NOTES-MANAGER/frontend/package-lock.json`, `AURA-NOTES-MANAGER/package-lock.json`, `AURA-NOTES-MANAGER/e2e/package-lock.json`
 - pip with requirements files in `requirements.txt`, `AURA-CHAT/requirements.txt`, `AURA-NOTES-MANAGER/requirements.txt`
+- Hatchling-backed `pyproject.toml` packaging for the shared `aura-model-router` package in `shared/model_router/pyproject.toml`
 - Lockfile: present for Node, missing for Python dependency pinning beyond requirements files
 
 ## Frameworks
@@ -38,6 +39,7 @@
 **Build/Dev:**
 - Tailwind CSS 4 + `@tailwindcss/vite` - Styling pipeline in `AURA-CHAT/client/package.json`, `AURA-CHAT/client/vite.config.ts`
 - ESLint flat config - TypeScript linting in `AURA-CHAT/client/eslint.config.js`, `AURA-NOTES-MANAGER/frontend/eslint.config.js`
+- Hatchling - Editable build backend for `shared/model_router/pyproject.toml`
 - Uvicorn - FastAPI app server in `AURA-CHAT/Dockerfile`, `AURA-NOTES-MANAGER/api/Dockerfile`
 - Docker - Container build targets in `AURA-CHAT/Dockerfile`, `AURA-CHAT/client/Dockerfile`, `AURA-NOTES-MANAGER/api/Dockerfile`, `AURA-NOTES-MANAGER/frontend/Dockerfile`
 
@@ -46,6 +48,7 @@
 **Critical:**
 - `neo4j` - Graph database driver powering RAG graph access and KG storage in `AURA-CHAT/backend/graph_manager.py`, `AURA-NOTES-MANAGER/api/neo4j_config.py`
 - `google-cloud-aiplatform` / `vertexai` / `google-genai` / `google-generativeai` - Gemini and Vertex AI access in `AURA-CHAT/requirements.txt`, `AURA-CHAT/backend/utils/vertex_ai_client.py`, `AURA-NOTES-MANAGER/requirements.txt`, `AURA-NOTES-MANAGER/services/vertex_ai_client.py`, `AURA-NOTES-MANAGER/services/genai_client.py`
+- `pydantic` - Shared request/response contracts and config models in `shared/model_router/src/model_router/types.py` and `shared/model_router/src/model_router/config.py`
 - `firebase-admin` + `firebase` - Shared auth and Firestore access across backends and frontends in `AURA-CHAT/server/auth/firebase_auth.py`, `AURA-CHAT/server/auth/firestore_client.py`, `AURA-CHAT/client/src/lib/firebase.ts`, `AURA-NOTES-MANAGER/api/config.py`, `AURA-NOTES-MANAGER/frontend/src/api/firebaseClient.ts`
 - `@tanstack/react-query` + `zustand` - Frontend data fetching and local state in `AURA-CHAT/client/package.json`, `AURA-NOTES-MANAGER/frontend/package.json`
 
