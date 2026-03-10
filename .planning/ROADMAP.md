@@ -126,13 +126,15 @@ Plans:
 
 **Key risks:** Configuration drift between the two apps. Provider settings, API keys, and defaults can diverge. Shared config source needed with clear separation of generation config (user-facing) from processing config (operational).
 
-**Plans:** 4/4 plans complete
+**Plans:** 6 plans (4 complete, 2 gap closure)
 
 Plans:
 - [x] 10-01-PLAN.md — Shared config modules: settings store, key manager, model cache + TDD unit tests ([summary](./phases/10-cross-app-migration-backend-integration/10-01-SUMMARY.md))
 - [x] 10-02-PLAN.md — Admin settings REST endpoints for both AURA-CHAT and AURA-NOTES-MANAGER ([summary](./phases/10-cross-app-migration-backend-integration/10-02-SUMMARY.md))
 - [x] 10-03-PLAN.md — AURA-CHAT full migration: vertex_ai_client.py + embeddings.py rewritten as model_router façades ([summary](./phases/10-cross-app-migration-backend-integration/10-03-SUMMARY.md))
-- [ ] 10-04-PLAN.md — AURA-NOTES-MANAGER full migration + Celery verification + no-direct-imports audit test
+- [x] 10-04-PLAN.md — AURA-NOTES-MANAGER full migration + Celery verification + no-direct-imports audit test ([summary](./phases/10-cross-app-migration-backend-integration/10-04-SUMMARY.md))
+- [ ] 10-05-PLAN.md — Gap closure: test file SDK import cleanup + ARQ worker import verification
+- [ ] 10-06-PLAN.md — Gap closure: configurable model cache TTL (5-60 min) + provider-aware key validation
 
 ---
 
@@ -216,7 +218,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
-| 10. Cross-App Migration + Config | v1.1 | 4/4 | Complete | 2026-03-10 |
+| 10. Cross-App Migration + Config | v1.1 | 4/6 | Gap Closure | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
