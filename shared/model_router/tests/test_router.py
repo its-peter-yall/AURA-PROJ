@@ -27,15 +27,15 @@ def make_config() -> RouterConfig:
     """Create a router config that auto-registers test-mode Vertex AI."""
     return RouterConfig(
         test_mode=True,
-        vertex_ai=VertexAIConfig(project_id='test-project', region='global'),
-        openrouter=OpenRouterConfig(api_key='test-key'),
+        vertex_ai=VertexAIConfig(project_id="test-project", region="global"),
+        openrouter=OpenRouterConfig(api_key="test-key"),
     )
 
 
 def make_manual_router() -> ModelRouter:
     """Create a router with providers registered explicitly."""
     router = ModelRouter(RouterConfig())
-    provider_config = VertexAIConfig(project_id='test-project', region='global')
+    provider_config = VertexAIConfig(project_id="test-project", region="global")
     router.register_provider(
         ProviderType.VERTEX_AI,
         VertexAIProvider(provider_config),
@@ -57,11 +57,11 @@ def reset_router_singleton() -> None:
 @pytest.mark.asyncio
 async def test_router_generate_delegates_to_vertex() -> None:
     router = make_manual_router()
-    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+    request = GenerateRequest(model="gemini-2.0-flash", contents="hello")
 
     response = await router.generate(request)
 
-    assert response.text == 'Test-mode output.'
+    assert response.text == "Test-mode output."
     assert response.provider is ProviderType.VERTEX_AI
 
 
@@ -69,10 +69,10 @@ async def test_router_generate_delegates_to_vertex() -> None:
 async def test_router_generate_with_kwargs() -> None:
     router = ModelRouter(make_config())
 
-    response = await router.generate(model='gemini-2.0-flash', contents='hi')
+    response = await router.generate(model="gemini-2.0-flash", contents="hi")
 
-    assert response.model_used == 'gemini-2.0-flash'
-    assert response.text == 'Test-mode output.'
+    assert response.model_used == "gemini-2.0-flash"
+    assert response.text == "Test-mode output."
 
 
 @pytest.mark.asyncio
@@ -80,19 +80,19 @@ async def test_router_generate_delegates_to_openrouter() -> None:
     router = ModelRouter(make_config())
 
     response = await router.generate(
-        model='anthropic/claude-sonnet-4',
-        contents='hello',
+        model="anthropic/claude-sonnet-4",
+        contents="hello",
     )
 
     assert response.provider is ProviderType.OPENROUTER
-    assert response.model_used == 'anthropic/claude-sonnet-4'
+    assert response.model_used == "anthropic/claude-sonnet-4"
 
 
 @pytest.mark.asyncio
 async def test_router_embed_returns_vectors() -> None:
     router = make_manual_router()
 
-    vectors = await router.embed(texts=['hello', 'world'])
+    vectors = await router.embed(texts=["hello", "world"])
 
     assert len(vectors) == 2
     assert len(vectors[0]) == 768
@@ -103,7 +103,7 @@ async def test_router_embed_returns_vectors() -> None:
 async def test_router_embed_single_text() -> None:
     router = ModelRouter(make_config())
 
-    vectors = await router.embed(text='hello')
+    vectors = await router.embed(text="hello")
 
     assert len(vectors) == 1
     assert len(vectors[0]) == 768
@@ -113,7 +113,7 @@ def test_router_resolve_vertex_default() -> None:
     router = ModelRouter(make_config())
 
     provider = router._resolve_provider(
-        GenerateRequest(model='gemini-2.0-flash', contents='hello')
+        GenerateRequest(model="gemini-2.0-flash", contents="hello")
     )
 
     assert isinstance(provider, VertexAIProvider)
@@ -124,8 +124,8 @@ def test_router_resolve_openrouter_slash() -> None:
 
     provider = router._resolve_provider(
         GenerateRequest(
-            model='anthropic/claude-sonnet-4',
-            contents='hello',
+            model="anthropic/claude-sonnet-4",
+            contents="hello",
         )
     )
 
@@ -143,8 +143,8 @@ def test_router_resolve_openrouter_succeeds() -> None:
 
     provider = router._resolve_provider(
         GenerateRequest(
-            model='anthropic/claude-sonnet-4',
-            contents='hello',
+            model="anthropic/claude-sonnet-4",
+            contents="hello",
         )
     )
 
@@ -156,9 +156,9 @@ def test_router_resolve_explicit_provider() -> None:
 
     provider = router._resolve_provider(
         GenerateRequest(
-            model='anthropic/claude-sonnet-4',
-            contents='hello',
-            provider='vertex_ai',
+            model="anthropic/claude-sonnet-4",
+            contents="hello",
+            provider="vertex_ai",
         )
     )
 
@@ -170,7 +170,7 @@ async def test_router_no_provider_raises() -> None:
     router = ModelRouter(RouterConfig())
 
     with pytest.raises(ModelUnavailableError):
-        await router.generate(model='gemini-2.0-flash', contents='hello')
+        await router.generate(model="gemini-2.0-flash", contents="hello")
 
 
 @pytest.mark.asyncio
@@ -178,7 +178,7 @@ async def test_router_no_embedding_provider_raises() -> None:
     router = ModelRouter(RouterConfig())
 
     with pytest.raises(ModelRouterError):
-        await router.embed(texts=['hello'])
+        await router.embed(texts=["hello"])
 
 
 @pytest.mark.asyncio
@@ -187,7 +187,7 @@ async def test_router_embed_rejects_non_vertex_provider() -> None:
 
     with pytest.raises(ModelRouterError):
         await router.embed(
-            texts=['hello'],
+            texts=["hello"],
             provider=ProviderType.OPENROUTER,
         )
 
@@ -213,14 +213,14 @@ async def test_router_stream_yields_chunks() -> None:
     chunks = [
         chunk
         async for chunk in router.stream(
-            model='gemini-2.0-flash',
-            contents='hello',
+            model="gemini-2.0-flash",
+            contents="hello",
         )
     ]
 
     assert len(chunks) == 1
-    assert chunks[0].type == 'content'
-    assert chunks[0].text == 'Test-mode stream output.'
+    assert chunks[0].type == "content"
+    assert chunks[0].text == "Test-mode stream output."
 
 
 @pytest.mark.asyncio
@@ -229,22 +229,22 @@ async def test_router_stream_delegates_to_openrouter() -> None:
 
     provider = router._resolve_provider(
         GenerateRequest(
-            model='anthropic/claude-sonnet-4',
-            contents='hello',
+            model="anthropic/claude-sonnet-4",
+            contents="hello",
         )
     )
     chunks = [
         chunk
         async for chunk in router.stream(
-            model='anthropic/claude-sonnet-4',
-            contents='hello',
+            model="anthropic/claude-sonnet-4",
+            contents="hello",
         )
     ]
 
     assert isinstance(provider, OpenRouterProvider)
     assert len(chunks) == 1
-    assert chunks[0].type == 'content'
-    assert chunks[0].text == 'Test-mode stream output.'
+    assert chunks[0].type == "content"
+    assert chunks[0].text == "Test-mode stream output."
 
 
 @pytest.mark.asyncio
@@ -266,17 +266,10 @@ async def test_router_list_models_single_provider() -> None:
     router = ModelRouter(make_config())
 
     vertex_models = await router.list_models(provider=ProviderType.VERTEX_AI)
-    openrouter_models = await router.list_models(
-        provider=ProviderType.OPENROUTER
-    )
+    openrouter_models = await router.list_models(provider=ProviderType.OPENROUTER)
 
-    assert all(
-        model.provider is ProviderType.VERTEX_AI for model in vertex_models
-    )
-    assert all(
-        model.provider is ProviderType.OPENROUTER
-        for model in openrouter_models
-    )
+    assert all(model.provider is ProviderType.VERTEX_AI for model in vertex_models)
+    assert all(model.provider is ProviderType.OPENROUTER for model in openrouter_models)
     assert len(vertex_models) == 3
     assert len(openrouter_models) >= 5
 
@@ -321,6 +314,19 @@ async def test_router_health_check_unregistered_returns_false() -> None:
     assert health == {ProviderType.VERTEX_AI: False}
 
 
+@pytest.mark.asyncio
+async def test_router_health_check_invalid_string_raises_model_unavailable() -> None:
+    """health_check() should not leak raw provider coercion errors."""
+    router = ModelRouter(make_config())
+
+    with pytest.raises(ModelUnavailableError) as error_info:
+        await router.health_check(provider="invalid-provider")
+
+    assert error_info.value.provider == "invalid-provider"
+    assert "invalid-provider" in str(error_info.value)
+    assert isinstance(error_info.value.__cause__, ValueError)
+
+
 def test_router_get_provider_returns_instance() -> None:
     """get_provider() returns registered provider instances."""
     router = ModelRouter(make_config())
@@ -340,6 +346,31 @@ def test_router_get_provider_unregistered_raises() -> None:
         router.get_provider(ProviderType.VERTEX_AI)
 
 
+def test_router_get_provider_invalid_string_raises_model_unavailable() -> None:
+    """get_provider() normalizes invalid provider strings to shared errors."""
+    router = ModelRouter(make_config())
+
+    with pytest.raises(ModelUnavailableError) as error_info:
+        router.get_provider("invalid-provider")
+
+    assert error_info.value.provider == "invalid-provider"
+    assert "invalid-provider" in str(error_info.value)
+    assert isinstance(error_info.value.__cause__, ValueError)
+
+
+@pytest.mark.asyncio
+async def test_router_list_models_invalid_string_raises_model_unavailable() -> None:
+    """list_models() should not leak raw provider coercion errors."""
+    router = ModelRouter(make_config())
+
+    with pytest.raises(ModelUnavailableError) as error_info:
+        await router.list_models(provider="invalid-provider")
+
+    assert error_info.value.provider == "invalid-provider"
+    assert "invalid-provider" in str(error_info.value)
+    assert isinstance(error_info.value.__cause__, ValueError)
+
+
 @pytest.mark.asyncio
 async def test_router_openrouter_credit_balance_via_get_provider() -> None:
     """OpenRouter credit balance is accessible through router.get_provider()."""
@@ -350,6 +381,6 @@ async def test_router_openrouter_credit_balance_via_get_provider() -> None:
     assert isinstance(provider, OpenRouterProvider)
     credits = await provider.get_credit_balance()
 
-    assert 'usage' in credits
-    assert 'limit' in credits
-    assert 'is_free_tier' in credits
+    assert "usage" in credits
+    assert "limit" in credits
+    assert "is_free_tier" in credits

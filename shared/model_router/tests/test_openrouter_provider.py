@@ -12,8 +12,10 @@
 
 import sys
 import types
+from collections.abc import Callable
 from unittest.mock import patch
 
+import httpx
 import pytest
 
 from model_router import ModelRouter
@@ -52,9 +54,25 @@ class FakeOpenAIError(Exception):
         self.body = body
 
 
+class FakeAsyncClient:
+    """Minimal async httpx client stub for OpenRouter metadata tests."""
+
+    def __init__(self, handler: Callable[..., httpx.Response], **_: object) -> None:
+        self._handler = handler
+
+    async def __aenter__(self) -> "FakeAsyncClient":
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        return None
+
+    async def get(self, url: str, headers: dict[str, str]) -> httpx.Response:
+        return self._handler(url=url, headers=headers)
+
+
 def make_config() -> OpenRouterConfig:
     """Create a minimal config for test-mode OpenRouter provider checks."""
-    return OpenRouterConfig(api_key='test-key')
+    return OpenRouterConfig(api_key="test-key")
 
 
 def make_router() -> ModelRouter:
@@ -62,7 +80,7 @@ def make_router() -> ModelRouter:
     return ModelRouter(
         RouterConfig(
             test_mode=True,
-            vertex_ai=VertexAIConfig(project_id='test-project', region='global'),
+            vertex_ai=VertexAIConfig(project_id="test-project", region="global"),
             openrouter=make_config(),
         )
     )
@@ -70,7 +88,7 @@ def make_router() -> ModelRouter:
 
 def install_fake_openai_module() -> types.ModuleType:
     """Create a fake openai module exposing the exception classes we need."""
-    fake_module = types.ModuleType('openai')
+    fake_module = types.ModuleType("openai")
 
     class FakeAuthenticationError(FakeOpenAIError):
         pass
@@ -95,18 +113,32 @@ def install_fake_openai_module() -> types.ModuleType:
     return fake_module
 
 
+def make_http_status_error(
+    status_code: int,
+    url: str,
+    message: str,
+    *,
+    retry_after: str | None = None,
+) -> httpx.HTTPStatusError:
+    """Create an HTTPStatusError with request/response metadata."""
+    headers = {"Retry-After": retry_after} if retry_after is not None else None
+    request = httpx.Request("GET", url)
+    response = httpx.Response(status_code, request=request, headers=headers)
+    return httpx.HTTPStatusError(message, request=request, response=response)
+
+
 @pytest.mark.asyncio
 async def test_generate_returns_correct_shape() -> None:
     provider = OpenRouterProvider(make_config())
     request = GenerateRequest(
-        model='anthropic/claude-sonnet-4',
-        contents='hello',
+        model="anthropic/claude-sonnet-4",
+        contents="hello",
     )
 
     response = await provider.generate(request)
 
     assert isinstance(response, GenerateResponse)
-    assert response.text == 'Test-mode output.'
+    assert response.text == "Test-mode output."
     assert response.provider is ProviderType.OPENROUTER
     assert response.usage.input_tokens == 0
     assert response.usage.output_tokens == 0
@@ -117,28 +149,28 @@ async def test_generate_returns_correct_shape() -> None:
 async def test_generate_uses_request_model() -> None:
     provider = OpenRouterProvider(make_config())
     request = GenerateRequest(
-        model='google/gemini-2.5-flash',
-        contents='hello',
+        model="google/gemini-2.5-flash",
+        contents="hello",
     )
 
     response = await provider.generate(request)
 
-    assert response.model_used == 'google/gemini-2.5-flash'
+    assert response.model_used == "google/gemini-2.5-flash"
 
 
 @pytest.mark.asyncio
 async def test_stream_yields_chunks() -> None:
     provider = OpenRouterProvider(make_config())
     request = GenerateRequest(
-        model='deepseek/deepseek-r1',
-        contents='hello',
+        model="deepseek/deepseek-r1",
+        contents="hello",
     )
 
     chunks = [chunk async for chunk in provider.stream(request)]
 
     assert len(chunks) == 1
-    assert chunks[0].type == 'content'
-    assert chunks[0].text == 'Test-mode stream output.'
+    assert chunks[0].type == "content"
+    assert chunks[0].text == "Test-mode stream output."
 
 
 @pytest.mark.asyncio
@@ -148,12 +180,12 @@ async def test_list_models_returns_curated_models() -> None:
     models = await provider.list_models()
 
     model_names = {model.name for model in models}
-    assert any(name.startswith('anthropic/') for name in model_names)
-    assert any(name.startswith('google/') for name in model_names)
-    assert any(name.startswith('openai/') for name in model_names)
-    assert any(name.startswith('deepseek/') for name in model_names)
-    assert any(name.startswith('meta-llama/') for name in model_names)
-    assert any(name.startswith('mistralai/') for name in model_names)
+    assert any(name.startswith("anthropic/") for name in model_names)
+    assert any(name.startswith("google/") for name in model_names)
+    assert any(name.startswith("openai/") for name in model_names)
+    assert any(name.startswith("deepseek/") for name in model_names)
+    assert any(name.startswith("meta-llama/") for name in model_names)
+    assert any(name.startswith("mistralai/") for name in model_names)
     assert all(model.provider is ProviderType.OPENROUTER for model in models)
 
 
@@ -170,9 +202,9 @@ async def test_get_credit_balance_returns_dict() -> None:
 
     credits = await provider.get_credit_balance()
 
-    assert credits['usage'] == 0.0
-    assert credits['limit'] == 100.0
-    assert 'is_free_tier' in credits
+    assert credits["usage"] == 0.0
+    assert credits["limit"] == 100.0
+    assert "is_free_tier" in credits
 
 
 @pytest.mark.asyncio
@@ -180,8 +212,8 @@ async def test_router_auto_registers_openrouter_in_test_mode() -> None:
     router = make_router()
 
     response = await router.generate(
-        model='anthropic/claude-sonnet-4',
-        contents='hello',
+        model="anthropic/claude-sonnet-4",
+        contents="hello",
     )
 
     assert ProviderType.OPENROUTER in router._providers
@@ -198,68 +230,144 @@ def test_public_exports_include_openrouter_symbols() -> None:
 
 def test_map_openrouter_error_auth() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.AuthenticationError('invalid api key')
+    original = fake_openai.AuthenticationError("invalid api key")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert isinstance(mapped, AuthenticationError)
 
 
 def test_map_openrouter_error_rate_limit() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.RateLimitError('too many requests')
+    original = fake_openai.RateLimitError("too many requests")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert isinstance(mapped, RateLimitError)
 
 
 def test_map_openrouter_error_not_found() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.NotFoundError('model not found')
+    original = fake_openai.NotFoundError("model not found")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert isinstance(mapped, ModelUnavailableError)
 
 
 def test_map_openrouter_error_content_policy() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.BadRequestError('blocked by safety content filter')
+    original = fake_openai.BadRequestError("blocked by safety content filter")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert isinstance(mapped, ContentPolicyError)
 
 
 def test_map_openrouter_error_timeout() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.APITimeoutError('request timed out')
+    original = fake_openai.APITimeoutError("request timed out")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert isinstance(mapped, ProviderTimeoutError)
 
 
 def test_map_openrouter_error_generic() -> None:
-    original = RuntimeError('unexpected upstream failure')
+    original = RuntimeError("unexpected upstream failure")
 
-    mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert type(mapped) is ModelRouterError
 
 
 def test_error_preserves_original_cause() -> None:
     fake_openai = install_fake_openai_module()
-    original = fake_openai.AuthenticationError('invalid api key')
+    original = fake_openai.AuthenticationError("invalid api key")
 
-    with patch.dict(sys.modules, {'openai': fake_openai}):
-        mapped = _map_openrouter_error(original, model='anthropic/claude-sonnet-4')
+    with patch.dict(sys.modules, {"openai": fake_openai}):
+        mapped = _map_openrouter_error(original, model="anthropic/claude-sonnet-4")
 
     assert mapped.original is original
     assert mapped.__cause__ is original
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "url_suffix"),
+    [
+        ("list_models", "/models"),
+        ("get_credit_balance", "/auth/key"),
+    ],
+)
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_metadata_http_auth_failures_map_to_authentication_error(
+    monkeypatch: pytest.MonkeyPatch,
+    method_name: str,
+    url_suffix: str,
+    status_code: int,
+) -> None:
+    provider = OpenRouterProvider(make_config())
+    monkeypatch.setattr(provider, "_test_mode", False)
+
+    def handler(*, url: str, headers: dict[str, str]) -> httpx.Response:
+        assert url.endswith(url_suffix)
+        assert headers["Authorization"] == "Bearer test-key"
+        raise make_http_status_error(status_code, url, "auth failed")
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: FakeAsyncClient(handler, **kwargs),
+    )
+
+    method = getattr(provider, method_name)
+    with pytest.raises(AuthenticationError) as error_info:
+        await method()
+
+    assert isinstance(error_info.value.original, httpx.HTTPStatusError)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "url_suffix"),
+    [
+        ("list_models", "/models"),
+        ("get_credit_balance", "/auth/key"),
+    ],
+)
+async def test_metadata_http_rate_limit_failures_map_to_rate_limit_error(
+    monkeypatch: pytest.MonkeyPatch,
+    method_name: str,
+    url_suffix: str,
+) -> None:
+    provider = OpenRouterProvider(make_config())
+    monkeypatch.setattr(provider, "_test_mode", False)
+
+    def handler(*, url: str, headers: dict[str, str]) -> httpx.Response:
+        assert url.endswith(url_suffix)
+        assert headers["Authorization"] == "Bearer test-key"
+        raise make_http_status_error(
+            429,
+            url,
+            "rate limited",
+            retry_after="7.5",
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: FakeAsyncClient(handler, **kwargs),
+    )
+
+    method = getattr(provider, method_name)
+    with pytest.raises(RateLimitError) as error_info:
+        await method()
+
+    assert error_info.value.retry_after == 7.5
+    assert isinstance(error_info.value.original, httpx.HTTPStatusError)
