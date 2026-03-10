@@ -51,7 +51,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 
 - [ ] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
 - [x] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
-- [ ] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management
+- [x] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management (completed 2026-03-10)
 - [ ] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence
 - [ ] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters
 - [ ] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification
@@ -126,7 +126,7 @@ Plans:
 
 **Key risks:** Configuration drift between the two apps. Provider settings, API keys, and defaults can diverge. Shared config source needed with clear separation of generation config (user-facing) from processing config (operational).
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 10-01-PLAN.md — Shared config modules: settings store, key manager, model cache + TDD unit tests ([summary](./phases/10-cross-app-migration-backend-integration/10-01-SUMMARY.md))
@@ -216,7 +216,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
-| 10. Cross-App Migration + Config | v1.1 | 3/4 | In Progress | - |
+| 10. Cross-App Migration + Config | v1.1 | 4/4 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |

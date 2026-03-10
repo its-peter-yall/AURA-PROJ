@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T16:03:33Z"
-last_activity: "2026-03-10 - Completed Phase 10 Plan 02 (cross-app admin settings endpoints for shared defaults, model discovery, and API key management)"
+last_updated: "2026-03-10T16:11:32Z"
+last_activity: "2026-03-10 - Completed Phase 10 Plan 04 (AURA-NOTES-MANAGER façade migration, Celery import verification, and cross-app no-direct-imports audit)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -19,23 +19,23 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 10 active -- Cross-App Migration + Backend Integration
+**Current focus:** Phase 10 complete -- Phase 11 frontend provider settings and model selection UI next
 
 ## Current Position
 
 Phase: 10 of 13 (Cross-App Migration + Backend Integration)
-Plan: 3 of 4 complete (10-01, 10-02, and 10-03 done; 10-04 next)
-Status: In progress
-Last activity: 2026-03-10 - Completed 10-02 cross-app settings endpoints
+Plan: 4 of 4 complete (10-01 through 10-04 done)
+Status: Phase complete
+Last activity: 2026-03-10 - Completed 10-04 NOTES façade migration + cross-app import audit
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 11 min
-- Total execution time: 87 min
+- Total plans completed: 9
+- Average duration: 12 min
+- Total execution time: 104 min
 
 **By Phase:**
 
@@ -43,7 +43,7 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
 | 09 | 3 | 10 min | 3 min |
-| 10 | 3 | 41 min | 13 min |
+| 10 | 4 | 58 min | 14 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
@@ -51,6 +51,7 @@ Progress: [████████░░] 80%
 | Phase 10 P01 | 10 min | 2 tasks | 9 files |
 | Phase 10 P03 | 21 min | 2 tasks | 3 files |
 | Phase 10 P02 | 10 min | 3 tasks | 9 files |
+| Phase 10 P04 | 17 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Keep batching, rate limiting, and retry orchestration inside AURA-CHAT's EmbeddingService while delegating single-batch embedding execution to router.embed().
 - [Phase 10]: Validate OpenRouter API keys with a temporary OpenRouterProvider health check and report unsupported providers as unvalidated.
 - [Phase 10]: Serve aggregate settings model discovery via ModelCache fan-out so all model listing endpoints share identical cache semantics and dependency overrides.
+- [Phase 10]: Preserve AURA-NOTES-MANAGER consumer imports by rewriting the service hub files as router-backed façades instead of editing downstream modules.
+- [Phase 10]: Use AST-based forbidden-import scanning so regression tests catch real imports without flagging string literals in verification scripts.
 
 ### Pending Todos
 
@@ -97,13 +100,12 @@ Recent decisions affecting current work:
 - [Phase 8]: Celery worker editable-install import resolution still needs verification during compatibility shim rollout.
 - [Phase 8]: `08-03-SUMMARY.md` is present on disk but still documents validation-open status, so the phase is not yet fully closed.
 - [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs end-to-end validation in a later integration phase.
-- [Phase 10]: Full shared `model_router` suite is still blocked by unrelated dirty-worktree compat failures in `tests/test_compat.py`; 10-01 new tests pass but package-wide regression remains deferred.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 10-02-PLAN.md
-Resume file: .planning/phases/10-cross-app-migration-backend-integration/10-04-PLAN.md
+Stopped at: Completed 10-04-PLAN.md
+Resume file: None
 
 ### Quick Tasks Completed
 
