@@ -29,7 +29,7 @@ from model_router.types import (
     StreamChunk,
 )
 
-_default_router: 'ModelRouter | None' = None
+_default_router: "ModelRouter | None" = None
 
 
 def _coerce_provider_type(value: ProviderType | str) -> ProviderType:
@@ -37,6 +37,18 @@ def _coerce_provider_type(value: ProviderType | str) -> ProviderType:
     if isinstance(value, ProviderType):
         return value
     return ProviderType(value)
+
+
+def _coerce_metadata_provider_type(value: ProviderType | str) -> ProviderType:
+    """Normalize metadata provider input to shared router errors."""
+    try:
+        return _coerce_provider_type(value)
+    except ValueError as error:
+        raise ModelUnavailableError(
+            f"No provider registered for {value}",
+            provider=str(value),
+            original=error,
+        ) from error
 
 
 class ModelRouter:
@@ -87,11 +99,11 @@ class ModelRouter:
         provider_type: ProviderType | str,
     ) -> BaseProvider:
         """Return a registered provider for provider-specific operations."""
-        resolved_type = _coerce_provider_type(provider_type)
+        resolved_type = _coerce_metadata_provider_type(provider_type)
         provider = self._providers.get(resolved_type)
         if provider is None:
             raise ModelUnavailableError(
-                f'No provider registered for {resolved_type.value}',
+                f"No provider registered for {resolved_type.value}",
                 provider=resolved_type.value,
             )
         return provider
@@ -103,13 +115,13 @@ class ModelRouter:
                 return _coerce_provider_type(request.provider)
             except ValueError as error:
                 raise ModelUnavailableError(
-                    f'No provider registered for {request.provider}',
+                    f"No provider registered for {request.provider}",
                     provider=str(request.provider),
                     model=request.model,
                     original=error,
                 ) from error
 
-        if '/' in request.model:
+        if "/" in request.model:
             return ProviderType.OPENROUTER
         return self._config.default_provider
 
@@ -119,7 +131,7 @@ class ModelRouter:
         provider = self._providers.get(resolved_type)
         if provider is None:
             raise ModelUnavailableError(
-                f'No provider registered for {resolved_type.value}',
+                f"No provider registered for {resolved_type.value}",
                 provider=resolved_type.value,
                 model=request.model,
             )
@@ -134,7 +146,7 @@ class ModelRouter:
         if request is not None:
             return request
         if not kwargs:
-            raise ValueError('request or generation kwargs are required')
+            raise ValueError("request or generation kwargs are required")
         return GenerateRequest(**kwargs)
 
     async def generate(
@@ -167,7 +179,7 @@ class ModelRouter:
     ) -> dict[ProviderType, bool]:
         """Check one or all registered providers for availability."""
         if provider is not None:
-            resolved_type = _coerce_provider_type(provider)
+            resolved_type = _coerce_metadata_provider_type(provider)
             registered_provider = self._providers.get(resolved_type)
             if registered_provider is None:
                 return {resolved_type: False}
@@ -191,14 +203,14 @@ class ModelRouter:
                 provider_type = _coerce_provider_type(provider)
             except ValueError as error:
                 raise ModelRouterError(
-                    'Embeddings are only available through Vertex AI',
+                    "Embeddings are only available through Vertex AI",
                     provider=str(provider),
                     original=error,
                 ) from error
 
             if provider_type is not ProviderType.VERTEX_AI:
                 raise ModelRouterError(
-                    'Embeddings are only available through Vertex AI',
+                    "Embeddings are only available through Vertex AI",
                     provider=provider_type.value,
                 )
 
@@ -206,7 +218,7 @@ class ModelRouter:
             texts = [text]
 
         if self._embedding_provider is None:
-            raise ModelRouterError('No embedding provider registered')
+            raise ModelRouterError("No embedding provider registered")
 
         return await self._embedding_provider.embed(texts or [])
 
@@ -236,4 +248,4 @@ def reset_default_router() -> None:
     _default_router = None
 
 
-__all__ = ['ModelRouter', 'get_default_router', 'reset_default_router']
+__all__ = ["ModelRouter", "get_default_router", "reset_default_router"]

@@ -15,6 +15,8 @@ from __future__ import annotations
 import os
 from typing import Any, AsyncGenerator
 
+import httpx
+
 from model_router.config import OpenRouterConfig
 from model_router.errors import (
     AuthenticationError,
@@ -35,63 +37,63 @@ from model_router.types import (
 )
 
 _OPENROUTER_CURATED_PREFIXES = [
-    'anthropic/',
-    'google/',
-    'openai/',
-    'deepseek/',
-    'meta-llama/',
-    'mistralai/',
-    'qwen/',
+    "anthropic/",
+    "google/",
+    "openai/",
+    "deepseek/",
+    "meta-llama/",
+    "mistralai/",
+    "qwen/",
 ]
 
 _TEST_MODELS = [
     ModelInfo(
-        name='anthropic/claude-sonnet-4',
+        name="anthropic/claude-sonnet-4",
         provider=ProviderType.OPENROUTER,
-        display_name='Claude Sonnet 4',
+        display_name="Claude Sonnet 4",
     ),
     ModelInfo(
-        name='google/gemini-2.5-flash',
+        name="google/gemini-2.5-flash",
         provider=ProviderType.OPENROUTER,
-        display_name='Gemini 2.5 Flash',
+        display_name="Gemini 2.5 Flash",
     ),
     ModelInfo(
-        name='openai/gpt-4.1-mini',
+        name="openai/gpt-4.1-mini",
         provider=ProviderType.OPENROUTER,
-        display_name='GPT-4.1 Mini',
+        display_name="GPT-4.1 Mini",
     ),
     ModelInfo(
-        name='deepseek/deepseek-r1',
+        name="deepseek/deepseek-r1",
         provider=ProviderType.OPENROUTER,
-        display_name='DeepSeek R1',
+        display_name="DeepSeek R1",
     ),
     ModelInfo(
-        name='meta-llama/llama-3.3-70b-instruct',
+        name="meta-llama/llama-3.3-70b-instruct",
         provider=ProviderType.OPENROUTER,
-        display_name='Llama 3.3 70B Instruct',
+        display_name="Llama 3.3 70B Instruct",
     ),
     ModelInfo(
-        name='mistralai/mistral-large',
+        name="mistralai/mistral-large",
         provider=ProviderType.OPENROUTER,
-        display_name='Mistral Large',
+        display_name="Mistral Large",
     ),
     ModelInfo(
-        name='qwen/qwen-2.5-72b-instruct',
+        name="qwen/qwen-2.5-72b-instruct",
         provider=ProviderType.OPENROUTER,
-        display_name='Qwen 2.5 72B Instruct',
+        display_name="Qwen 2.5 72B Instruct",
     ),
 ]
 
 
 def _is_test_mode() -> bool:
     """Return True when provider calls should avoid live OpenRouter access."""
-    return os.getenv('AURA_TEST_MODE', '').strip().lower() == 'true'
+    return os.getenv("AURA_TEST_MODE", "").strip().lower() == "true"
 
 
 def _coerce_text_value(value: Any) -> str:
     """Normalize mixed SDK content shapes into a plain text string."""
     if value is None:
-        return ''
+        return ""
     if isinstance(value, str):
         return value
     if isinstance(value, list):
@@ -101,14 +103,14 @@ def _coerce_text_value(value: Any) -> str:
                 parts.append(item)
                 continue
             if isinstance(item, dict):
-                text = item.get('text')
+                text = item.get("text")
                 if isinstance(text, str):
                     parts.append(text)
                 continue
-            text = getattr(item, 'text', None)
+            text = getattr(item, "text", None)
             if isinstance(text, str):
                 parts.append(text)
-        return ''.join(parts)
+        return "".join(parts)
     return str(value)
 
 
@@ -119,40 +121,40 @@ def _build_messages(request: GenerateRequest) -> list[dict[str, Any]]:
     if request.system_instruction:
         messages.append(
             {
-                'role': 'system',
-                'content': request.system_instruction,
+                "role": "system",
+                "content": request.system_instruction,
             }
         )
 
     if isinstance(request.contents, str):
-        messages.append({'role': 'user', 'content': request.contents})
+        messages.append({"role": "user", "content": request.contents})
         return messages
 
     for item in request.contents:
         if isinstance(item, str):
-            messages.append({'role': 'user', 'content': item})
+            messages.append({"role": "user", "content": item})
             continue
 
         if not isinstance(item, dict):
             continue
 
-        role = str(item.get('role', 'user'))
-        if role == 'model':
-            role = 'assistant'
+        role = str(item.get("role", "user"))
+        if role == "model":
+            role = "assistant"
 
-        parts = item.get('parts', [])
+        parts = item.get("parts", [])
         content_parts: list[str] = []
         for part in parts:
             if isinstance(part, str):
                 content_parts.append(part)
             elif isinstance(part, dict):
-                text = part.get('text')
+                text = part.get("text")
                 if isinstance(text, str):
                     content_parts.append(text)
 
-        content = ''.join(content_parts)
+        content = "".join(content_parts)
         if content:
-            messages.append({'role': role, 'content': content})
+            messages.append({"role": role, "content": content})
 
     return messages
 
@@ -166,20 +168,20 @@ def _build_thinking_params(
         return {}
 
     model_name = model.lower()
-    budget = int(thinking_config.get('thinking_budget', 0) or 0)
+    budget = int(thinking_config.get("thinking_budget", 0) or 0)
     if budget <= 0:
         return {}
 
-    if 'claude' in model_name or 'anthropic' in model_name:
+    if "claude" in model_name or "anthropic" in model_name:
         if budget <= 1024:
-            effort = 'low'
+            effort = "low"
         elif budget <= 4096:
-            effort = 'medium'
+            effort = "medium"
         else:
-            effort = 'high'
-        return {'reasoning': {'effort': effort}}
+            effort = "high"
+        return {"reasoning": {"effort": effort}}
 
-    if 'deepseek' in model_name and 'r1' in model_name:
+    if "deepseek" in model_name and "r1" in model_name:
         return {}
 
     return {}
@@ -188,20 +190,45 @@ def _build_thinking_params(
 def _build_headers(config: OpenRouterConfig) -> dict[str, str]:
     """Build OpenRouter attribution and auth headers."""
     headers = {
-        'Authorization': f'Bearer {config.api_key}',
-        'X-Title': config.site_name,
+        "Authorization": f"Bearer {config.api_key}",
+        "X-Title": config.site_name,
     }
     if config.site_url:
-        headers['HTTP-Referer'] = config.site_url
+        headers["HTTP-Referer"] = config.site_url
     return headers
 
 
 def _map_openrouter_error(
     error: BaseException,
     *,
-    model: str = '',
+    model: str = "",
 ) -> ModelRouterError:
     """Map OpenRouter/OpenAI SDK failures to the shared error hierarchy."""
+    if isinstance(error, httpx.HTTPStatusError):
+        status_code = error.response.status_code
+        if status_code in (401, 403):
+            return AuthenticationError(
+                str(error),
+                provider=ProviderType.OPENROUTER.value,
+                model=model,
+                original=error,
+            )
+        if status_code == 429:
+            retry_after_value = error.response.headers.get("Retry-After")
+            retry_after: float | None = None
+            if retry_after_value is not None:
+                try:
+                    retry_after = float(retry_after_value)
+                except ValueError:
+                    retry_after = None
+            return RateLimitError(
+                str(error),
+                provider=ProviderType.OPENROUTER.value,
+                model=model,
+                original=error,
+                retry_after=retry_after,
+            )
+
     try:
         import openai as openai_mod
     except ImportError:
@@ -235,7 +262,7 @@ def _map_openrouter_error(
         )
     if isinstance(error, openai_mod.BadRequestError):
         error_text = str(error).lower()
-        if 'safety' in error_text or 'content' in error_text:
+        if "safety" in error_text or "content" in error_text:
             return ContentPolicyError(
                 str(error),
                 provider=ProviderType.OPENROUTER.value,
@@ -277,14 +304,14 @@ class OpenRouterProvider(BaseProvider):
             from openai import AsyncOpenAI
         except ImportError as error:
             raise ModelRouterError(
-                'OpenRouter support requires the openai extra dependency',
+                "OpenRouter support requires the openai extra dependency",
                 provider=ProviderType.OPENROUTER.value,
                 original=error,
             ) from error
 
-        default_headers = {'X-Title': self._config.site_name}
+        default_headers = {"X-Title": self._config.site_name}
         if self._config.site_url:
-            default_headers['HTTP-Referer'] = self._config.site_url
+            default_headers["HTTP-Referer"] = self._config.site_url
 
         self._client = AsyncOpenAI(
             base_url=self._config.base_url,
@@ -297,7 +324,7 @@ class OpenRouterProvider(BaseProvider):
         """Generate a normalized response for an OpenRouter request."""
         if self._test_mode:
             return GenerateResponse(
-                text='Test-mode output.',
+                text="Test-mode output.",
                 model_used=request.model,
                 provider=ProviderType.OPENROUTER,
                 usage=UsageInfo(),
@@ -310,15 +337,15 @@ class OpenRouterProvider(BaseProvider):
                 request.thinking_config,
             )
             kwargs: dict[str, Any] = {
-                'model': request.model,
-                'messages': _build_messages(request),
+                "model": request.model,
+                "messages": _build_messages(request),
             }
             if request.temperature is not None:
-                kwargs['temperature'] = request.temperature
+                kwargs["temperature"] = request.temperature
             if request.max_output_tokens is not None:
-                kwargs['max_tokens'] = request.max_output_tokens
+                kwargs["max_tokens"] = request.max_output_tokens
             if extra_body:
-                kwargs['extra_body'] = extra_body
+                kwargs["extra_body"] = extra_body
 
             response = await client.chat.completions.create(**kwargs)
         except ModelRouterError:
@@ -328,22 +355,18 @@ class OpenRouterProvider(BaseProvider):
 
         choice = response.choices[0]
         message = choice.message
-        reasoning = getattr(message, 'reasoning_content', None)
+        reasoning = getattr(message, "reasoning_content", None)
         if not reasoning:
-            reasoning = getattr(message, 'reasoning', None)
-        usage = getattr(response, 'usage', None)
+            reasoning = getattr(message, "reasoning", None)
+        usage = getattr(response, "usage", None)
         return GenerateResponse(
-            text=_coerce_text_value(getattr(message, 'content', '')),
-            model_used=str(getattr(response, 'model', None) or request.model),
+            text=_coerce_text_value(getattr(message, "content", "")),
+            model_used=str(getattr(response, "model", None) or request.model),
             provider=ProviderType.OPENROUTER,
             usage=UsageInfo(
-                input_tokens=int(getattr(usage, 'prompt_tokens', 0) or 0),
-                output_tokens=int(
-                    getattr(usage, 'completion_tokens', 0) or 0
-                ),
-                thinking_tokens=int(
-                    getattr(usage, 'reasoning_tokens', 0) or 0
-                ),
+                input_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+                output_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+                thinking_tokens=int(getattr(usage, "reasoning_tokens", 0) or 0),
             ),
             thinking_text=_coerce_text_value(reasoning) or None,
         )
@@ -354,7 +377,7 @@ class OpenRouterProvider(BaseProvider):
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream normalized thinking/content chunks from OpenRouter."""
         if self._test_mode:
-            yield StreamChunk(type='content', text='Test-mode stream output.')
+            yield StreamChunk(type="content", text="Test-mode stream output.")
             return
 
         client = self._get_client()
@@ -365,45 +388,45 @@ class OpenRouterProvider(BaseProvider):
                 request.thinking_config,
             )
             kwargs: dict[str, Any] = {
-                'model': request.model,
-                'messages': _build_messages(request),
-                'stream': True,
+                "model": request.model,
+                "messages": _build_messages(request),
+                "stream": True,
             }
             if request.temperature is not None:
-                kwargs['temperature'] = request.temperature
+                kwargs["temperature"] = request.temperature
             if request.max_output_tokens is not None:
-                kwargs['max_tokens'] = request.max_output_tokens
+                kwargs["max_tokens"] = request.max_output_tokens
             if extra_body:
-                kwargs['extra_body'] = extra_body
+                kwargs["extra_body"] = extra_body
 
             stream = await client.chat.completions.create(**kwargs)
             async for chunk in stream:
-                if not getattr(chunk, 'choices', None):
+                if not getattr(chunk, "choices", None):
                     continue
                 delta = chunk.choices[0].delta
-                reasoning = getattr(delta, 'reasoning_content', None)
+                reasoning = getattr(delta, "reasoning_content", None)
                 if not reasoning:
-                    reasoning = getattr(delta, 'reasoning', None)
+                    reasoning = getattr(delta, "reasoning", None)
                 reasoning_text = _coerce_text_value(reasoning)
                 if reasoning_text:
-                    yield StreamChunk(type='thinking', text=reasoning_text)
+                    yield StreamChunk(type="thinking", text=reasoning_text)
 
-                content_text = _coerce_text_value(getattr(delta, 'content', None))
+                content_text = _coerce_text_value(getattr(delta, "content", None))
                 if content_text:
-                    yield StreamChunk(type='content', text=content_text)
+                    yield StreamChunk(type="content", text=content_text)
         except ModelRouterError:
             raise
         except Exception as error:
             raise _map_openrouter_error(error, model=request.model) from error
         finally:
             if stream is not None:
-                close_fn = getattr(stream, 'close', None)
+                close_fn = getattr(stream, "close", None)
                 if callable(close_fn):
                     try:
                         close_fn()
                     except Exception:
                         pass
-                aclose_fn = getattr(stream, 'aclose', None)
+                aclose_fn = getattr(stream, "aclose", None)
                 if callable(aclose_fn):
                     try:
                         await aclose_fn()
@@ -416,27 +439,27 @@ class OpenRouterProvider(BaseProvider):
             return list(_TEST_MODELS)
 
         try:
-            import httpx
-
             async with httpx.AsyncClient(timeout=10.0) as http_client:
                 response = await http_client.get(
-                    f'{self._config.base_url.rstrip('/')}/models',
+                    f"{self._config.base_url.rstrip('/')}/models",
                     headers=_build_headers(self._config),
                 )
                 response.raise_for_status()
         except Exception as error:
             raise _map_openrouter_error(error) from error
 
-        payload = response.json().get('data', [])
+        payload = response.json().get("data", [])
         models: list[ModelInfo] = []
         for item in payload:
-            name = item.get('id', '')
+            name = item.get("id", "")
             if not isinstance(name, str):
                 continue
-            if not any(name.startswith(prefix) for prefix in _OPENROUTER_CURATED_PREFIXES):
+            if not any(
+                name.startswith(prefix) for prefix in _OPENROUTER_CURATED_PREFIXES
+            ):
                 continue
 
-            display_name = item.get('name')
+            display_name = item.get("name")
             models.append(
                 ModelInfo(
                     name=name,
@@ -463,30 +486,28 @@ class OpenRouterProvider(BaseProvider):
         """Fetch OpenRouter usage and credit metadata."""
         if self._test_mode:
             return {
-                'usage': 0.0,
-                'limit': 100.0,
-                'is_free_tier': False,
+                "usage": 0.0,
+                "limit": 100.0,
+                "is_free_tier": False,
             }
 
         try:
-            import httpx
-
             async with httpx.AsyncClient(timeout=10.0) as http_client:
                 response = await http_client.get(
-                    f'{self._config.base_url.rstrip('/')}/auth/key',
+                    f"{self._config.base_url.rstrip('/')}/auth/key",
                     headers=_build_headers(self._config),
                 )
                 response.raise_for_status()
         except Exception as error:
             raise _map_openrouter_error(error) from error
 
-        data = response.json().get('data', {})
+        data = response.json().get("data", {})
         return {
-            'usage': float(data.get('usage', 0.0) or 0.0),
-            'limit': data.get('limit'),
-            'is_free_tier': bool(data.get('is_free_tier', False)),
-            'rate_limit': data.get('rate_limit', {}),
+            "usage": float(data.get("usage", 0.0) or 0.0),
+            "limit": data.get("limit"),
+            "is_free_tier": bool(data.get("is_free_tier", False)),
+            "rate_limit": data.get("rate_limit", {}),
         }
 
 
-__all__ = ['OpenRouterProvider', '_map_openrouter_error']
+__all__ = ["OpenRouterProvider", "_map_openrouter_error"]
