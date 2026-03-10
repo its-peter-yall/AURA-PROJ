@@ -100,11 +100,12 @@ Plans:
 
 **Key risks:** Streaming API differences between providers (chunking behavior, thinking content separation, termination signals). Each provider adapter must normalize its own stream format. Curated model allowlist needed to prevent exposing non-functional models.
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
 - [x] 09-01-PLAN.md — OpenRouter provider core: config, OpenRouterProvider (generate, stream, list_models, health_check, credit balance), error mapping, auto-registration, TDD tests ([summary](./phases/09-openrouter-streaming/09-01-SUMMARY.md))
 - [x] 09-02-PLAN.md — Cross-provider streaming normalization verification + thinking config translation tests + router delegation for OpenRouter ([summary](./phases/09-openrouter-streaming/09-02-SUMMARY.md))
+- [ ] 09-03-PLAN.md — Gap closure: router-level metadata surface (list_models, health_check, get_provider) + Vertex AI thinking regression tests
 
 ---
 
@@ -212,7 +213,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
-| 9. OpenRouter + Streaming | v1.1 | 2/2 | Complete | 2026-03-10 |
+| 9. OpenRouter + Streaming | v1.1 | 2/3 | In Progress | - |
 | 10. Cross-App Migration + Config | v1.1 | 0/TBD | Not started | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
