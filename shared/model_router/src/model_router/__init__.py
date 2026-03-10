@@ -12,6 +12,7 @@
 
 from model_router.compat import VertexCompatModel
 from model_router.config import OpenRouterConfig
+from model_router.cache import ModelCache, get_cached_models
 from model_router.errors import (
     AuthenticationError,
     ContentPolicyError,
@@ -21,9 +22,11 @@ from model_router.errors import (
     ProviderTimeoutError,
     RateLimitError,
 )
+from model_router.key_manager import KeyManager
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
 from model_router.providers.openrouter import OpenRouterProvider
 from model_router.router import ModelRouter, get_default_router, reset_default_router
+from model_router.settings_store import SettingsStore
 from model_router.types import (
     GenerateRequest,
     GenerateResponse,
@@ -34,27 +37,31 @@ from model_router.types import (
 )
 
 __all__ = [
-    'AuthenticationError',
-    'BaseEmbeddingProvider',
-    'BaseProvider',
-    'ContentPolicyError',
-    'EmbeddingDimensionError',
-    'GenerateRequest',
-    'GenerateResponse',
-    'get_default_router',
-    'ModelInfo',
-    'ModelRouter',
-    'ModelRouterError',
-    'ModelUnavailableError',
-    'OpenRouterConfig',
-    'OpenRouterProvider',
-    'ProviderTimeoutError',
-    'ProviderType',
-    'RateLimitError',
-    'reset_default_router',
-    'StreamChunk',
-    'UsageInfo',
-    'VertexCompatModel',
+    "AuthenticationError",
+    "BaseEmbeddingProvider",
+    "BaseProvider",
+    "get_cached_models",
+    "ContentPolicyError",
+    "EmbeddingDimensionError",
+    "GenerateRequest",
+    "GenerateResponse",
+    "get_default_router",
+    "KeyManager",
+    "ModelInfo",
+    "ModelCache",
+    "ModelRouter",
+    "ModelRouterError",
+    "ModelUnavailableError",
+    "OpenRouterConfig",
+    "OpenRouterProvider",
+    "ProviderTimeoutError",
+    "ProviderType",
+    "RateLimitError",
+    "reset_default_router",
+    "SettingsStore",
+    "StreamChunk",
+    "UsageInfo",
+    "VertexCompatModel",
 ]
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"
