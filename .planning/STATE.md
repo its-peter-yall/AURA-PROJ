@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T17:37:03Z"
-last_activity: "2026-03-10 - Completed Plan 10-05 to remove direct SDK imports from chat test code and add ARQ worker import verification"
+last_updated: "2026-03-10T17:42:30Z"
+last_activity: "2026-03-10 - Completed Plan 10-06 to enforce configurable cache TTL bounds and provider-aware API key validation"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -19,23 +19,23 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 10 gap closure -- Plan 10-06 remains to close TTL and provider-validation verification gaps before Phase 11
+**Current focus:** Phase 10 complete -- backend integration gaps are closed and Phase 11 frontend settings work can begin
 
 ## Current Position
 
 Phase: 10 of 13 (Cross-App Migration + Backend Integration)
-Plan: 5 of 6 complete (10-01 through 10-05 done, 10-06 gap closure pending)
-Status: Gap closure in progress
-Last activity: 2026-03-10 - Completed Plan 10-05 gap closure for test import cleanup + ARQ worker verification
+Plan: 6 of 6 complete (10-01 through 10-06 done)
+Status: Phase 10 complete
+Last activity: 2026-03-10 - Completed Plan 10-06 gap closure for TTL bounds + provider-aware validation
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 11 min
-- Total execution time: 112 min
+- Total execution time: 126 min
 
 **By Phase:**
 
@@ -43,7 +43,7 @@ Progress: [█████████░] 90%
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
 | 09 | 3 | 10 min | 3 min |
-| 10 | 5 | 66 min | 13 min |
+| 10 | 6 | 80 min | 13 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
@@ -53,6 +53,7 @@ Progress: [█████████░] 90%
 | Phase 10 P02 | 10 min | 3 tasks | 9 files |
 | Phase 10 P04 | 17 min | 2 tasks | 5 files |
 | Phase 10-cross-app-migration-backend-integration P05 | 8 min | 2 tasks | 2 files |
+| Phase 10-cross-app-migration-backend-integration P06 | 14 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Use AST-based forbidden-import scanning so regression tests catch real imports without flagging string literals in verification scripts.
 - [Phase 10-cross-app-migration-backend-integration]: Keep the live thinking verification end-to-end, but drive it through model_router generate/stream calls while retaining the legacy façade import surface for compatibility visibility.
 - [Phase 10-cross-app-migration-backend-integration]: Extend the forbidden-import audit to scan dedicated test directories and verify the AURA-CHAT ARQ worker import chain in subprocess context.
+- [Phase 10-cross-app-migration-backend-integration]: Read MODEL_CACHE_TTL_SECONDS in each settings router, but enforce the 300-3600 second contract centrally inside shared ModelCache helpers.
+- [Phase 10-cross-app-migration-backend-integration]: Return validation metadata and JSON null for Ollama so the admin API distinguishes not-applicable validation from an actual failed credential check.
 
 ### Pending Todos
 
@@ -107,9 +110,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 10-cross-app-migration-backend-integration-05-PLAN.md
+Stopped at: Completed 10-cross-app-migration-backend-integration-06-PLAN.md
 Resume file: None
-Next action: Execute 10-06 gap closure via `/gsd-execute-phase 10`
+Next action: Begin Phase 11 frontend provider settings/model selection planning or execution
 
 ### Quick Tasks Completed
 

@@ -133,8 +133,8 @@ Plans:
 - [x] 10-02-PLAN.md — Admin settings REST endpoints for both AURA-CHAT and AURA-NOTES-MANAGER ([summary](./phases/10-cross-app-migration-backend-integration/10-02-SUMMARY.md))
 - [x] 10-03-PLAN.md — AURA-CHAT full migration: vertex_ai_client.py + embeddings.py rewritten as model_router façades ([summary](./phases/10-cross-app-migration-backend-integration/10-03-SUMMARY.md))
 - [x] 10-04-PLAN.md — AURA-NOTES-MANAGER full migration + Celery verification + no-direct-imports audit test ([summary](./phases/10-cross-app-migration-backend-integration/10-04-SUMMARY.md))
-- [ ] 10-05-PLAN.md — Gap closure: test file SDK import cleanup + ARQ worker import verification
-- [ ] 10-06-PLAN.md — Gap closure: configurable model cache TTL (5-60 min) + provider-aware key validation
+- [x] 10-05-PLAN.md — Gap closure: test file SDK import cleanup + ARQ worker import verification ([summary](./phases/10-cross-app-migration-backend-integration/10-05-SUMMARY.md))
+- [x] 10-06-PLAN.md — Gap closure: configurable model cache TTL (5-60 min) + provider-aware key validation ([summary](./phases/10-cross-app-migration-backend-integration/10-06-SUMMARY.md))
 
 ---
 
@@ -156,11 +156,13 @@ Plans:
 
 **Build note:** Components built in AURA-CHAT (React 19) first, then copied to AURA-NOTES-MANAGER (React 18). React version gap prevents a shared npm package.
 
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md — Data layer foundation: settings types, model grouping function, Zustand model store, TanStack Query settings hooks (TDD)
+- [ ] 11-02-PLAN.md — Settings page UI: HierarchicalModelPicker + admin components (ProviderSettings, DefaultModel, ApiKey) + SettingsPage wiring
+- [ ] 11-03-PLAN.md — Inline chat model picker + ChatPage integration + session model persistence
+- [ ] 11-04-PLAN.md — AURA-NOTES-MANAGER adaptation: copy + adapt all settings components, create SettingsPage + routing
 
 ---
 
@@ -218,8 +220,8 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
-| 10. Cross-App Migration + Config | v1.1 | 5/6 | Gap Closure | - |
-| 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
+| 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
+| 11. Frontend Settings + Model UI | v1.1 | 0/4 | Planned | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 
