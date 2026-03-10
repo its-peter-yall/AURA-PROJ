@@ -6,11 +6,12 @@
 # from repo, app, and Celery worker working-directory contexts.
 
 # @see: shared/model_router/tests/test_import_contexts.py
-# @note: This initial RED-phase version scans raw file contents directly.
+# @note: Uses AST import inspection so string literals do not create false hits.
 
 from __future__ import annotations
 
 import os
+import ast
 import re
 import subprocess
 import sys
@@ -55,11 +56,34 @@ def _find_violations(app_name: str) -> list[str]:
     violations: list[str] = []
     for path in _iter_python_files(SCAN_DIRS[app_name]):
         source = path.read_text(encoding="utf-8", errors="ignore")
-        for line_number, line in enumerate(source.splitlines(), start=1):
-            for pattern in FORBIDDEN_PATTERNS:
-                if re.search(pattern, line):
-                    relative_path = path.relative_to(REPO_ROOT)
-                    violations.append(f"{relative_path}:{line_number}: {line.strip()}")
+        tree = ast.parse(source, filename=str(path))
+        lines = source.splitlines()
+        imports = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Import, ast.ImportFrom))
+        ]
+        for node in imports:
+            matched = False
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    candidate = f"import {alias.name}"
+                    if any(
+                        re.search(pattern, candidate) for pattern in FORBIDDEN_PATTERNS
+                    ):
+                        matched = True
+                        break
+            else:
+                module = node.module or ""
+                candidate = f"from {module} import sentinel"
+                matched = any(
+                    re.search(pattern, candidate) for pattern in FORBIDDEN_PATTERNS
+                )
+
+            if matched:
+                relative_path = path.relative_to(REPO_ROOT)
+                import_line = lines[node.lineno - 1].strip()
+                violations.append(f"{relative_path}:{node.lineno}: {import_line}")
     return violations
 
 
