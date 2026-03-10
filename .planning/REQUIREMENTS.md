@@ -29,7 +29,7 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 
 ### Frontend UI
 
-- [ ] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider → vendor → model) with search/filter
+- [ ] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider > vendor > model) with search/filter
 - [ ] **UI-02**: Chat interface includes an inline compact model picker for quick mid-session model switching
 - [ ] **UI-03**: Both AURA-CHAT and AURA-NOTES-MANAGER use the shared model router for all LLM calls with no direct provider imports
 
@@ -58,13 +58,13 @@ Deferred to next milestone. Tracked but not in current roadmap.
 
 | Feature | Reason |
 |---------|--------|
-| User-facing embedding provider switching | Corrupts Neo4j 768-dim HNSW indices silently — embeddings locked per deployment |
-| Per-user BYOK API key management | Security nightmare in academic setting — admin manages all keys |
-| Real-time provider price comparison | Adds latency, complexity for marginal value — use cached pricing |
-| Self-hosted LLM proxy/gateway | Scope creep — in-process router is simpler and faster |
-| Fine-tuning / custom model training UI | Out of scope — orders of magnitude more complex |
-| Provider-specific advanced parameter exposure | Overwhelming UI — expose only universal params (temperature, max_tokens, top_p) |
-| Mobile native experience | Web-first — existing PWA patterns sufficient |
+| User-facing embedding provider switching | Corrupts Neo4j 768-dim HNSW indices silently -- embeddings locked per deployment |
+| Per-user BYOK API key management | Security nightmare in academic setting -- admin manages all keys |
+| Real-time provider price comparison | Adds latency, complexity for marginal value -- use cached pricing |
+| Self-hosted LLM proxy/gateway | Scope creep -- in-process router is simpler and faster |
+| Fine-tuning / custom model training UI | Out of scope -- orders of magnitude more complex |
+| Provider-specific advanced parameter exposure | Overwhelming UI -- expose only universal params (temperature, max_tokens, top_p) |
+| Mobile native experience | Web-first -- existing PWA patterns sufficient |
 
 ## Traceability
 
@@ -72,28 +72,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROUTER-01 | — | Pending |
-| ROUTER-02 | — | Pending |
-| ROUTER-03 | — | Pending |
-| ROUTER-04 | — | Pending |
-| PROV-01 | — | Pending |
-| PROV-02 | — | Pending |
-| PROV-03 | — | Pending |
-| CONFIG-01 | — | Pending |
-| CONFIG-02 | — | Pending |
-| CONFIG-03 | — | Pending |
-| CONFIG-04 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| USAGE-01 | — | Pending |
-| USAGE-02 | — | Pending |
+| ROUTER-01 | Phase 8 | Pending |
+| ROUTER-02 | Phase 8 | Pending |
+| ROUTER-03 | Phase 9 | Pending |
+| ROUTER-04 | Phase 8 | Pending |
+| PROV-01 | Phase 8 | Pending |
+| PROV-02 | Phase 9 | Pending |
+| PROV-03 | Phase 9 | Pending |
+| CONFIG-01 | Phase 10 | Pending |
+| CONFIG-02 | Phase 11 | Pending |
+| CONFIG-03 | Phase 10 | Pending |
+| CONFIG-04 | Phase 10 | Pending |
+| UI-01 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Pending |
+| UI-03 | Phase 10 | Pending |
+| USAGE-01 | Phase 12 | Pending |
+| USAGE-02 | Phase 12 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 16 total
-- Mapped to phases: 0 ⚠️
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after initial definition*
+*Last updated: 2026-03-10 after roadmap creation (phases 8-13)*

@@ -1,63 +1,24 @@
-# AURA Roadmap
+# Roadmap: AURA v1.1 -- Multi-Provider LLM Architecture
 
-> **Current:** v1.0 M2KG Transformation (Shipped 2026-03-08)
-> **Next:** Planning v1.1
+**Created:** 2026-03-10
+**Phases:** 6 (Phase 8-13)
+**Requirements:** 16/16 mapped
 
----
+## Overview
 
-## Project Vision
-
-Transform AURA from document-centric to **module-centric learning platform** with interconnected knowledge graphs enabling:
-- Contextual learning (module-scoped study sessions)
-- Cross-module discovery (concept bridges)
-- Progressive mastery tracking
-- Semantic navigation through graph relationships
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│              AURA-NOTES-MANAGER (Staff Portal)              │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ 1. Document Management                               │    │
-│  │ 2. Module Organization                               │    │
-│  │ 3. KG Processing                                     │    │
-│  │ 4. Module Publishing                                 │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-                   ┌─────────────────┐
-                   │   Neo4j KG      │
-                   │   (Shared)      │
-                   └─────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 AURA-CHAT (Student Chat)                    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ 1. Module Selection UI                              │    │
-│  │ 2. Study Sessions                                   │    │
-│  │ 3. Module-Aware RAG                                 │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
+AURA v1.1 transforms both applications from single-provider (Vertex AI) to a shared, provider-agnostic Model Router supporting Vertex AI, OpenRouter (200+ models), and an Ollama stub. The work progresses from shared types and Vertex AI migration (Phase 8) through new providers and streaming normalization (Phase 9), cross-app wiring with backend configuration (Phase 10), frontend UI for model selection (Phase 11), usage tracking with cost dashboard (Phase 12), and integration polish (Phase 13). Phase numbering continues from v1.0 which ended at Phase 7.
 
 ## Milestones
 
-- ✅ **v1.0 M2KG Transformation** — Phases 1-7 (shipped 2026-03-08)
-- 📋 **v1.1** — TBD (planning)
+- [x] **v1.0 M2KG Transformation** -- Phases 1-7 (shipped 2026-03-08)
+- [ ] **v1.1 Multi-Provider LLM Architecture** -- Phases 8-13 (in progress)
 
 ---
 
 ## Completed Milestone
 
 <details>
-<summary>✅ v1.0 M2KG Transformation (Phases 1-7) — SHIPPED 2026-03-08</summary>
+<summary>v1.0 M2KG Transformation (Phases 1-7) -- SHIPPED 2026-03-08</summary>
 
 ### Overview
 Module-centric learning platform with knowledge graphs, persistent study sessions, and full testing infrastructure.
@@ -84,15 +45,177 @@ Module-centric learning platform with knowledge graphs, persistent study session
 
 ---
 
-## Next Milestone (v1.1)
+## Phases
 
-**Status:** Not started
+**Milestone v1.1: Multi-Provider LLM Architecture**
 
-To begin planning v1.1:
+- [ ] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
+- [ ] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
+- [ ] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management
+- [ ] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence
+- [ ] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters
+- [ ] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification
 
-```
-/gsd:new-milestone
-```
+## Phase Details
+
+### Phase 8: Shared Package Foundation + Vertex AI Migration
+
+**Goal:** Both AURA applications can route LLM calls through a shared model router with the existing Vertex AI provider, with zero regression in functionality or tests
+
+**Depends on:** Nothing (first phase of v1.1; v1.0 complete)
+
+**Requirements:** ROUTER-01, ROUTER-02, ROUTER-04, PROV-01
+
+**Success Criteria** (what must be TRUE):
+  1. A call to `router.generate(model="gemini-2.0-flash", ...)` returns a response identical in shape to the existing Vertex AI direct calls
+  2. A call to `router.embed(text, ...)` produces 768-dimension vectors matching existing Gemini embedding output, and rejects any request to switch embedding provider at runtime
+  3. All 210+ existing unit tests pass without modification when running through the router interface via compatibility shims
+  4. Provider errors (auth failure, rate limit, timeout, content policy, model unavailable) surface as typed exceptions from a unified error hierarchy with the original error preserved
+  5. Both AURA-CHAT and AURA-NOTES-MANAGER can `from model_router import ModelRouter` from the shared package installed via `pip install -e`
+
+**Key risks:** Highest-risk phase. Three critical pitfalls converge: migration breakage across 35+ files with two different Vertex AI SDKs (`google-genai` and `vertexai.generative_models`), shared package import resolution in a monorepo with nested git repos and Celery workers, and embedding dimension validation for 768-dim HNSW indices. Strangler Fig pattern mandatory -- wrap existing code first, verify tests, then migrate callers incrementally. Budget 2-3x normal estimation.
+
+**Plans:** TBD
+
+Plans:
+- [ ] 08-01: TBD
+- [ ] 08-02: TBD
+
+---
+
+### Phase 9: OpenRouter Provider + Streaming Normalization
+
+**Goal:** Users can access 200+ models via OpenRouter alongside Vertex AI, with all providers streaming responses through a single normalized SSE format and thinking mode working across providers
+
+**Depends on:** Phase 8
+
+**Requirements:** PROV-02, ROUTER-03, PROV-03
+
+**Success Criteria** (what must be TRUE):
+  1. A generate request to an OpenRouter model (e.g., `anthropic/claude-sonnet-4`) returns a valid response through the router interface with a valid API key
+  2. Streaming responses from both Vertex AI and OpenRouter arrive as identical `{type: "thinking"|"content", text}` SSE chunks in the browser
+  3. Thinking/reasoning content from Gemini thinking mode, Claude extended thinking, and DeepSeek reasoning is accessible through a unified enable/budget interface, with graceful degradation for models that do not support thinking
+  4. OpenRouter credit balance and available model listing are retrievable via the router API
+
+**Key risks:** Streaming API differences between providers (chunking behavior, thinking content separation, termination signals). Each provider adapter must normalize its own stream format. Curated model allowlist needed to prevent exposing non-functional models.
+
+**Plans:** TBD
+
+Plans:
+- [ ] 09-01: TBD
+- [ ] 09-02: TBD
+
+---
+
+### Phase 10: Cross-App Migration + Backend Integration
+
+**Goal:** Both applications use the model router exclusively for every LLM call, with admin-configurable defaults, dynamic model discovery, and secure API key management
+
+**Depends on:** Phase 9
+
+**Requirements:** UI-03, CONFIG-01, CONFIG-03, CONFIG-04
+
+**Success Criteria** (what must be TRUE):
+  1. Neither AURA-CHAT nor AURA-NOTES-MANAGER contains any direct import of `vertexai`, `google.generativeai`, or `openai` SDK outside the shared model_router package
+  2. Admin can set the default provider and model for each use case (chat, embeddings, entity extraction) via REST settings endpoints
+  3. The system returns a list of available models from each configured provider, refreshed from a cache with configurable TTL (5-60 minutes)
+  4. Admin can store, validate, and manage API keys per provider through backend APIs, with keys masked in all responses (e.g., `sk-...abc`)
+  5. Celery workers in both apps successfully import and use the shared model router for background KG processing tasks
+
+**Key risks:** Configuration drift between the two apps. Provider settings, API keys, and defaults can diverge. Shared config source needed with clear separation of generation config (user-facing) from processing config (operational).
+
+**Plans:** TBD
+
+Plans:
+- [ ] 10-01: TBD
+- [ ] 10-02: TBD
+
+---
+
+### Phase 11: Frontend Provider Settings + Model Selection UI
+
+**Goal:** Students can pick any available model for their study session through an intuitive hierarchical selector, and admins can manage provider configuration through a settings page
+
+**Depends on:** Phase 10
+
+**Requirements:** UI-01, UI-02, CONFIG-02
+
+**Success Criteria** (what must be TRUE):
+  1. Provider selection UI displays a 2-level hierarchy for Vertex AI/Ollama (provider then model) and a 3-level hierarchy for OpenRouter (provider then vendor then model), with search and filter capabilities
+  2. Chat interface includes a compact inline model picker that lets the student switch models mid-session without leaving the conversation
+  3. A student's model selection persists for the duration of their study session and restores when they resume the session later
+  4. Both AURA-CHAT and AURA-NOTES-MANAGER render the provider settings page; AURA-CHAT additionally includes the inline chat model picker
+
+**Key risks:** State synchronization between Zustand (client selection) and TanStack Query (server model lists). Provider change must invalidate cached model lists. Clear UI distinction between chat model settings and processing model settings.
+
+**Build note:** Components built in AURA-CHAT (React 19) first, then copied to AURA-NOTES-MANAGER (React 18). React version gap prevents a shared npm package.
+
+**Plans:** TBD
+
+Plans:
+- [ ] 11-01: TBD
+- [ ] 11-02: TBD
+
+---
+
+### Phase 12: Usage Tracking + Cost Dashboard
+
+**Goal:** Administrators can monitor LLM usage costs across providers, models, and time periods to make informed spending decisions
+
+**Depends on:** Phase 10 (usage tracking hooks wired from Phase 8; dashboard depends on accumulated data and frontend from Phase 11)
+
+**Requirements:** USAGE-01, USAGE-02
+
+**Success Criteria** (what must be TRUE):
+  1. Every LLM request records token usage (input, output, thinking tokens) and estimated cost, attributed to session, user, model, and provider
+  2. A dashboard displays cost charts broken down by provider, model, and time period with selectable date range filters
+  3. Per-session cost is visible in the chat UI so students can see the cost impact of their model choices
+
+**Key risks:** Cost calculation varies by provider (Gemini per character, OpenRouter per token, Ollama free). Cached pricing data needed with an "estimated" flag for approximations. Usage tracking hooks should be wired into the router from Phase 8 to avoid costly retrofit.
+
+**Plans:** TBD
+
+Plans:
+- [ ] 12-01: TBD
+- [ ] 12-02: TBD
+
+---
+
+### Phase 13: Polish + Integration Testing
+
+**Goal:** The entire multi-provider system works reliably across both applications with no regressions, edge cases handled, and cross-provider features validated end-to-end
+
+**Depends on:** Phases 8-12
+
+**Requirements:** Cross-cutting quality validation (no new requirements -- validates that phases 8-12 deliver as specified)
+
+**Success Criteria** (what must be TRUE):
+  1. Switching providers mid-session via the inline picker produces no errors, no lost context, and the conversation continues seamlessly
+  2. Thinking mode UI (thinking panel, toggle, token budget) works identically for Gemini thinking and Claude extended thinking from the student's perspective
+  3. Both applications pass their full test suites (unit + E2E) with the multi-provider architecture active
+  4. Router abstraction adds less than 10ms overhead per request compared to direct SDK calls
+
+**Key risks:** Low risk if phases 8-12 are individually well-tested. Primary concern is cross-cutting interactions that unit tests miss (e.g., thinking mode + streaming + session persistence + provider switching in one flow).
+
+**Plans:** TBD
+
+Plans:
+- [ ] 13-01: TBD
+
+---
+
+## Progress
+
+**Execution Order:** 8 -> 9 -> 10 -> 11 -> 12 -> 13
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 8. Shared Package + Vertex AI | v1.1 | 0/TBD | Not started | - |
+| 9. OpenRouter + Streaming | v1.1 | 0/TBD | Not started | - |
+| 10. Cross-App Migration + Config | v1.1 | 0/TBD | Not started | - |
+| 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
+| 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
+| 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 
 ---
 
@@ -105,20 +228,26 @@ To begin planning v1.1:
 | **Celery** | 5.3.6 | Async task queue |
 | **Neo4j** | 5.15+ | Graph database with vector search |
 | **Redis** | 7+ | Caching and broker |
-| **React** | 18.2.0/19 | Frontend UI |
+| **React** | 18.2.0 / 19 | Frontend UI (NOTES / CHAT) |
 | **TypeScript** | 5.3.3 | Type safety |
 | **TanStack Query** | 5.17.0 | Server state management |
 | **Zustand** | 4.4.7 | Client state management |
-| **Gemini** | text-embedding-004 | Embeddings (768-dim) |
+| **Gemini** | text-embedding-004 | Embeddings (768-dim, locked) |
+| **openai SDK** | >=2.26.0 | OpenRouter client (v1.1) |
+| **ollama SDK** | >=0.6.1 | Local model client stub (v1.1) |
+| **pydantic-settings** | >=2.13.0 | Hierarchical config (v1.1) |
+| **recharts** | ^3.8.0 | Cost dashboard charts (v1.1) |
 
 ---
 
 ## References
 
 - [PROJECT.md](./PROJECT.md) - Current project state
+- [REQUIREMENTS.md](./REQUIREMENTS.md) - v1.1 requirements with traceability
 - [MILESTONES.md](./MILESTONES.md) - Milestone history
-- [RETROSPECTIVE.md](./RETROSPECTIVE.md) - Lessons learned
+- [research/SUMMARY.md](./research/SUMMARY.md) - v1.1 research findings
 
 ---
 
-*Last updated: 2026-03-08 after v1.0 milestone completion*
+*Roadmap created: 2026-03-10*
+*Last updated: 2026-03-10*
