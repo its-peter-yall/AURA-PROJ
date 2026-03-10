@@ -1,17 +1,17 @@
 # test_no_direct_imports.py
-# Cross-app audit for forbidden provider SDK imports and import contexts.
+# Cross-app audit for forbidden provider SDK imports and worker import contexts.
 
-# Verifies both AURA apps only use the shared model_router surface in
-# non-test Python modules, and confirms the shared package remains importable
-# from repo, app, and Celery worker working-directory contexts.
+# Verifies both AURA apps only use the shared model_router surface across app
+# code and test files, and confirms the shared package remains importable from
+# repo, app, Celery, and ARQ worker working-directory contexts.
 
 # @see: shared/model_router/tests/test_import_contexts.py
 # @note: Uses AST import inspection so string literals do not create false hits.
 
 from __future__ import annotations
 
-import os
 import ast
+import os
 import re
 import subprocess
 import sys
@@ -35,26 +35,38 @@ FORBIDDEN_PATTERNS = [
 ]
 SCAN_DIRS = {
     "AURA-CHAT": ["AURA-CHAT/backend", "AURA-CHAT/server"],
-    "AURA-NOTES-MANAGER": ["AURA-NOTES-MANAGER/api", "AURA-NOTES-MANAGER/services"],
+    "AURA-NOTES-MANAGER": [
+        "AURA-NOTES-MANAGER/api",
+        "AURA-NOTES-MANAGER/services",
+    ],
+}
+TEST_SCAN_DIRS = {
+    "AURA-CHAT tests": [
+        "AURA-CHAT/backend/tests",
+        "AURA-CHAT/server/tests",
+    ],
+    "AURA-NOTES-MANAGER tests": ["AURA-NOTES-MANAGER/api/tests"],
 }
 
 
 def _iter_python_files(base_dirs: list[str]) -> list[Path]:
     files: list[Path] = []
     for base_dir in base_dirs:
-        for path in (REPO_ROOT / base_dir).rglob("*.py"):
+        root = REPO_ROOT / base_dir
+        if not root.exists():
+            continue
+        for path in root.rglob("*.py"):
             normalized = str(path).replace("\\", "/").lower()
-            if "test" in path.name.lower():
-                continue
             if "__pycache__" in normalized or normalized.endswith(".pyc"):
                 continue
             files.append(path)
     return sorted(files)
 
 
-def _find_violations(app_name: str) -> list[str]:
+def _find_violations_for_dirs(label: str, base_dirs: list[str]) -> list[str]:
+    del label
     violations: list[str] = []
-    for path in _iter_python_files(SCAN_DIRS[app_name]):
+    for path in _iter_python_files(base_dirs):
         source = path.read_text(encoding="utf-8", errors="ignore")
         tree = ast.parse(source, filename=str(path))
         lines = source.splitlines()
@@ -87,6 +99,10 @@ def _find_violations(app_name: str) -> list[str]:
     return violations
 
 
+def _find_violations(app_name: str) -> list[str]:
+    return _find_violations_for_dirs(app_name, SCAN_DIRS[app_name])
+
+
 def _run_python(cwd: Path, code: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["AURA_TEST_MODE"] = "true"
@@ -114,6 +130,22 @@ def test_no_direct_sdk_imports_aura_chat() -> None:
 
 def test_no_direct_sdk_imports_aura_notes() -> None:
     violations = _find_violations("AURA-NOTES-MANAGER")
+    assert violations == [], "\n".join(violations)
+
+
+def test_no_direct_sdk_imports_chat_tests() -> None:
+    violations = _find_violations_for_dirs(
+        "AURA-CHAT tests",
+        TEST_SCAN_DIRS["AURA-CHAT tests"],
+    )
+    assert violations == [], "\n".join(violations)
+
+
+def test_no_direct_sdk_imports_notes_tests() -> None:
+    violations = _find_violations_for_dirs(
+        "AURA-NOTES-MANAGER tests",
+        TEST_SCAN_DIRS["AURA-NOTES-MANAGER tests"],
+    )
     assert violations == [], "\n".join(violations)
 
 
@@ -154,4 +186,22 @@ def test_celery_worker_import_context() -> None:
         REPO_ROOT / "AURA-NOTES-MANAGER" / "api",
         celery_code,
         "ModelRouter",
+    )
+
+
+def test_arq_worker_import_context() -> None:
+    """Verify AURA-CHAT ARQ worker can reach model_router-backed services."""
+    arq_code = (
+        "import sys; "
+        "from pathlib import Path; "
+        "sys.path.insert(0, str(Path.cwd())); "
+        "from backend.tasks.worker import WorkerSettings; "
+        "from backend.utils.vertex_ai_client import get_model; "
+        "from backend.utils.embeddings import EmbeddingService; "
+        'print("ARQ_OK")'
+    )
+    _assert_import_ok(
+        REPO_ROOT / "AURA-CHAT",
+        arq_code,
+        "ARQ_OK",
     )
