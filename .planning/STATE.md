@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T12:43:18.3124330Z"
-last_activity: "2026-03-10 - Completed Phase 9 Plan 02 (streaming + thinking regression coverage, 115 shared tests passing)"
+last_updated: "2026-03-10T13:10:37Z"
+last_activity: "2026-03-10 - Completed Phase 9 Plan 03 (router metadata surface + Vertex thinking regression coverage, 132 shared tests passing)"
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 5
-  completed_plans: 4
+  completed_phases: 1
+  total_plans: 6
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,33 +19,34 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 9 complete -- OpenRouter Provider + Streaming Normalization
+**Current focus:** Phase 9 closed -- OpenRouter Provider + Streaming Normalization
 
 ## Current Position
 
 Phase: 9 of 13 (OpenRouter Provider + Streaming Normalization)
-Plan: 2 of 2 complete (09-02 done)
+Plan: 3 of 3 complete (09-03 done)
 Status: Phase complete
-Last activity: 2026-03-10 -- Completed 09-02 streaming normalization and thinking-config regression verification
+Last activity: 2026-03-10 -- Completed 09-03 router metadata and Vertex thinking gap closure verification
 
 Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 11 min
-- Total execution time: 44 min
+- Total plans completed: 5
+- Average duration: 9 min
+- Total execution time: 46 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
-| 09 | 2 | 8 min | 4 min |
+| 09 | 3 | 10 min | 3 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
+| Phase 09 P03 | 2 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 09]: Auto-register OpenRouter whenever test mode is enabled or an API key is configured — slash-form model IDs should resolve cleanly without manual provider bootstrap.
 - [Phase 09]: Validate cross-provider stream normalization with fake provider clients in tests — AURA_TEST_MODE returns canned streams, so deterministic fakes are needed to exercise provider-specific chunk normalization without network access.
 - [Phase 09]: Keep OpenRouter thinking translation covered as a pure helper contract — Budget-to-effort mapping and graceful degradation are deterministic rules that should stay fast and SDK-independent in the shared package tests.
+- [Phase 09]: Expose list_models() and health_check() on ModelRouter while keeping OpenRouter credit balance behind get_provider()
+- [Phase 09]: Cover Gemini thinking parity with fake stream chunks and helper fixtures so regression tests remain offline
 
 ### Pending Todos
 
@@ -85,7 +88,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 09-02-PLAN.md (streaming normalization verification)
+Stopped at: Completed 09-03-PLAN.md
 Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
 
 ### Quick Tasks Completed
