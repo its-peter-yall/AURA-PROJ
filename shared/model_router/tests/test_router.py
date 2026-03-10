@@ -1,9 +1,19 @@
+# test_router.py
+# Tests for ModelRouter delegation, routing, and singleton helpers.
+
+# Covers auto-registration, provider resolution, generation/stream routing,
+# and singleton behavior for the shared router. This update extends the suite
+# with OpenRouter delegation assertions for slash-form model identifiers.
+
+# @see: model_router/router.py - Routing logic under test
+# @note: Test mode keeps provider calls deterministic and offline.
+
 """Tests for ModelRouter delegation, routing, and singleton helpers."""
 
 import pytest
 
 from model_router import ModelRouter, get_default_router, reset_default_router
-from model_router.config import RouterConfig, VertexAIConfig
+from model_router.config import OpenRouterConfig, RouterConfig, VertexAIConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
 from model_router.providers.openrouter import OpenRouterProvider
 from model_router.providers.vertex_ai import (
@@ -18,6 +28,7 @@ def make_config() -> RouterConfig:
     return RouterConfig(
         test_mode=True,
         vertex_ai=VertexAIConfig(project_id='test-project', region='global'),
+        openrouter=OpenRouterConfig(api_key='test-key'),
     )
 
 
@@ -65,6 +76,19 @@ async def test_router_generate_with_kwargs() -> None:
 
 
 @pytest.mark.asyncio
+async def test_router_generate_delegates_to_openrouter() -> None:
+    router = ModelRouter(make_config())
+
+    response = await router.generate(
+        model='anthropic/claude-sonnet-4',
+        contents='hello',
+    )
+
+    assert response.provider is ProviderType.OPENROUTER
+    assert response.model_used == 'anthropic/claude-sonnet-4'
+
+
+@pytest.mark.asyncio
 async def test_router_embed_returns_vectors() -> None:
     router = make_manual_router()
 
@@ -96,6 +120,25 @@ def test_router_resolve_vertex_default() -> None:
 
 
 def test_router_resolve_openrouter_slash() -> None:
+    router = ModelRouter(make_config())
+
+    provider = router._resolve_provider(
+        GenerateRequest(
+            model='anthropic/claude-sonnet-4',
+            contents='hello',
+        )
+    )
+
+    assert isinstance(provider, OpenRouterProvider)
+
+
+def test_router_openrouter_auto_registered_in_test_mode() -> None:
+    router = ModelRouter(make_config())
+
+    assert ProviderType.OPENROUTER in router._providers
+
+
+def test_router_resolve_openrouter_succeeds() -> None:
     router = ModelRouter(make_config())
 
     provider = router._resolve_provider(
@@ -175,6 +218,30 @@ async def test_router_stream_yields_chunks() -> None:
         )
     ]
 
+    assert len(chunks) == 1
+    assert chunks[0].type == 'content'
+    assert chunks[0].text == 'Test-mode stream output.'
+
+
+@pytest.mark.asyncio
+async def test_router_stream_delegates_to_openrouter() -> None:
+    router = ModelRouter(make_config())
+
+    provider = router._resolve_provider(
+        GenerateRequest(
+            model='anthropic/claude-sonnet-4',
+            contents='hello',
+        )
+    )
+    chunks = [
+        chunk
+        async for chunk in router.stream(
+            model='anthropic/claude-sonnet-4',
+            contents='hello',
+        )
+    ]
+
+    assert isinstance(provider, OpenRouterProvider)
     assert len(chunks) == 1
     assert chunks[0].type == 'content'
     assert chunks[0].text == 'Test-mode stream output.'
