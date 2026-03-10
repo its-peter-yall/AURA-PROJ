@@ -226,6 +226,7 @@ e2e/
 
 # Test configs
 conftest.py
+!shared/model_router/tests/conftest.py
 pytest.ini
 
 # =============================================================================
