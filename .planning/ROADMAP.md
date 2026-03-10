@@ -50,7 +50,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 **Milestone v1.1: Multi-Provider LLM Architecture**
 
 - [ ] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
-- [ ] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
+- [x] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
 - [ ] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management
 - [ ] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence
 - [ ] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters
@@ -104,7 +104,7 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md — OpenRouter provider core: config, OpenRouterProvider (generate, stream, list_models, health_check, credit balance), error mapping, auto-registration, TDD tests ([summary](./phases/09-openrouter-streaming/09-01-SUMMARY.md))
-- [ ] 09-02-PLAN.md — Cross-provider streaming normalization verification + thinking config translation tests + router delegation for OpenRouter
+- [x] 09-02-PLAN.md — Cross-provider streaming normalization verification + thinking config translation tests + router delegation for OpenRouter ([summary](./phases/09-openrouter-streaming/09-02-SUMMARY.md))
 
 ---
 
@@ -212,7 +212,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
-| 9. OpenRouter + Streaming | v1.1 | 1/2 | In Progress | - |
+| 9. OpenRouter + Streaming | v1.1 | 2/2 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 0/TBD | Not started | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |

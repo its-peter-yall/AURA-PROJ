@@ -11,14 +11,14 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 
 - [ ] **ROUTER-01**: Backend provides a unified `generate()` interface that routes to the correct provider based on model identifier
 - [ ] **ROUTER-02**: Backend provides a unified `embed()` interface locked to Vertex AI per deployment with dimension validation
-- [ ] **ROUTER-03**: All providers stream responses through a normalized SSE format matching AURA's existing `{type: "thinking"|"content", text}` chunk shape
+- [x] **ROUTER-03**: All providers stream responses through a normalized SSE format matching AURA's existing `{type: "thinking"|"content", text}` chunk shape
 - [ ] **ROUTER-04**: All provider errors map to a unified error hierarchy (auth, rate limit, content policy, model unavailable, timeout) with original error preserved
 
 ### Provider Implementations
 
 - [ ] **PROV-01**: Vertex AI provider wraps existing code through the shared router interface with zero regression in existing tests
 - [x] **PROV-02**: OpenRouter provider supports completions, streaming, model listing, and credit checking via the `openai` SDK
-- [ ] **PROV-03**: Thinking/reasoning mode works across Vertex AI (Gemini thinking), OpenRouter (Claude extended thinking, DeepSeek reasoning) with a unified enable/budget interface
+- [x] **PROV-03**: Thinking/reasoning mode works across Vertex AI (Gemini thinking), OpenRouter (Claude extended thinking, DeepSeek reasoning) with a unified enable/budget interface
 
 ### Configuration
 
@@ -74,11 +74,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | ROUTER-01 | Phase 8 | Pending |
 | ROUTER-02 | Phase 8 | Pending |
-| ROUTER-03 | Phase 9 | Pending |
+| ROUTER-03 | Phase 9 | Complete |
 | ROUTER-04 | Phase 8 | Pending |
 | PROV-01 | Phase 8 | Pending |
 | PROV-02 | Phase 9 | Complete |
-| PROV-03 | Phase 9 | Pending |
+| PROV-03 | Phase 9 | Complete |
 | CONFIG-01 | Phase 10 | Pending |
 | CONFIG-02 | Phase 11 | Pending |
 | CONFIG-03 | Phase 10 | Pending |

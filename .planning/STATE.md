@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T12:36:10Z"
-last_activity: "2026-03-10 - Completed Phase 9 Plan 01 (OpenRouter provider core, 90 shared tests passing)"
+last_updated: "2026-03-10T12:43:18.3124330Z"
+last_activity: "2026-03-10 - Completed Phase 9 Plan 02 (streaming + thinking regression coverage, 115 shared tests passing)"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,32 +19,33 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 9 -- OpenRouter Provider + Streaming Normalization
+**Current focus:** Phase 9 complete -- OpenRouter Provider + Streaming Normalization
 
 ## Current Position
 
 Phase: 9 of 13 (OpenRouter Provider + Streaming Normalization)
-Plan: 2 of 2 (09-02 next)
-Status: In progress
-Last activity: 2026-03-10 -- Completed 09-01 OpenRouter provider core and shared-package regression verification
+Plan: 2 of 2 complete (09-02 done)
+Status: Phase complete
+Last activity: 2026-03-10 -- Completed 09-02 streaming normalization and thinking-config regression verification
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 14 min
-- Total execution time: 0.7 hours
+- Total plans completed: 4
+- Average duration: 11 min
+- Total execution time: 44 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
-| 09 | 1 | 6 min | 6 min |
+| 09 | 2 | 8 min | 4 min |
 
 *Updated after each plan completion*
+| Phase 09 P02 | 2 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -67,24 +68,25 @@ Recent decisions affecting current work:
 - [Phase 09]: Keep OpenRouter's openai SDK import lazy inside the provider — test mode and non-OpenRouter installs must remain import-safe until the provider is actually used.
 - [Phase 09]: Use OpenAI-compatible client calls for generation/streaming but direct REST calls for `/models` and `/auth/key` — OpenRouter metadata endpoints are outside the standard chat client surface.
 - [Phase 09]: Auto-register OpenRouter whenever test mode is enabled or an API key is configured — slash-form model IDs should resolve cleanly without manual provider bootstrap.
+- [Phase 09]: Validate cross-provider stream normalization with fake provider clients in tests — AURA_TEST_MODE returns canned streams, so deterministic fakes are needed to exercise provider-specific chunk normalization without network access.
+- [Phase 09]: Keep OpenRouter thinking translation covered as a pure helper contract — Budget-to-effort mapping and graceful degradation are deterministic rules that should stay fast and SDK-independent in the shared package tests.
 
 ### Pending Todos
 
 - Phase 08 Plan 03: close the outstanding cross-app regression validation and nested-repo docs/state follow-up.
-- Phase 09 Plan 02: verify cross-provider streaming normalization and thinking-config translation behavior.
 
 ### Blockers/Concerns
 
 - [Phase 8]: Compatibility shim rollout in 08-03 must preserve behavior across the new shared google-genai wrapper and the legacy Notes SDK surface.
 - [Phase 8]: Celery worker editable-install import resolution still needs verification during compatibility shim rollout.
 - [Phase 8]: `08-03-SUMMARY.md` is present on disk but still documents validation-open status, so the phase is not yet fully closed.
-- [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs integration-level validation in 09-02.
+- [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs end-to-end validation in a later integration phase.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 09-01-PLAN.md (OpenRouter provider core)
-Resume file: .planning/phases/09-openrouter-streaming/09-02-PLAN.md
+Stopped at: Completed 09-02-PLAN.md (streaming normalization verification)
+Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
 
 ### Quick Tasks Completed
 
