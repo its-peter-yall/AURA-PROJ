@@ -75,11 +75,12 @@ Module-centric learning platform with knowledge graphs, persistent study session
 
 **Key risks:** Highest-risk phase. Three critical pitfalls converge: migration breakage across 35+ files with two different Vertex AI SDKs (`google-genai` and `vertexai.generative_models`), shared package import resolution in a monorepo with nested git repos and Celery workers, and embedding dimension validation for 768-dim HNSW indices. Strangler Fig pattern mandatory -- wrap existing code first, verify tests, then migrate callers incrementally. Budget 2-3x normal estimation.
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Package foundation: types, errors, config, provider ABCs + unit tests
+- [ ] 08-02-PLAN.md — VertexAI provider + ModelRouter core with routing and delegation
+- [ ] 08-03-PLAN.md — Compatibility shims in both apps + zero-regression test verification
 
 ---
 
@@ -210,7 +211,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 8. Shared Package + Vertex AI | v1.1 | 0/TBD | Not started | - |
+| 8. Shared Package + Vertex AI | v1.1 | 0/3 | Planned | - |
 | 9. OpenRouter + Streaming | v1.1 | 0/TBD | Not started | - |
 | 10. Cross-App Migration + Config | v1.1 | 0/TBD | Not started | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
