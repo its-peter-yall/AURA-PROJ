@@ -10,6 +10,7 @@ from model_router.errors import (
     RateLimitError,
 )
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
+from model_router.router import ModelRouter, get_default_router, reset_default_router
 from model_router.types import (
     GenerateRequest,
     GenerateResponse,
@@ -27,12 +28,15 @@ __all__ = [
     'EmbeddingDimensionError',
     'GenerateRequest',
     'GenerateResponse',
+    'get_default_router',
     'ModelInfo',
+    'ModelRouter',
     'ModelRouterError',
     'ModelUnavailableError',
     'ProviderTimeoutError',
     'ProviderType',
     'RateLimitError',
+    'reset_default_router',
     'StreamChunk',
     'UsageInfo',
 ]
