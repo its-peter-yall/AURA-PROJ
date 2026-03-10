@@ -1,5 +1,6 @@
 """Public package exports for the AURA model router."""
 
+from model_router.compat import VertexCompatModel
 from model_router.errors import (
     AuthenticationError,
     ContentPolicyError,
@@ -39,6 +40,7 @@ __all__ = [
     'reset_default_router',
     'StreamChunk',
     'UsageInfo',
+    'VertexCompatModel',
 ]
 
 __version__ = '0.1.0'
