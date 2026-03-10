@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T13:10:37Z"
-last_activity: "2026-03-10 - Completed Phase 9 Plan 03 (router metadata surface + Vertex thinking regression coverage, 132 shared tests passing)"
+last_updated: "2026-03-10T15:25:27Z"
+last_activity: "2026-03-10 - Completed Quick Task 8 (shared router metadata invalid-provider handling + OpenRouter metadata HTTP error normalization, 50 focused tests passing)"
 progress:
   total_phases: 6
   completed_phases: 1
@@ -73,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 09]: Keep OpenRouter thinking translation covered as a pure helper contract — Budget-to-effort mapping and graceful degradation are deterministic rules that should stay fast and SDK-independent in the shared package tests.
 - [Phase 09]: Expose list_models() and health_check() on ModelRouter while keeping OpenRouter credit balance behind get_provider()
 - [Phase 09]: Cover Gemini thinking parity with fake stream chunks and helper fixtures so regression tests remain offline
+- [Quick 8]: Metadata-only provider coercion should raise ModelUnavailableError with the original invalid string instead of leaking enum ValueError exceptions from public router metadata APIs.
+- [Quick 8]: OpenRouter `/models` and `/auth/key` metadata failures should classify 401/403 as AuthenticationError and 429 as RateLimitError, including Retry-After when available.
 
 ### Pending Todos
 
@@ -88,7 +90,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 09-03-PLAN.md
+Stopped at: Completed quick task 8
 Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
 
 ### Quick Tasks Completed
@@ -97,3 +99,4 @@ Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
 |---|-------------|------|--------|-----------|
 | 1 | Replace DOM confirm dialog with UI theme dialog for user deletion in User Management | 2026-02-23 | 7cb43a1 | [1-replace-dom-confirm-dialog-with-ui-theme](./quick/1-replace-dom-confirm-dialog-with-ui-theme/) |
 | 7 | Update AGENTS.md, CLAUDE.md, and GEMINI.md to reflect current codebase | 2026-03-06 | 2e57d3a | [7-update-agents-md-claude-md-and-gemini-md](./quick/7-update-agents-md-claude-md-and-gemini-md/) |
+| 8 | Fix shared model-router invalid metadata provider handling and OpenRouter metadata HTTP classification | 2026-03-10 | 7dff94d | [8-fix-model-router-invalid-provider-handli](./quick/8-fix-model-router-invalid-provider-handli/) |
