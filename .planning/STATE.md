@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T15:46:43Z"
-last_activity: "2026-03-10 - Completed Phase 10 Plan 03 (AURA-CHAT model-router façade migration for generation, streaming, and embeddings)"
+last_updated: "2026-03-10T16:03:33Z"
+last_activity: "2026-03-10 - Completed Phase 10 Plan 02 (cross-app admin settings endpoints for shared defaults, model discovery, and API key management)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -24,18 +24,18 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 ## Current Position
 
 Phase: 10 of 13 (Cross-App Migration + Backend Integration)
-Plan: 2 of 4 complete (10-01 and 10-03 done; 10-02 next)
+Plan: 3 of 4 complete (10-01, 10-02, and 10-03 done; 10-04 next)
 Status: In progress
-Last activity: 2026-03-10 - Completed 10-03 AURA-CHAT façade migration onto shared model_router
+Last activity: 2026-03-10 - Completed 10-02 cross-app settings endpoints
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 11 min
-- Total execution time: 77 min
+- Total execution time: 87 min
 
 **By Phase:**
 
@@ -43,13 +43,14 @@ Progress: [███████░░░] 70%
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
 | 09 | 3 | 10 min | 3 min |
-| 10 | 2 | 31 min | 15 min |
+| 10 | 3 | 41 min | 13 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
 | Phase 09 P03 | 2 min | 2 tasks | 4 files |
 | Phase 10 P01 | 10 min | 2 tasks | 9 files |
 | Phase 10 P03 | 21 min | 2 tasks | 3 files |
+| Phase 10 P02 | 10 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Serialize cached ModelInfo payloads with model_dump(mode='json') for Redis round-trips
 - [Phase 10]: Preserve AURA-CHAT's existing vertex_ai_client import surface by exposing model_router-backed compatibility shims instead of changing consumer imports.
 - [Phase 10]: Keep batching, rate limiting, and retry orchestration inside AURA-CHAT's EmbeddingService while delegating single-batch embedding execution to router.embed().
+- [Phase 10]: Validate OpenRouter API keys with a temporary OpenRouterProvider health check and report unsupported providers as unvalidated.
+- [Phase 10]: Serve aggregate settings model discovery via ModelCache fan-out so all model listing endpoints share identical cache semantics and dependency overrides.
 
 ### Pending Todos
 
@@ -99,8 +102,8 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 10-03-PLAN.md
-Resume file: .planning/phases/10-cross-app-migration-backend-integration/10-02-PLAN.md
+Stopped at: Completed 10-02-PLAN.md
+Resume file: .planning/phases/10-cross-app-migration-backend-integration/10-04-PLAN.md
 
 ### Quick Tasks Completed
 
