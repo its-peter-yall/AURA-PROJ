@@ -1,3 +1,13 @@
+# config.py
+# Environment-backed configuration models for the shared model router.
+
+# Defines provider-specific config objects and the top-level RouterConfig
+# assembled from environment variables. This phase extends the package with
+# OpenRouter settings while keeping env loading deterministic in test mode.
+
+# @see: model_router/router.py - Runtime auto-registration logic
+# @note: Vertex region prefers VERTEX_REGION, then VERTEX_LOCATION.
+
 """Environment-backed configuration models for model router setup."""
 
 import os
@@ -42,11 +52,34 @@ class VertexAIConfig(BaseModel):
         )
 
 
+class OpenRouterConfig(BaseModel):
+    """Configuration for the OpenRouter provider."""
+
+    api_key: str = ''
+    base_url: str = 'https://openrouter.ai/api/v1'
+    site_url: str = ''
+    site_name: str = 'AURA'
+
+    @classmethod
+    def from_env(cls) -> 'OpenRouterConfig':
+        """Build OpenRouter config from environment variables."""
+        return cls(
+            api_key=os.getenv('OPENROUTER_API_KEY', ''),
+            base_url=os.getenv(
+                'OPENROUTER_BASE_URL',
+                'https://openrouter.ai/api/v1',
+            ),
+            site_url=os.getenv('OPENROUTER_SITE_URL', ''),
+            site_name=os.getenv('OPENROUTER_SITE_NAME', 'AURA'),
+        )
+
+
 class RouterConfig(BaseModel):
     """Top-level router configuration."""
 
     default_provider: ProviderType = ProviderType.VERTEX_AI
     vertex_ai: VertexAIConfig = Field(default_factory=VertexAIConfig)
+    openrouter: OpenRouterConfig = Field(default_factory=OpenRouterConfig)
     test_mode: bool = False
 
     @classmethod
@@ -55,5 +88,6 @@ class RouterConfig(BaseModel):
         return cls(
             default_provider=ProviderType.VERTEX_AI,
             vertex_ai=VertexAIConfig.from_env(),
+            openrouter=OpenRouterConfig.from_env(),
             test_mode=_env_flag('AURA_TEST_MODE'),
         )

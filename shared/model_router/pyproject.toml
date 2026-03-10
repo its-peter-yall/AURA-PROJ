@@ -19,6 +19,9 @@ vertex = [
   'google-cloud-aiplatform>=1.51.0',
   'requests>=2.31.0',
 ]
+openrouter = [
+  'openai>=1.51.0',
+]
 dev = [
   'pytest>=8.0',
   'pytest-asyncio>=0.23',
@@ -28,6 +31,7 @@ all = [
   'google-auth>=2.35.0',
   'google-cloud-aiplatform>=1.51.0',
   'requests>=2.31.0',
+  'openai>=1.51.0',
 ]
 
 [tool.hatch.build.targets.wheel]
