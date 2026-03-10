@@ -1,5 +1,7 @@
 """Tests for the shared Vertex AI provider implementations."""
 
+from types import SimpleNamespace
+
 import pytest
 
 from model_router.config import VertexAIConfig
@@ -14,6 +16,8 @@ from model_router.errors import (
 from model_router.providers.vertex_ai import (
     VertexAIEmbeddingProvider,
     VertexAIProvider,
+    _extract_response_parts,
+    _extract_usage,
     _map_vertex_error,
 )
 from model_router.types import GenerateRequest, GenerateResponse, ProviderType
@@ -173,3 +177,93 @@ def test_error_preserves_original_cause() -> None:
 
     assert mapped.original is original
     assert mapped.__cause__ is original
+
+
+def test_extract_response_parts_with_thinking() -> None:
+    """Thinking parts are separated from answer text."""
+    thinking_part = SimpleNamespace(
+        text='thinking step',
+        thought=True,
+        thought_summary=None,
+    )
+    content_part = SimpleNamespace(
+        text='the answer',
+        thought=False,
+        thought_summary=None,
+    )
+    content = SimpleNamespace(parts=[thinking_part, content_part])
+    candidate = SimpleNamespace(content=content)
+    response = SimpleNamespace(candidates=[candidate], text=None)
+
+    text, thinking_text = _extract_response_parts(response)
+
+    assert text == 'the answer'
+    assert thinking_text == 'thinking step'
+
+
+def test_extract_response_parts_with_thought_summary() -> None:
+    """Thought-summary parts are treated as thinking output."""
+    summary_part = SimpleNamespace(
+        text='summary',
+        thought=False,
+        thought_summary='brief',
+    )
+    content_part = SimpleNamespace(
+        text='result',
+        thought=False,
+        thought_summary=None,
+    )
+    content = SimpleNamespace(parts=[summary_part, content_part])
+    candidate = SimpleNamespace(content=content)
+    response = SimpleNamespace(candidates=[candidate], text=None)
+
+    text, thinking_text = _extract_response_parts(response)
+
+    assert text == 'result'
+    assert thinking_text == 'summary'
+
+
+def test_extract_response_parts_no_thinking() -> None:
+    """Responses without thought parts return no thinking_text."""
+    content_part = SimpleNamespace(
+        text='just content',
+        thought=False,
+        thought_summary=None,
+    )
+    content = SimpleNamespace(parts=[content_part])
+    candidate = SimpleNamespace(content=content)
+    response = SimpleNamespace(candidates=[candidate], text=None)
+
+    text, thinking_text = _extract_response_parts(response)
+
+    assert text == 'just content'
+    assert thinking_text is None
+
+
+def test_extract_usage_with_thinking_tokens() -> None:
+    """Thought token counts are mapped into UsageInfo.thinking_tokens."""
+    usage_metadata = SimpleNamespace(
+        prompt_token_count=10,
+        candidates_token_count=50,
+        thoughts_token_count=25,
+    )
+    response = SimpleNamespace(usage_metadata=usage_metadata)
+
+    usage = _extract_usage(response)
+
+    assert usage.input_tokens == 10
+    assert usage.output_tokens == 50
+    assert usage.thinking_tokens == 25
+
+
+def test_extract_usage_without_thinking_tokens() -> None:
+    """Missing thought token counts default to zero."""
+    usage_metadata = SimpleNamespace(
+        prompt_token_count=10,
+        candidates_token_count=50,
+    )
+    response = SimpleNamespace(usage_metadata=usage_metadata)
+
+    usage = _extract_usage(response)
+
+    assert usage.thinking_tokens == 0

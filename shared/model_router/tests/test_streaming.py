@@ -160,6 +160,65 @@ async def test_vertex_stream_yields_streamchunk() -> None:
 
 
 @pytest.mark.asyncio
+async def test_vertex_thinking_chunk_yields_thinking_streamchunk() -> None:
+    """Vertex thought chunks normalize to thinking StreamChunk items."""
+    provider = make_vertex_provider(
+        [make_vertex_chunk(text='reasoning step...', is_thought=True)]
+    )
+    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+
+    chunks = [chunk async for chunk in provider.stream(request)]
+
+    assert len(chunks) == 1
+    assert chunks[0] == StreamChunk(type='thinking', text='reasoning step...')
+
+
+@pytest.mark.asyncio
+async def test_vertex_thought_summary_yields_thinking_streamchunk() -> None:
+    """Vertex thought-summary parts normalize to thinking chunks."""
+    part = SimpleNamespace(
+        text='summary of reasoning',
+        thought=False,
+        thought_summary='brief summary',
+    )
+    content = SimpleNamespace(parts=[part])
+    candidate = SimpleNamespace(content=content)
+    chunk_obj = SimpleNamespace(candidates=[candidate])
+
+    provider = make_vertex_provider([chunk_obj])
+    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+
+    chunks = [chunk async for chunk in provider.stream(request)]
+
+    assert len(chunks) == 1
+    assert chunks[0] == StreamChunk(
+        type='thinking',
+        text='summary of reasoning',
+    )
+
+
+@pytest.mark.asyncio
+async def test_vertex_mixed_thinking_and_content_stream() -> None:
+    """Vertex streams preserve thinking/content order in mixed responses."""
+    provider = make_vertex_provider(
+        [
+            make_vertex_chunk(text='let me think...', is_thought=True),
+            make_vertex_chunk(text='here is the answer'),
+        ]
+    )
+    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+
+    chunks = [chunk async for chunk in provider.stream(request)]
+
+    assert len(chunks) == 2
+    assert chunks[0] == StreamChunk(type='thinking', text='let me think...')
+    assert chunks[1] == StreamChunk(
+        type='content',
+        text='here is the answer',
+    )
+
+
+@pytest.mark.asyncio
 async def test_openrouter_stream_yields_streamchunk() -> None:
     provider = make_openrouter_provider(
         [make_openrouter_chunk(content='hello')]
