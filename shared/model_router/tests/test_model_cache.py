@@ -13,6 +13,11 @@
 import pytest
 
 from model_router import ModelCache, get_cached_models
+from model_router.cache import (
+    DEFAULT_TTL_SECONDS,
+    MAX_TTL_SECONDS,
+    MIN_TTL_SECONDS,
+)
 from model_router.types import ModelInfo, ProviderType
 
 
@@ -119,3 +124,61 @@ async def test_expired_cache_returns_fresh_results(fake_redis) -> None:
     assert router.call_count == 2
     assert initial[0].name == "gemini-2.5-flash"
     assert refreshed[0].name == "gemini-2.5-pro"
+
+
+def test_ttl_bounds_valid(fake_redis) -> None:
+    router = FakeRouter()
+
+    lower_bound_cache = ModelCache(fake_redis, router, default_ttl=MIN_TTL_SECONDS)
+    upper_bound_cache = ModelCache(fake_redis, router, default_ttl=MAX_TTL_SECONDS)
+
+    assert lower_bound_cache._default_ttl == MIN_TTL_SECONDS
+    assert upper_bound_cache._default_ttl == MAX_TTL_SECONDS
+
+
+def test_ttl_bounds_too_low(fake_redis) -> None:
+    router = FakeRouter()
+
+    with pytest.raises(ValueError, match="TTL must be between"):
+        ModelCache(fake_redis, router, default_ttl=MIN_TTL_SECONDS - 1)
+
+
+def test_ttl_bounds_too_high(fake_redis) -> None:
+    router = FakeRouter()
+
+    with pytest.raises(ValueError, match="TTL must be between"):
+        ModelCache(fake_redis, router, default_ttl=MAX_TTL_SECONDS + 1)
+
+
+def test_ttl_default(fake_redis) -> None:
+    router = FakeRouter()
+
+    cache = ModelCache(fake_redis, router)
+
+    assert cache._default_ttl == DEFAULT_TTL_SECONDS
+
+
+@pytest.mark.asyncio
+async def test_get_cached_models_ttl_too_low_raises(fake_redis) -> None:
+    router = FakeRouter()
+
+    with pytest.raises(ValueError, match="TTL must be between"):
+        await get_cached_models(
+            "vertex_ai",
+            fake_redis,
+            router,
+            ttl_seconds=MIN_TTL_SECONDS - 1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_cached_models_ttl_too_high_raises(fake_redis) -> None:
+    router = FakeRouter()
+
+    with pytest.raises(ValueError, match="TTL must be between"):
+        await get_cached_models(
+            "vertex_ai",
+            fake_redis,
+            router,
+            ttl_seconds=MAX_TTL_SECONDS + 1,
+        )

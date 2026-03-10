@@ -19,6 +19,31 @@ from model_router.router import ModelRouter
 from model_router.types import ModelInfo, ProviderType
 
 
+MIN_TTL_SECONDS = 300
+MAX_TTL_SECONDS = 3600
+DEFAULT_TTL_SECONDS = 900
+
+
+def _validate_ttl_seconds(ttl_seconds: int) -> int:
+    """Validate model cache TTL bounds.
+
+    Args:
+        ttl_seconds: Cache TTL in seconds.
+
+    Returns:
+        The validated TTL value.
+
+    Raises:
+        ValueError: If the TTL is outside the supported range.
+    """
+    if not (MIN_TTL_SECONDS <= ttl_seconds <= MAX_TTL_SECONDS):
+        raise ValueError(
+            f"TTL must be between {MIN_TTL_SECONDS} and "
+            f"{MAX_TTL_SECONDS} seconds, got {ttl_seconds}"
+        )
+    return ttl_seconds
+
+
 def _provider_cache_value(provider: ProviderType | str) -> str:
     """Normalize provider identifiers for Redis cache keys."""
     if isinstance(provider, ProviderType):
@@ -30,10 +55,11 @@ async def get_cached_models(
     provider: ProviderType | str,
     redis_client: Any,
     router: ModelRouter,
-    ttl_seconds: int = 900,
+    ttl_seconds: int = DEFAULT_TTL_SECONDS,
     force_refresh: bool = False,
 ) -> list[ModelInfo]:
     """Return cached models for a provider or refresh them from the router."""
+    ttl_seconds = _validate_ttl_seconds(ttl_seconds)
     provider_key = _provider_cache_value(provider)
     cache_key = f"aura:models:{provider_key}"
 
@@ -55,7 +81,7 @@ class ModelCache:
         self,
         redis_client: Any,
         router: ModelRouter,
-        default_ttl: int = 900,
+        default_ttl: int = DEFAULT_TTL_SECONDS,
     ) -> None:
         """Store cache dependencies.
 
@@ -66,7 +92,7 @@ class ModelCache:
         """
         self._redis = redis_client
         self._router = router
-        self._default_ttl = default_ttl
+        self._default_ttl = _validate_ttl_seconds(default_ttl)
 
     async def get_models(
         self,
