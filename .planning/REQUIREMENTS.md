@@ -17,7 +17,7 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 ### Provider Implementations
 
 - [ ] **PROV-01**: Vertex AI provider wraps existing code through the shared router interface with zero regression in existing tests
-- [ ] **PROV-02**: OpenRouter provider supports completions, streaming, model listing, and credit checking via the `openai` SDK
+- [x] **PROV-02**: OpenRouter provider supports completions, streaming, model listing, and credit checking via the `openai` SDK
 - [ ] **PROV-03**: Thinking/reasoning mode works across Vertex AI (Gemini thinking), OpenRouter (Claude extended thinking, DeepSeek reasoning) with a unified enable/budget interface
 
 ### Configuration
@@ -77,7 +77,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROUTER-03 | Phase 9 | Pending |
 | ROUTER-04 | Phase 8 | Pending |
 | PROV-01 | Phase 8 | Pending |
-| PROV-02 | Phase 9 | Pending |
+| PROV-02 | Phase 9 | Complete |
 | PROV-03 | Phase 9 | Pending |
 | CONFIG-01 | Phase 10 | Pending |
 | CONFIG-02 | Phase 11 | Pending |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T08:27:18Z"
-last_activity: "2026-03-10 - Completed Phase 8 Plan 02 (Vertex AI provider, ModelRouter core, 59 tests passing)"
+last_updated: "2026-03-10T12:36:10Z"
+last_activity: "2026-03-10 - Completed Phase 9 Plan 01 (OpenRouter provider core, 90 shared tests passing)"
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 3
-  completed_plans: 2
+  total_plans: 5
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,29 +19,30 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 8 -- Shared Package Foundation + Vertex AI Migration
+**Current focus:** Phase 9 -- OpenRouter Provider + Streaming Normalization
 
 ## Current Position
 
-Phase: 8 of 13 (Shared Package Foundation + Vertex AI Migration)
-Plan: 3 of 3 (08-03 next)
+Phase: 9 of 13 (OpenRouter Provider + Streaming Normalization)
+Plan: 2 of 2 (09-02 next)
 Status: In progress
-Last activity: 2026-03-10 -- Completed 08-02 Vertex AI provider and ModelRouter core
+Last activity: 2026-03-10 -- Completed 09-01 OpenRouter provider core and shared-package regression verification
 
-Progress: [███████░░░] 67%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 18 min
-- Total execution time: 0.6 hours
+- Total plans completed: 3
+- Average duration: 14 min
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
+| 09 | 1 | 6 min | 6 min |
 
 *Updated after each plan completion*
 
@@ -63,21 +64,27 @@ Recent decisions affecting current work:
 - [Phase 08]: Use lazy google-genai client initialization in VertexAIProvider — The shared package must preserve AURA_TEST_MODE behavior and avoid touching GCP auth during imports or unit tests.
 - [Phase 08]: Keep embeddings locked to Vertex AI at the router boundary — Embedding provider overrides must fail fast so the shared package protects the existing 768-dimension deployment assumptions.
 - [Phase 08]: Reuse the REST embedding flow for shared Vertex embeddings — The REST path matches the AURA-CHAT implementation and keeps the shared package independent from app-local embedding helper modules.
+- [Phase 09]: Keep OpenRouter's openai SDK import lazy inside the provider — test mode and non-OpenRouter installs must remain import-safe until the provider is actually used.
+- [Phase 09]: Use OpenAI-compatible client calls for generation/streaming but direct REST calls for `/models` and `/auth/key` — OpenRouter metadata endpoints are outside the standard chat client surface.
+- [Phase 09]: Auto-register OpenRouter whenever test mode is enabled or an API key is configured — slash-form model IDs should resolve cleanly without manual provider bootstrap.
 
 ### Pending Todos
 
-- Phase 08 Plan 03: add compatibility shims and zero-regression verification in both apps.
+- Phase 08 Plan 03: close the outstanding cross-app regression validation and nested-repo docs/state follow-up.
+- Phase 09 Plan 02: verify cross-provider streaming normalization and thinking-config translation behavior.
 
 ### Blockers/Concerns
 
 - [Phase 8]: Compatibility shim rollout in 08-03 must preserve behavior across the new shared google-genai wrapper and the legacy Notes SDK surface.
 - [Phase 8]: Celery worker editable-install import resolution still needs verification during compatibility shim rollout.
+- [Phase 8]: `08-03-SUMMARY.md` is present on disk but still documents validation-open status, so the phase is not yet fully closed.
+- [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs integration-level validation in 09-02.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 08-02-PLAN.md (Vertex AI provider and ModelRouter core)
-Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
+Stopped at: Completed 09-01-PLAN.md (OpenRouter provider core)
+Resume file: .planning/phases/09-openrouter-streaming/09-02-PLAN.md
 
 ### Quick Tasks Completed
 
