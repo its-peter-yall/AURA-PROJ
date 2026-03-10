@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T15:31:49Z"
-last_activity: "2026-03-10 - Completed quick task 8: Fix model router invalid provider handling and OpenRouter metadata HTTP error classification"
+last_updated: "2026-03-10T15:35:08Z"
+last_activity: "2026-03-10 - Completed Phase 10 Plan 01 (shared config modules: settings store, key manager, model cache, 23 new tests passing)"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 5
+  total_plans: 10
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,23 +19,23 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 9 closed -- OpenRouter Provider + Streaming Normalization
+**Current focus:** Phase 10 active -- Cross-App Migration + Backend Integration
 
 ## Current Position
 
-Phase: 9 of 13 (OpenRouter Provider + Streaming Normalization)
-Plan: 3 of 3 complete (09-03 done)
-Status: Phase complete
-Last activity: 2026-03-10 - Completed quick task 8: Fix model router invalid provider handling and OpenRouter metadata HTTP error classification
+Phase: 10 of 13 (Cross-App Migration + Backend Integration)
+Plan: 1 of 4 complete (10-01 done)
+Status: In progress
+Last activity: 2026-03-10 - Completed 10-01 shared config modules and offline unit tests
 
-Progress: [████████░░] 80%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 5
 - Average duration: 9 min
-- Total execution time: 46 min
+- Total execution time: 56 min
 
 **By Phase:**
 
@@ -43,10 +43,12 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 08 | 2 | 36 min | 18 min |
 | 09 | 3 | 10 min | 3 min |
+| 10 | 1 | 10 min | 10 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
 | Phase 09 P03 | 2 min | 2 tasks | 4 files |
+| Phase 10 P01 | 10 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -75,6 +77,9 @@ Recent decisions affecting current work:
 - [Phase 09]: Cover Gemini thinking parity with fake stream chunks and helper fixtures so regression tests remain offline
 - [Quick 8]: Metadata-only provider coercion should raise ModelUnavailableError with the original invalid string instead of leaking enum ValueError exceptions from public router metadata APIs.
 - [Quick 8]: OpenRouter `/models` and `/auth/key` metadata failures should classify 401/403 as AuthenticationError and 429 as RateLimitError, including Retry-After when available.
+- [Phase 10]: Use constructor-injected async Redis clients in shared config helpers
+- [Phase 10]: Fail fast when AURA_MASTER_KEY is missing for API key encryption
+- [Phase 10]: Serialize cached ModelInfo payloads with model_dump(mode='json') for Redis round-trips
 
 ### Pending Todos
 
@@ -86,12 +91,13 @@ Recent decisions affecting current work:
 - [Phase 8]: Celery worker editable-install import resolution still needs verification during compatibility shim rollout.
 - [Phase 8]: `08-03-SUMMARY.md` is present on disk but still documents validation-open status, so the phase is not yet fully closed.
 - [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs end-to-end validation in a later integration phase.
+- [Phase 10]: Full shared `model_router` suite is still blocked by unrelated dirty-worktree compat failures in `tests/test_compat.py`; 10-01 new tests pass but package-wide regression remains deferred.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed quick task 8
-Resume file: .planning/phases/08-shared-package-vertex-ai/08-03-PLAN.md
+Stopped at: Completed 10-01-PLAN.md
+Resume file: .planning/phases/10-cross-app-migration-backend-integration/10-02-PLAN.md
 
 ### Quick Tasks Completed
 
