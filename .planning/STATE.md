@@ -1,21 +1,25 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: M2KG Transformation
-status: complete
-last_updated: "2026-03-08T17:35:00.000Z"
-last_activity: "2026-03-08 - Completed v1.0 milestone: M2KG Transformation shipped"
+milestone: v1.1
+milestone_name: Multi-Provider LLM Architecture
+status: active
+last_updated: "2026-03-10T00:00:00.000Z"
+last_activity: "2026-03-10 - Milestone v1.1 started"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 28
-  completed_plans: 30
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
-### Status
-✅ **Milestone v1.0 Complete** — M2KG Transformation shipped March 8, 2026
+## Current Position
+
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-10 — Milestone v1.1 started
 
 ### Blockers/Concerns
 None.
@@ -29,10 +33,10 @@ None.
 
 ### Project Reference
 
-See: [PROJECT.md](./PROJECT.md) (updated 2026-03-08)
+See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions
-**Current focus:** Planning next milestone (v1.1)
+**Current focus:** Milestone v1.1 — Multi-Provider LLM Architecture
 
 ### Accumulated Context
 
@@ -43,8 +47,15 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-08)
 - Celery async for KG processing
 - TanStack Query + Zustand for state management
 
+**Decisions Made (v1.1 — so far):**
+- Shared package at project root for Model Router (`shared/model_router/`)
+- Vertex AI (full) + OpenRouter (full) + Ollama (stub)
+- Hybrid UI approach (global settings + inline contextual selectors)
+- Global defaults + per-session overrides (2-level config)
+- Full usage tracking & cost dashboard
+
 **Technical Debt:**
 - Split backend directories need consolidation (AURA-CHAT server/ vs backend/)
 - React version alignment (18 vs 19)
 
-Last activity: 2026-03-08 - Completed v1.0 milestone: M2KG Transformation shipped
+Last activity: 2026-03-10 - Milestone v1.1 started

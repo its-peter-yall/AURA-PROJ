@@ -55,9 +55,25 @@ Transform from document-centric to module-centric learning, enabling contextual 
 - ✓ Testing infrastructure (unit, E2E, performance)
 - ✓ Docker deployment (8-service Compose stack)
 
+## Current Milestone: v1.1 Multi-Provider LLM Architecture
+
+**Goal:** Transform both AURA applications from single-provider (Vertex AI) to a shared, provider-agnostic Model Router supporting multiple LLM providers with full UI and cost tracking.
+
+**Target features:**
+- Model Router abstraction layer (shared package, `generate()` / `embed()` interface)
+- Vertex AI provider (refactored from existing tightly-coupled code)
+- OpenRouter provider (200+ models via unified API)
+- Ollama provider stub (interface + local detection, implementation deferred)
+- Cross-project migration (both apps use shared router)
+- Hierarchical provider selection UI (2-level for Vertex/Ollama, 3-level for OpenRouter)
+- Hybrid settings UI (global settings page + inline contextual selectors)
+- Configuration system (global defaults + per-session overrides)
+- Usage tracking & cost dashboard with budget controls
+- Error handling normalization across providers
+
 ## Active Requirements (v1.1)
 
-None defined yet.
+To be defined — see REQUIREMENTS.md after scoping.
 
 ## Out of Scope
 
@@ -76,6 +92,9 @@ None defined yet.
 | Celery for KG processing | Async pipeline works well | ✓ Good |
 | Feature-based frontend | Reusable, maintainable | ✓ Good |
 | Separate frontend versions | React 18 vs 19 for gradual migration | ⚠ Revisit |
+| Shared Model Router package | Single source of truth for both apps | — Pending |
+| OpenRouter as primary multi-model provider | 200+ models via single API key | — Pending |
+| Hybrid UI for provider selection | Settings page + inline selectors | — Pending |
 
 ## Context
 
@@ -84,9 +103,12 @@ None defined yet.
 - **Commits:** 200+
 - **Test Coverage:** >85% backend, >80% frontend
 
-## Next Milestone Goals (v1.1)
+## Constraints
 
-TBD — define via `/gsd:new-milestone`
+- **Code Sharing**: Shared package at project root (`shared/model_router/`) — both apps import from it
+- **Backward Compatibility**: Existing Vertex AI code must continue working during migration
+- **Provider Isolation**: Provider-specific code stays in provider modules only
+- **Performance**: Abstraction layer overhead < 10ms per request
 
 ---
-*Last updated: 2026-03-08 after v1.0 milestone*
+*Last updated: 2026-03-10 after v1.1 milestone start*
