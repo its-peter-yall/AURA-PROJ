@@ -79,7 +79,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 
 Plans:
 - [x] 08-01-PLAN.md — Package foundation: types, errors, config, provider ABCs + unit tests ([summary](./phases/08-shared-package-vertex-ai/08-01-SUMMARY.md))
-- [ ] 08-02-PLAN.md — VertexAI provider + ModelRouter core with routing and delegation
+- [x] 08-02-PLAN.md — VertexAI provider + ModelRouter core with routing and delegation ([summary](./phases/08-shared-package-vertex-ai/08-02-SUMMARY.md))
 - [ ] 08-03-PLAN.md — Compatibility shims in both apps + zero-regression test verification
 
 ---
@@ -211,7 +211,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 8. Shared Package + Vertex AI | v1.1 | 1/3 | In Progress | - |
+| 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 0/TBD | Not started | - |
 | 10. Cross-App Migration + Config | v1.1 | 0/TBD | Not started | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |

@@ -79,7 +79,7 @@ AURA-PROJ/
 **`shared/`:**
 - Purpose: Host installable cross-application Python packages shared by both AURA apps.
 - Contains: `shared/model_router/` with `src/model_router/`, `tests/`, and package metadata in `pyproject.toml`.
-- Key files: `shared/model_router/pyproject.toml`, `shared/model_router/src/model_router/__init__.py`, `shared/model_router/src/model_router/providers/base.py`.
+- Key files: `shared/model_router/pyproject.toml`, `shared/model_router/src/model_router/__init__.py`, `shared/model_router/src/model_router/router.py`, `shared/model_router/src/model_router/providers/base.py`, `shared/model_router/src/model_router/providers/vertex_ai.py`.
 
 ## Key File Locations
 
