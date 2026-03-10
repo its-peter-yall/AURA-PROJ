@@ -126,12 +126,12 @@ Plans:
 
 **Key risks:** Configuration drift between the two apps. Provider settings, API keys, and defaults can diverge. Shared config source needed with clear separation of generation config (user-facing) from processing config (operational).
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 10-01-PLAN.md — Shared config modules: settings store, key manager, model cache + TDD unit tests ([summary](./phases/10-cross-app-migration-backend-integration/10-01-SUMMARY.md))
 - [ ] 10-02-PLAN.md — Admin settings REST endpoints for both AURA-CHAT and AURA-NOTES-MANAGER
-- [ ] 10-03-PLAN.md — AURA-CHAT full migration: vertex_ai_client.py + embeddings.py rewritten as model_router façades
+- [x] 10-03-PLAN.md — AURA-CHAT full migration: vertex_ai_client.py + embeddings.py rewritten as model_router façades ([summary](./phases/10-cross-app-migration-backend-integration/10-03-SUMMARY.md))
 - [ ] 10-04-PLAN.md — AURA-NOTES-MANAGER full migration + Celery verification + no-direct-imports audit test
 
 ---
@@ -216,7 +216,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
-| 10. Cross-App Migration + Config | v1.1 | 1/4 | In Progress | - |
+| 10. Cross-App Migration + Config | v1.1 | 2/4 | In Progress | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
