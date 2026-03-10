@@ -218,7 +218,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
-| 10. Cross-App Migration + Config | v1.1 | 4/6 | Gap Closure | - |
+| 10. Cross-App Migration + Config | v1.1 | 5/6 | Gap Closure | - |
 | 11. Frontend Settings + Model UI | v1.1 | 0/TBD | Not started | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
