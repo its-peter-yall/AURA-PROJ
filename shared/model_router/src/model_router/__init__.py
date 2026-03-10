@@ -1,6 +1,17 @@
+# __init__.py
+# Public exports for the shared AURA model router package.
+
+# Re-exports the shared contracts, provider types, config models, and router
+# entry points so callers can import the package from the repo root without
+# needing to know the internal module layout.
+
+# @see: model_router/router.py - Router runtime and singleton helpers
+# @note: Provider implementations keep optional SDK imports lazy at runtime.
+
 """Public package exports for the AURA model router."""
 
 from model_router.compat import VertexCompatModel
+from model_router.config import OpenRouterConfig
 from model_router.errors import (
     AuthenticationError,
     ContentPolicyError,
@@ -11,6 +22,7 @@ from model_router.errors import (
     RateLimitError,
 )
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
+from model_router.providers.openrouter import OpenRouterProvider
 from model_router.router import ModelRouter, get_default_router, reset_default_router
 from model_router.types import (
     GenerateRequest,
@@ -34,6 +46,8 @@ __all__ = [
     'ModelRouter',
     'ModelRouterError',
     'ModelUnavailableError',
+    'OpenRouterConfig',
+    'OpenRouterProvider',
     'ProviderTimeoutError',
     'ProviderType',
     'RateLimitError',

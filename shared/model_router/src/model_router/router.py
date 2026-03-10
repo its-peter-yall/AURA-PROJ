@@ -1,3 +1,13 @@
+# router.py
+# Core router for provider registration, routing, and request delegation.
+
+# Centralizes provider bootstrap and request routing for shared generation and
+# embedding calls. This update adds lazy OpenRouter auto-registration while
+# preserving the existing Vertex AI bootstrap and routing heuristics.
+
+# @see: model_router/config.py - RouterConfig and provider config models
+# @note: Slash-delimited model IDs route to OpenRouter unless overridden.
+
 """Core router for provider registration, routing, and delegation."""
 
 from __future__ import annotations
@@ -42,9 +52,19 @@ class ModelRouter:
             self.register_provider(ProviderType.VERTEX_AI, vertex_provider)
             self.register_embedding_provider(embedding_provider)
 
+        if self._should_auto_register_openrouter():
+            from model_router.providers.openrouter import OpenRouterProvider
+
+            openrouter_provider = OpenRouterProvider(self._config.openrouter)
+            self.register_provider(ProviderType.OPENROUTER, openrouter_provider)
+
     def _should_auto_register_vertex(self) -> bool:
         """Return True when config should bootstrap the Vertex AI providers."""
         return self._config.test_mode or bool(self._config.vertex_ai.project_id)
+
+    def _should_auto_register_openrouter(self) -> bool:
+        """Return True when config should bootstrap the OpenRouter provider."""
+        return self._config.test_mode or bool(self._config.openrouter.api_key)
 
     def register_provider(
         self,

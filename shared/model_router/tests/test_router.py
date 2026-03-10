@@ -5,6 +5,7 @@ import pytest
 from model_router import ModelRouter, get_default_router, reset_default_router
 from model_router.config import RouterConfig, VertexAIConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
+from model_router.providers.openrouter import OpenRouterProvider
 from model_router.providers.vertex_ai import (
     VertexAIEmbeddingProvider,
     VertexAIProvider,
@@ -97,13 +98,14 @@ def test_router_resolve_vertex_default() -> None:
 def test_router_resolve_openrouter_slash() -> None:
     router = ModelRouter(make_config())
 
-    with pytest.raises(ModelUnavailableError):
-        router._resolve_provider(
-            GenerateRequest(
-                model='anthropic/claude-sonnet-4',
-                contents='hello',
-            )
+    provider = router._resolve_provider(
+        GenerateRequest(
+            model='anthropic/claude-sonnet-4',
+            contents='hello',
         )
+    )
+
+    assert isinstance(provider, OpenRouterProvider)
 
 
 def test_router_resolve_explicit_provider() -> None:
