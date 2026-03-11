@@ -202,12 +202,8 @@ class ModelRouter:
                     model=response.model_used,
                     provider=response.provider,
                     estimated_cost=cost,
-                    session_id=resolved_request.metadata.get(
-                        "session_id"
-                    ),
-                    user_id=resolved_request.metadata.get(
-                        "user_id"
-                    ),
+                    session_id=resolved_request.metadata.get("session_id"),
+                    user_id=resolved_request.metadata.get("user_id"),
                 )
             except Exception:
                 logger.warning(
@@ -296,14 +292,10 @@ class ModelRouter:
 
         if self._usage_tracker and self._cost_calculator:
             try:
-                provider_type = self._determine_provider_type(
-                    resolved_request
-                )
+                provider_type = self._determine_provider_type(resolved_request)
                 # Estimate tokens from character count (~4 chars/token)
                 est_output = max(len(total_text) // 4, 1)
-                est_input = max(
-                    len(str(resolved_request.contents)) // 4, 1
-                )
+                est_input = max(len(str(resolved_request.contents)) // 4, 1)
                 usage = UsageInfo(
                     input_tokens=est_input,
                     output_tokens=est_output,
@@ -318,17 +310,114 @@ class ModelRouter:
                     model=resolved_request.model,
                     provider=provider_type,
                     estimated_cost=cost,
-                    session_id=resolved_request.metadata.get(
-                        "session_id"
-                    ),
-                    user_id=resolved_request.metadata.get(
-                        "user_id"
-                    ),
+                    session_id=resolved_request.metadata.get("session_id"),
+                    user_id=resolved_request.metadata.get("user_id"),
                     operation="stream",
                 )
             except Exception:
                 logger.warning(
                     "Usage tracking failed for stream()",
+                    exc_info=True,
+                )
+
+    async def stream_with_usage(
+        self,
+        request: GenerateRequest | None = None,
+        *,
+        usage_out: list[UsageInfo] | None = None,
+        **kwargs: Any,
+    ) -> AsyncGenerator[StreamChunk, None]:
+        """Stream normalized chunks with optional usage data output.
+
+        Yields StreamChunk objects like stream(). If usage_out is provided,
+        the usage data will be appended to that list when the stream
+        completes, allowing callers to access it without re-estimation.
+
+        Args:
+            request: Generation request or None (uses kwargs).
+            usage_out: Optional mutable list to receive UsageInfo after
+                      stream completion. List will have one item appended.
+            **kwargs: Request fields if request object not provided.
+
+        Example:
+            usage_data: list[UsageInfo] = []
+            async for chunk in router.stream_with_usage(req, usage_out=usage_data):
+                print(chunk.text)
+            # usage_data[0] now contains the UsageInfo
+        """
+        resolved_request = self._build_request(request, kwargs)
+        provider = self._resolve_provider(resolved_request)
+
+        total_text = ""
+        total_thinking_text = ""
+        async for chunk in provider.stream(resolved_request):
+            total_text += chunk.text
+            if chunk.type == "thinking":
+                total_thinking_text += chunk.text
+            yield chunk
+
+        # Calculate usage info
+        est_output = max(len(total_text) // 4, 1)
+        est_input = max(len(str(resolved_request.contents)) // 4, 1)
+        est_thinking = max(len(total_thinking_text) // 4, 0)
+        usage = UsageInfo(
+            input_tokens=est_input,
+            output_tokens=est_output,
+            thinking_tokens=est_thinking,
+        )
+
+        # Return usage to caller via mutable container
+        if usage_out is not None:
+            usage_out.append(usage)
+
+        # Also record to usage tracker if configured
+        if self._usage_tracker and self._cost_calculator:
+            try:
+                provider_type = self._determine_provider_type(resolved_request)
+                cost = self._cost_calculator.estimate(
+                    usage,
+                    resolved_request.model,
+                    provider_type,
+                )
+                await self._usage_tracker.record(
+                    usage=usage,
+                    model=resolved_request.model,
+                    provider=provider_type,
+                    estimated_cost=cost,
+                    session_id=resolved_request.metadata.get("session_id"),
+                    user_id=resolved_request.metadata.get("user_id"),
+                    operation="stream",
+                )
+            except Exception:
+                logger.warning(
+                    "Usage tracking failed for stream_with_usage()",
+                    exc_info=True,
+                )
+
+        # Store usage info on generator for caller access
+        self._stream_usage_info = usage  # type: ignore[attr-defined]
+
+        # Also record to usage tracker if configured
+        if self._usage_tracker and self._cost_calculator:
+            try:
+                provider_type = self._determine_provider_type(resolved_request)
+                cost = self._cost_calculator.estimate(
+                    usage,
+                    resolved_request.model,
+                    provider_type,
+                )
+                await self._usage_tracker.record(
+                    usage=usage,
+                    model=resolved_request.model,
+                    provider=provider_type,
+                    estimated_cost=cost,
+                    session_id=resolved_request.metadata.get("session_id"),
+                    user_id=resolved_request.metadata.get("user_id"),
+                    operation="stream",
+                )
+            except Exception:
+                logger.warning(
+                    "Usage tracking failed for stream_with_usage()",
                     exc_info=True,
                 )
 

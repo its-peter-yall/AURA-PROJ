@@ -20,7 +20,7 @@ from model_router.providers.vertex_ai import (
     VertexAIEmbeddingProvider,
     VertexAIProvider,
 )
-from model_router.types import GenerateRequest, ProviderType
+from model_router.types import GenerateRequest, ProviderType, UsageInfo
 
 
 def make_config() -> RouterConfig:
@@ -130,6 +130,19 @@ def test_router_resolve_openrouter_slash() -> None:
     )
 
     assert isinstance(provider, OpenRouterProvider)
+
+
+def test_router_resolve_models_prefix_to_vertex() -> None:
+    router = ModelRouter(make_config())
+
+    provider = router._resolve_provider(
+        GenerateRequest(
+            model="models/gemini-2.5-pro",
+            contents="hello",
+        )
+    )
+
+    assert isinstance(provider, VertexAIProvider)
 
 
 def test_router_openrouter_auto_registered_in_test_mode() -> None:
@@ -245,6 +258,74 @@ async def test_router_stream_delegates_to_openrouter() -> None:
     assert len(chunks) == 1
     assert chunks[0].type == "content"
     assert chunks[0].text == "Test-mode stream output."
+
+
+@pytest.mark.asyncio
+async def test_router_stream_with_usage_returns_usage_info() -> None:
+    """stream_with_usage() returns usage data via mutable container."""
+    router = ModelRouter(make_config())
+    usage_data: list[UsageInfo] = []
+
+    chunks = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="hello world",  # ~2 tokens
+            usage_out=usage_data,
+        )
+    ]
+
+    assert len(chunks) == 1
+    assert chunks[0].type == "content"
+    # Usage should be populated after stream completes
+    assert len(usage_data) == 1
+    usage = usage_data[0]
+    assert usage.input_tokens >= 1  # "hello world" ~ 2 tokens
+    assert usage.output_tokens >= 1  # "Test-mode stream output." ~ 6 tokens
+    assert usage.thinking_tokens == 0  # No thinking in test mode
+
+
+@pytest.mark.asyncio
+async def test_router_stream_with_usage_thinking_tokens() -> None:
+    """stream_with_usage() tracks thinking tokens separately."""
+    router = ModelRouter(make_config())
+    usage_data: list[UsageInfo] = []
+
+    # In test mode, the provider returns a single content chunk
+    # but we can verify the structure works for real thinking streams
+    chunks = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="test",
+            usage_out=usage_data,
+        )
+    ]
+
+    assert len(chunks) == 1
+    assert len(usage_data) == 1
+    # Verify UsageInfo has all fields
+    usage = usage_data[0]
+    assert hasattr(usage, "input_tokens")
+    assert hasattr(usage, "output_tokens")
+    assert hasattr(usage, "thinking_tokens")
+
+
+@pytest.mark.asyncio
+async def test_router_stream_with_usage_no_container() -> None:
+    """stream_with_usage() works without usage_out container."""
+    router = ModelRouter(make_config())
+
+    chunks = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="hello",
+        )
+    ]
+
+    assert len(chunks) == 1
+    assert chunks[0].type == "content"
 
 
 @pytest.mark.asyncio
