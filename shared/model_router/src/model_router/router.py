@@ -12,7 +12,8 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator
+import logging
+from typing import TYPE_CHECKING, Any, AsyncGenerator
 
 from model_router.config import RouterConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
@@ -27,7 +28,14 @@ from model_router.types import (
     ModelInfo,
     ProviderType,
     StreamChunk,
+    UsageInfo,
 )
+
+if TYPE_CHECKING:
+    from model_router.cost_calculator import CostCalculator
+    from model_router.usage_tracker import UsageTracker
+
+logger = logging.getLogger(__name__)
 
 _default_router: "ModelRouter | None" = None
 
@@ -58,6 +66,8 @@ class ModelRouter:
         self._config = config or RouterConfig()
         self._providers: dict[ProviderType, BaseProvider] = {}
         self._embedding_provider: BaseEmbeddingProvider | None = None
+        self._usage_tracker: "UsageTracker | None" = None
+        self._cost_calculator: "CostCalculator | None" = None
 
         if self._should_auto_register_vertex():
             vertex_provider = VertexAIProvider(self._config.vertex_ai)
@@ -78,6 +88,23 @@ class ModelRouter:
     def _should_auto_register_openrouter(self) -> bool:
         """Return True when config should bootstrap the OpenRouter provider."""
         return self._config.test_mode or bool(self._config.openrouter.api_key)
+
+    def set_usage_tracking(
+        self,
+        tracker: "UsageTracker",
+        calculator: "CostCalculator",
+    ) -> None:
+        """Bind usage tracking for late initialization.
+
+        Use this when the Redis client is not available at router
+        construction time.
+
+        Args:
+            tracker: UsageTracker instance for recording.
+            calculator: CostCalculator instance for cost estimation.
+        """
+        self._usage_tracker = tracker
+        self._cost_calculator = calculator
 
     def register_provider(
         self,
@@ -121,7 +148,11 @@ class ModelRouter:
                     original=error,
                 ) from error
 
-        if "/" in request.model:
+        model_name = request.model.strip()
+        if model_name.startswith("models/"):
+            return ProviderType.VERTEX_AI
+
+        if "/" in model_name:
             return ProviderType.OPENROUTER
         return self._config.default_provider
 
@@ -157,7 +188,34 @@ class ModelRouter:
         """Generate content through the resolved provider."""
         resolved_request = self._build_request(request, kwargs)
         provider = self._resolve_provider(resolved_request)
-        return await provider.generate(resolved_request)
+        response = await provider.generate(resolved_request)
+
+        if self._usage_tracker and self._cost_calculator:
+            try:
+                cost = self._cost_calculator.estimate(
+                    response.usage,
+                    response.model_used,
+                    response.provider,
+                )
+                await self._usage_tracker.record(
+                    usage=response.usage,
+                    model=response.model_used,
+                    provider=response.provider,
+                    estimated_cost=cost,
+                    session_id=resolved_request.metadata.get(
+                        "session_id"
+                    ),
+                    user_id=resolved_request.metadata.get(
+                        "user_id"
+                    ),
+                )
+            except Exception:
+                logger.warning(
+                    "Usage tracking failed for generate()",
+                    exc_info=True,
+                )
+
+        return response
 
     async def list_models(
         self,
@@ -230,8 +288,49 @@ class ModelRouter:
         """Stream normalized chunks from the resolved provider."""
         resolved_request = self._build_request(request, kwargs)
         provider = self._resolve_provider(resolved_request)
+
+        total_text = ""
         async for chunk in provider.stream(resolved_request):
+            total_text += chunk.text
             yield chunk
+
+        if self._usage_tracker and self._cost_calculator:
+            try:
+                provider_type = self._determine_provider_type(
+                    resolved_request
+                )
+                # Estimate tokens from character count (~4 chars/token)
+                est_output = max(len(total_text) // 4, 1)
+                est_input = max(
+                    len(str(resolved_request.contents)) // 4, 1
+                )
+                usage = UsageInfo(
+                    input_tokens=est_input,
+                    output_tokens=est_output,
+                )
+                cost = self._cost_calculator.estimate(
+                    usage,
+                    resolved_request.model,
+                    provider_type,
+                )
+                await self._usage_tracker.record(
+                    usage=usage,
+                    model=resolved_request.model,
+                    provider=provider_type,
+                    estimated_cost=cost,
+                    session_id=resolved_request.metadata.get(
+                        "session_id"
+                    ),
+                    user_id=resolved_request.metadata.get(
+                        "user_id"
+                    ),
+                    operation="stream",
+                )
+            except Exception:
+                logger.warning(
+                    "Usage tracking failed for stream()",
+                    exc_info=True,
+                )
 
 
 def get_default_router() -> ModelRouter:

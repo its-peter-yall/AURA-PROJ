@@ -13,6 +13,7 @@
 from model_router.compat import VertexCompatModel
 from model_router.config import OpenRouterConfig
 from model_router.cache import ModelCache, get_cached_models
+from model_router.cost_calculator import CostCalculator
 from model_router.errors import (
     AuthenticationError,
     ContentPolicyError,
@@ -34,12 +35,15 @@ from model_router.types import (
     ProviderType,
     StreamChunk,
     UsageInfo,
+    UsageRecord,
 )
+from model_router.usage_tracker import UsageTracker
 
 __all__ = [
     "AuthenticationError",
     "BaseEmbeddingProvider",
     "BaseProvider",
+    "CostCalculator",
     "get_cached_models",
     "ContentPolicyError",
     "EmbeddingDimensionError",
@@ -61,6 +65,8 @@ __all__ = [
     "SettingsStore",
     "StreamChunk",
     "UsageInfo",
+    "UsageRecord",
+    "UsageTracker",
     "VertexCompatModel",
 ]
 
