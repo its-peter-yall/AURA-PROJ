@@ -185,9 +185,9 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md — Shared backend: UsageRecord types, CostCalculator, UsageTracker, router hooks (TDD) ([summary](./phases/12-usage-tracking-cost-dashboard/12-01-SUMMARY.md))
-- [ ] 12-02-PLAN.md — Backend API endpoints (both apps) + SSE completion usage data
-- [ ] 12-03-PLAN.md — AURA-CHAT frontend: Recharts dashboard + per-session cost badge
-- [ ] 12-04-PLAN.md — AURA-NOTES-MANAGER dashboard adaptation (admin-protected)
+ - [x] 12-02-PLAN.md — Backend API endpoints (both apps) + SSE completion usage data ([summary](./phases/12-usage-tracking-cost-dashboard/12-02-SUMMARY.md))
+ - [x] 12-03-PLAN.md — AURA-CHAT frontend: Recharts dashboard + per-session cost badge ([summary](./phases/12-usage-tracking-cost-dashboard/12-03-SUMMARY.md))
+ - [x] 12-04-PLAN.md — AURA-NOTES-MANAGER dashboard adaptation (admin-protected) ([summary](./phases/12-usage-tracking-cost-dashboard/12-04-SUMMARY.md))
 
 ---
 
@@ -207,10 +207,12 @@ Plans:
 
 **Key risks:** Low risk if phases 8-12 are individually well-tested. Primary concern is cross-cutting interactions that unit tests miss (e.g., thinking mode + streaming + session persistence + provider switching in one flow).
 
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 13-01: TBD
+- [x] 13-01-PLAN.md — Cross-provider integration tests + router overhead benchmark ([summary](./phases/13-polish-integration-testing/13-01-SUMMARY.md))
+- [ ] 13-02-PLAN.md — Full regression sweep across all test suites
+- [ ] 13-03-PLAN.md — Requirements verification + traceability closure
 
 ---
 
@@ -225,7 +227,7 @@ Plans:
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
 | 12. Usage Tracking + Dashboard | 4/4 | Complete    | 2026-03-11 | - |
-| 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
+| 13. Polish + Integration Testing | v1.1 | 1/3 | In Progress | - |
 
 ---
 
@@ -260,4 +262,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-03-10*
-*Last updated: 2026-03-10*
+*Last updated: 2026-03-11*
