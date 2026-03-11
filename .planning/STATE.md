@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-11T13:40:00Z"
-last_activity: "2026-03-11 - Completed Plan 11-03 (Compact Model Selection UI)"
+last_updated: "2026-03-11T09:10:00Z"
+last_activity: "2026-03-11 - Completed Plan 12-01 (Usage Tracking Foundation)"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 17
+  completed_plans: 17
 ---
 
 # Project State
@@ -19,23 +19,23 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 11 - Frontend Provider Settings + Model Selection UI
+**Current focus:** Phase 12 - Usage Tracking + Cost Dashboard
 
 ## Current Position
 
-Phase: 11 of 13 (Frontend Provider Settings)
-Plan: 4 of 4 complete (11-04 done)
-Status: Complete
-Last activity: 2026-03-11 - Completed Plan 11-04 (AURA-NOTES-MANAGER Adaptation)
+Phase: 12 of 13 (Usage Tracking + Cost Dashboard)
+Plan: 1 of 4 complete (12-01 done)
+Status: Active
+Last activity: 2026-03-11 - Completed Plan 12-01 (Usage Tracking Foundation)
 
-Progress: [██████████] 100%
+Progress: [██████████████░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 11 min
-- Total execution time: 141 min
+- Total execution time: 144 min
 
 **By Phase:**
 
@@ -45,6 +45,7 @@ Progress: [██████████] 100%
 | 09 | 3 | 10 min | 3 min |
 | 10 | 6 | 80 min | 13 min |
 | 11 | 3 | 15 min | 5 min |
+| 12 | 1 | 3 min | 3 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
@@ -59,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 11 P02 | 6m | 2 tasks | 7 files |
 | Phase 11 P03 | 15m | 2 tasks | 5 files |
 | Phase 11 P04 | 25m | 2 tasks | 9 files |
+| Phase 12 P01 | 2 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -108,6 +110,9 @@ Recent decisions affecting current work:
 - [Phase 11]: Persist model selection per session ID in Zustand's useModelStore (sessionStorage)
 - [Phase 11]: Update formatModelLabel to handle API display_name and OpenRouter vendor prefixes
 - [Phase 11]: Use @/lib/cn in AURA-NOTES-MANAGER for settings components
+- [Phase 12]: Use Redis sorted sets with timestamp scores for both global usage history and session-scoped summaries.
+- [Phase 12]: Late-bind UsageTracker and CostCalculator into ModelRouter so the shared singleton can initialize before Redis is available.
+- [Phase 12]: Fall back to character-count token estimation for streams and swallow telemetry failures so tracking never breaks responses.
 
 ### Pending Todos
 
@@ -125,9 +130,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: Completed Plan 11-03 (Compact Model Selection UI)
+Stopped at: Completed Plan 12-01 (Usage Tracking Foundation)
 Resume file: None
-Next action: Plan 11-04 (AURA-NOTES-MANAGER adaptation)
+Next action: Plan 12-02 (Backend API endpoints + SSE completion usage data)
 
 ### Quick Tasks Completed
 

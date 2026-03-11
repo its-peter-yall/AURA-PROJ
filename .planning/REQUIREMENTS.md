@@ -9,14 +9,14 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 
 ### Router Abstraction
 
-- [ ] **ROUTER-01**: Backend provides a unified `generate()` interface that routes to the correct provider based on model identifier
-- [ ] **ROUTER-02**: Backend provides a unified `embed()` interface locked to Vertex AI per deployment with dimension validation
+- [x] **ROUTER-01**: Backend provides a unified `generate()` interface that routes to the correct provider based on model identifier
+- [x] **ROUTER-02**: Backend provides a unified `embed()` interface locked to Vertex AI per deployment with dimension validation
 - [x] **ROUTER-03**: All providers stream responses through a normalized SSE format matching AURA's existing `{type: "thinking"|"content", text}` chunk shape
-- [ ] **ROUTER-04**: All provider errors map to a unified error hierarchy (auth, rate limit, content policy, model unavailable, timeout) with original error preserved
+- [x] **ROUTER-04**: All provider errors map to a unified error hierarchy (auth, rate limit, content policy, model unavailable, timeout) with original error preserved
 
 ### Provider Implementations
 
-- [ ] **PROV-01**: Vertex AI provider wraps existing code through the shared router interface with zero regression in existing tests
+- [x] **PROV-01**: Vertex AI provider wraps existing code through the shared router interface with zero regression in existing tests
 - [x] **PROV-02**: OpenRouter provider supports completions, streaming, model listing, and credit checking via the `openai` SDK
 - [x] **PROV-03**: Thinking/reasoning mode works across Vertex AI (Gemini thinking), OpenRouter (Claude extended thinking, DeepSeek reasoning) with a unified enable/budget interface
 
@@ -30,12 +30,12 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 ### Frontend UI
 
 - [x] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider > vendor > model) with search/filter
-- [ ] **UI-02**: Chat interface includes an inline compact model picker for quick mid-session model switching
+- [x] **UI-02**: Chat interface includes an inline compact model picker for quick mid-session model switching
 - [ ] **UI-03**: Both AURA-CHAT and AURA-NOTES-MANAGER use the shared model router for all LLM calls with no direct provider imports
 
 ### Usage Tracking
 
-- [ ] **USAGE-01**: System tracks token usage and cost per request, aggregated by session, user, model, and provider
+- [x] **USAGE-01**: System tracks token usage and cost per request, aggregated by session, user, model, and provider
 - [ ] **USAGE-02**: Dashboard displays cost charts by provider, model, time period with date range filters
 
 ## v1.2 Requirements
@@ -72,11 +72,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROUTER-01 | Phase 8 | Pending |
-| ROUTER-02 | Phase 8 | Pending |
+| ROUTER-01 | Phase 8 | Complete |
+| ROUTER-02 | Phase 8 | Complete |
 | ROUTER-03 | Phase 9 | Complete |
-| ROUTER-04 | Phase 8 | Pending |
-| PROV-01 | Phase 8 | Pending |
+| ROUTER-04 | Phase 8 | Complete |
+| PROV-01 | Phase 8 | Complete |
 | PROV-02 | Phase 9 | Complete |
 | PROV-03 | Phase 9 | Complete |
 | CONFIG-01 | Phase 10 | Pending |
@@ -84,9 +84,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONFIG-03 | Phase 10 | Pending |
 | CONFIG-04 | Phase 10 | Pending |
 | UI-01 | Phase 11 | Complete |
-| UI-02 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Complete |
 | UI-03 | Phase 10 | Pending |
-| USAGE-01 | Phase 12 | Pending |
+| USAGE-01 | Phase 12 | Complete |
 | USAGE-02 | Phase 12 | Pending |
 
 **Coverage:**
