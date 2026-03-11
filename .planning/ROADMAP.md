@@ -53,7 +53,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 - [x] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
 - [x] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management (completed 2026-03-10)
 - [x] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence (completed 2026-03-11)
-- [ ] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters
+- [x] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters (completed 2026-03-11)
 - [ ] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification
 
 ## Phase Details
@@ -181,7 +181,7 @@ Plans:
 
 **Key risks:** Cost calculation varies by provider (Gemini per character, OpenRouter per token, Ollama free). Cached pricing data needed with an "estimated" flag for approximations. Usage tracking hooks should be wired into the router from Phase 8 to avoid costly retrofit.
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 12-01-PLAN.md — Shared backend: UsageRecord types, CostCalculator, UsageTracker, router hooks (TDD) ([summary](./phases/12-usage-tracking-cost-dashboard/12-01-SUMMARY.md))
@@ -224,7 +224,7 @@ Plans:
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
-| 12. Usage Tracking + Dashboard | 3/4 | In Progress|  | - |
+| 12. Usage Tracking + Dashboard | 4/4 | Complete   | 2026-03-11 | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 
 ---
