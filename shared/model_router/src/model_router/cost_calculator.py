@@ -73,12 +73,10 @@ class CostCalculator:
         """
         normalized = model.replace("models/", "")
         pricing = self._VERTEX_PRICING.get(normalized, {})
-        input_cost = (
-            (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
-        )
-        output_cost = (
-            (usage.output_tokens / 1_000_000) * pricing.get("output", 0.0)
-        )
+        input_cost = (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
+        # Thinking tokens priced at output rate (industry standard)
+        total_output_tokens = usage.output_tokens + usage.thinking_tokens
+        output_cost = (total_output_tokens / 1_000_000) * pricing.get("output", 0.0)
         return round(input_cost + output_cost, 6)
 
     def _estimate_openrouter(
@@ -96,12 +94,10 @@ class CostCalculator:
             Estimated cost in USD rounded to 6 decimals.
         """
         pricing = self._openrouter_pricing.get(model, {})
-        input_cost = (
-            (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
-        )
-        output_cost = (
-            (usage.output_tokens / 1_000_000) * pricing.get("output", 0.0)
-        )
+        input_cost = (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
+        # Thinking tokens priced at output rate (industry standard)
+        total_output_tokens = usage.output_tokens + usage.thinking_tokens
+        output_cost = (total_output_tokens / 1_000_000) * pricing.get("output", 0.0)
         return round(input_cost + output_cost, 6)
 
     def update_openrouter_pricing(

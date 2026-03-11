@@ -149,9 +149,7 @@ class TestCostCalculatorVertexAI:
         calc = CostCalculator()
         usage = UsageInfo(input_tokens=1000, output_tokens=500)
 
-        cost = calc.estimate(
-            usage, "gemini-2.5-flash", ProviderType.VERTEX_AI
-        )
+        cost = calc.estimate(usage, "gemini-2.5-flash", ProviderType.VERTEX_AI)
 
         # input: 1000/1M * 0.15 = 0.00015
         # output: 500/1M * 0.60 = 0.0003
@@ -163,9 +161,7 @@ class TestCostCalculatorVertexAI:
         calc = CostCalculator()
         usage = UsageInfo(input_tokens=1000, output_tokens=500)
 
-        cost = calc.estimate(
-            usage, "models/gemini-2.0-flash", ProviderType.VERTEX_AI
-        )
+        cost = calc.estimate(usage, "models/gemini-2.0-flash", ProviderType.VERTEX_AI)
 
         assert cost == pytest.approx(0.0003, abs=1e-7)
 
@@ -174,11 +170,25 @@ class TestCostCalculatorVertexAI:
         calc = CostCalculator()
         usage = UsageInfo(input_tokens=1000, output_tokens=500)
 
-        cost = calc.estimate(
-            usage, "gemini-unknown-model", ProviderType.VERTEX_AI
-        )
+        cost = calc.estimate(usage, "gemini-unknown-model", ProviderType.VERTEX_AI)
 
         assert cost == 0.0
+
+    def test_vertex_includes_thinking_tokens_in_output_cost(self) -> None:
+        """Thinking tokens are priced at output rate for Vertex AI."""
+        calc = CostCalculator()
+        usage = UsageInfo(
+            input_tokens=1000,
+            output_tokens=500,
+            thinking_tokens=200,
+        )
+
+        cost = calc.estimate(usage, "gemini-2.0-flash", ProviderType.VERTEX_AI)
+
+        # input: 1000/1M * 0.10 = 0.0001
+        # output: (500 + 200)/1M * 0.40 = 0.00028
+        # total: 0.00038
+        assert cost == pytest.approx(0.00038, abs=1e-7)
 
 
 class TestCostCalculatorOpenRouter:
@@ -187,12 +197,14 @@ class TestCostCalculatorOpenRouter:
     def test_openrouter_uses_cached_pricing(self) -> None:
         """OpenRouter uses cached pricing dict for estimation."""
         calc = CostCalculator()
-        calc.update_openrouter_pricing({
-            "anthropic/claude-sonnet-4": {
-                "input": 3.00,
-                "output": 15.00,
-            },
-        })
+        calc.update_openrouter_pricing(
+            {
+                "anthropic/claude-sonnet-4": {
+                    "input": 3.00,
+                    "output": 15.00,
+                },
+            }
+        )
         usage = UsageInfo(input_tokens=1000, output_tokens=500)
 
         cost = calc.estimate(
@@ -223,12 +235,14 @@ class TestCostCalculatorOpenRouter:
         """update_openrouter_pricing() stores pricing for later estimates."""
         calc = CostCalculator()
 
-        calc.update_openrouter_pricing({
-            "meta-llama/llama-3-70b": {
-                "input": 0.59,
-                "output": 0.79,
-            },
-        })
+        calc.update_openrouter_pricing(
+            {
+                "meta-llama/llama-3-70b": {
+                    "input": 0.59,
+                    "output": 0.79,
+                },
+            }
+        )
         usage = UsageInfo(input_tokens=2000, output_tokens=1000)
 
         cost = calc.estimate(
@@ -241,3 +255,31 @@ class TestCostCalculatorOpenRouter:
         # output: 1000/1M * 0.79 = 0.00079
         # total: 0.00197
         assert cost == pytest.approx(0.00197, abs=1e-7)
+
+    def test_openrouter_includes_thinking_tokens_in_output_cost(self) -> None:
+        """Thinking tokens are priced at output rate for OpenRouter."""
+        calc = CostCalculator()
+        calc.update_openrouter_pricing(
+            {
+                "anthropic/claude-sonnet-4": {
+                    "input": 3.00,
+                    "output": 15.00,
+                },
+            }
+        )
+        usage = UsageInfo(
+            input_tokens=1000,
+            output_tokens=500,
+            thinking_tokens=300,
+        )
+
+        cost = calc.estimate(
+            usage,
+            "anthropic/claude-sonnet-4",
+            ProviderType.OPENROUTER,
+        )
+
+        # input: 1000/1M * 3.00 = 0.003
+        # output: (500 + 300)/1M * 15.00 = 0.012
+        # total: 0.015
+        assert cost == pytest.approx(0.015, abs=1e-7)
