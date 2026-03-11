@@ -49,7 +49,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 
 **Milestone v1.1: Multi-Provider LLM Architecture**
 
-- [ ] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
+- [x] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
 - [x] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
 - [x] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management (completed 2026-03-10)
 - [ ] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence
@@ -80,7 +80,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 Plans:
 - [x] 08-01-PLAN.md — Package foundation: types, errors, config, provider ABCs + unit tests ([summary](./phases/08-shared-package-vertex-ai/08-01-SUMMARY.md))
 - [x] 08-02-PLAN.md — VertexAI provider + ModelRouter core with routing and delegation ([summary](./phases/08-shared-package-vertex-ai/08-02-SUMMARY.md))
-- [ ] 08-03-PLAN.md — Compatibility shims in both apps + zero-regression test verification
+- [x] 08-03-PLAN.md — Compatibility shims in both apps + zero-regression test verification
 
 ---
 
@@ -218,7 +218,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 8. Shared Package + Vertex AI | v1.1 | 2/3 | In Progress | - |
+| 8. Shared Package + Vertex AI | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | v1.1 | 0/4 | Planned | - |

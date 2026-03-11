@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T17:42:30Z"
-last_activity: "2026-03-10 - Completed Plan 10-06 to enforce configurable cache TTL bounds and provider-aware API key validation"
+last_updated: "2026-03-10T17:56:17Z"
+last_activity: "2026-03-10 - Re-verified Phase 10 after plans 10-05 and 10-06; one direct Vertex REST bypass remains in AURA-CHAT/test_real_models.py"
 progress:
   total_phases: 6
   completed_phases: 1
@@ -19,16 +19,16 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 10 complete -- backend integration gaps are closed and Phase 11 frontend settings work can begin
+**Current focus:** Phase 10 follow-up gap closure -- one direct Vertex REST bypass still blocks the router-only goal before Phase 11 can begin
 
 ## Current Position
 
-Phase: 10 of 13 (Cross-App Migration + Backend Integration)
-Plan: 6 of 6 complete (10-01 through 10-06 done)
-Status: Phase 10 complete
-Last activity: 2026-03-10 - Completed Plan 10-06 gap closure for TTL bounds + provider-aware validation
+Phase: 11 of 13 (Frontend Provider Settings)
+Plan: 1 of 4 complete (11-01 done)
+Status: Active
+Last activity: 2026-03-11 - Completed Plan 11-01 (Data layer for settings)
 
-Progress: [█████████░] 92%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -91,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 10]: Serve aggregate settings model discovery via ModelCache fan-out so all model listing endpoints share identical cache semantics and dependency overrides.
 - [Phase 10]: Preserve AURA-NOTES-MANAGER consumer imports by rewriting the service hub files as router-backed façades instead of editing downstream modules.
 - [Phase 10]: Use AST-based forbidden-import scanning so regression tests catch real imports without flagging string literals in verification scripts.
+- [Phase 10]: Compliance verification must also catch direct provider HTTP bypasses, not just SDK imports, because router-only guarantees can still be violated by standalone live scripts.
 - [Phase 10-cross-app-migration-backend-integration]: Keep the live thinking verification end-to-end, but drive it through model_router generate/stream calls while retaining the legacy façade import surface for compatibility visibility.
 - [Phase 10-cross-app-migration-backend-integration]: Extend the forbidden-import audit to scan dedicated test directories and verify the AURA-CHAT ARQ worker import chain in subprocess context.
 - [Phase 10-cross-app-migration-backend-integration]: Read MODEL_CACHE_TTL_SECONDS in each settings router, but enforce the 300-3600 second contract centrally inside shared ModelCache helpers.
@@ -98,6 +99,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
+- Phase 10 follow-up: migrate or remove `AURA-CHAT/test_real_models.py` and extend the compliance audit to catch direct provider HTTP bypasses.
 - Phase 08 Plan 03: close the outstanding cross-app regression validation and nested-repo docs/state follow-up.
 
 ### Blockers/Concerns
@@ -106,13 +108,14 @@ Recent decisions affecting current work:
 - [Phase 8]: Celery worker editable-install import resolution still needs verification during compatibility shim rollout.
 - [Phase 8]: `08-03-SUMMARY.md` is present on disk but still documents validation-open status, so the phase is not yet fully closed.
 - [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs end-to-end validation in a later integration phase.
+- [Phase 10]: `AURA-CHAT/test_real_models.py` still builds direct Vertex AI REST `generateContent` requests, so Phase 10 needs another gap-closure cycle before Phase 11 work starts.
 
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 10-cross-app-migration-backend-integration-06-PLAN.md
+Stopped at: Re-verified Phase 10 gap closure; found remaining direct Vertex REST bypass in `AURA-CHAT/test_real_models.py`
 Resume file: None
-Next action: Begin Phase 11 frontend provider settings/model selection planning or execution
+Next action: Run `/gsd-plan-phase 10 --gaps` to create the follow-up gap-closure plan
 
 ### Quick Tasks Completed
 
