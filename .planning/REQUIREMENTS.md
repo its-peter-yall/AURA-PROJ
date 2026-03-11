@@ -23,13 +23,13 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 ### Configuration
 
 - [ ] **CONFIG-01**: Admin can set default provider and model for each use case (chat, embeddings, entity extraction) via a settings page
-- [ ] **CONFIG-02**: Student can select a different chat model for their study session that persists for the session duration
+- [x] **CONFIG-02**: Student can select a different chat model for their study session that persists for the session duration
 - [ ] **CONFIG-03**: System dynamically discovers available models from each configured provider with cached model lists
 - [ ] **CONFIG-04**: Admin can securely store, validate, and manage API keys for each provider with masked display
 
 ### Frontend UI
 
-- [ ] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider > vendor > model) with search/filter
+- [x] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider > vendor > model) with search/filter
 - [ ] **UI-02**: Chat interface includes an inline compact model picker for quick mid-session model switching
 - [ ] **UI-03**: Both AURA-CHAT and AURA-NOTES-MANAGER use the shared model router for all LLM calls with no direct provider imports
 
@@ -80,10 +80,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROV-02 | Phase 9 | Complete |
 | PROV-03 | Phase 9 | Complete |
 | CONFIG-01 | Phase 10 | Pending |
-| CONFIG-02 | Phase 11 | Pending |
+| CONFIG-02 | Phase 11 | Complete |
 | CONFIG-03 | Phase 10 | Pending |
 | CONFIG-04 | Phase 10 | Pending |
-| UI-01 | Phase 11 | Pending |
+| UI-01 | Phase 11 | Complete |
 | UI-02 | Phase 11 | Pending |
 | UI-03 | Phase 10 | Pending |
 | USAGE-01 | Phase 12 | Pending |

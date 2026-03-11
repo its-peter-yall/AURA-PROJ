@@ -24,9 +24,9 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 ## Current Position
 
 Phase: 11 of 13 (Frontend Provider Settings)
-Plan: 1 of 4 complete (11-01 done)
+Plan: 2 of 4 complete (11-02 done)
 Status: Active
-Last activity: 2026-03-11 - Completed Plan 11-01 (Data layer for settings)
+Last activity: 2026-03-11 - Completed Plan 11-02 (Admin Settings UI)
 
 Progress: [█████████░] 94%
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 94%
 | Phase 10 P04 | 17 min | 2 tasks | 5 files |
 | Phase 10-cross-app-migration-backend-integration P05 | 8 min | 2 tasks | 2 files |
 | Phase 10-cross-app-migration-backend-integration P06 | 14 min | 2 tasks | 5 files |
+| Phase 11 P02 | 6m | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 10-cross-app-migration-backend-integration]: Extend the forbidden-import audit to scan dedicated test directories and verify the AURA-CHAT ARQ worker import chain in subprocess context.
 - [Phase 10-cross-app-migration-backend-integration]: Read MODEL_CACHE_TTL_SECONDS in each settings router, but enforce the 300-3600 second contract centrally inside shared ModelCache helpers.
 - [Phase 10-cross-app-migration-backend-integration]: Return validation metadata and JSON null for Ollama so the admin API distinguishes not-applicable validation from an actual failed credential check.
+- [Phase 11]: Search filtering for model picker hides empty providers to keep UI clean
+- [Phase 11]: Model picker uses auto-expansion during search while preserving user state during normal browsing
+- [Phase 11]: CSS variable-based indentation enables clean multi-level hierarchy rendering in model items
 
 ### Pending Todos
 
