@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-10T17:56:17Z"
-last_activity: "2026-03-10 - Re-verified Phase 10 after plans 10-05 and 10-06; one direct Vertex REST bypass remains in AURA-CHAT/test_real_models.py"
+last_updated: "2026-03-11T13:40:00Z"
+last_activity: "2026-03-11 - Completed Plan 11-03 (Compact Model Selection UI)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,23 +19,23 @@ progress:
 See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 10 follow-up gap closure -- one direct Vertex REST bypass still blocks the router-only goal before Phase 11 can begin
+**Current focus:** Phase 11 - Frontend Provider Settings + Model Selection UI
 
 ## Current Position
 
 Phase: 11 of 13 (Frontend Provider Settings)
-Plan: 2 of 4 complete (11-02 done)
+Plan: 3 of 4 complete (11-03 done)
 Status: Active
-Last activity: 2026-03-11 - Completed Plan 11-02 (Admin Settings UI)
+Last activity: 2026-03-11 - Completed Plan 11-03 (Compact Model Selection UI)
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 11 min
-- Total execution time: 126 min
+- Total execution time: 141 min
 
 **By Phase:**
 
@@ -44,6 +44,7 @@ Progress: [█████████░] 94%
 | 08 | 2 | 36 min | 18 min |
 | 09 | 3 | 10 min | 3 min |
 | 10 | 6 | 80 min | 13 min |
+| 11 | 3 | 15 min | 5 min |
 
 *Updated after each plan completion*
 | Phase 09 P02 | 2 min | 2 tasks | 3 files |
@@ -54,7 +55,9 @@ Progress: [█████████░] 94%
 | Phase 10 P04 | 17 min | 2 tasks | 5 files |
 | Phase 10-cross-app-migration-backend-integration P05 | 8 min | 2 tasks | 2 files |
 | Phase 10-cross-app-migration-backend-integration P06 | 14 min | 2 tasks | 5 files |
+| Phase 11 P01 | 4m | 2 tasks | 6 files |
 | Phase 11 P02 | 6m | 2 tasks | 7 files |
+| Phase 11 P03 | 15m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -100,9 +103,13 @@ Recent decisions affecting current work:
 - [Phase 11]: Search filtering for model picker hides empty providers to keep UI clean
 - [Phase 11]: Model picker uses auto-expansion during search while preserving user state during normal browsing
 - [Phase 11]: CSS variable-based indentation enables clean multi-level hierarchy rendering in model items
+- [Phase 11]: Use InlineModelPicker as a compact replacement for the flat Dropdown in the chat input bar
+- [Phase 11]: Persist model selection per session ID in Zustand's useModelStore (sessionStorage)
+- [Phase 11]: Update formatModelLabel to handle API display_name and OpenRouter vendor prefixes
 
 ### Pending Todos
 
+- Phase 11 Plan 04: AURA-NOTES-MANAGER adaptation: copy + adapt all settings components, create SettingsPage + routing.
 - Phase 10 follow-up: migrate or remove `AURA-CHAT/test_real_models.py` and extend the compliance audit to catch direct provider HTTP bypasses.
 - Phase 08 Plan 03: close the outstanding cross-app regression validation and nested-repo docs/state follow-up.
 
@@ -116,10 +123,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-10
-Stopped at: Re-verified Phase 10 gap closure; found remaining direct Vertex REST bypass in `AURA-CHAT/test_real_models.py`
+Last session: 2026-03-11
+Stopped at: Completed Plan 11-03 (Compact Model Selection UI)
 Resume file: None
-Next action: Run `/gsd-plan-phase 10 --gaps` to create the follow-up gap-closure plan
+Next action: Plan 11-04 (AURA-NOTES-MANAGER adaptation)
 
 ### Quick Tasks Completed
 
