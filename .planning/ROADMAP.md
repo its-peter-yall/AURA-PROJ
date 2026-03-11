@@ -181,7 +181,7 @@ Plans:
 
 **Key risks:** Cost calculation varies by provider (Gemini per character, OpenRouter per token, Ollama free). Cached pricing data needed with an "estimated" flag for approximations. Usage tracking hooks should be wired into the router from Phase 8 to avoid costly retrofit.
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 12-01-PLAN.md — Shared backend: UsageRecord types, CostCalculator, UsageTracker, router hooks (TDD) ([summary](./phases/12-usage-tracking-cost-dashboard/12-01-SUMMARY.md))
@@ -224,7 +224,7 @@ Plans:
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
-| 12. Usage Tracking + Dashboard | v1.1 | 1/4 | In progress | - |
+| 12. Usage Tracking + Dashboard | 2/4 | In Progress|  | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 
 ---

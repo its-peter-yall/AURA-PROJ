@@ -36,7 +36,7 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 ### Usage Tracking
 
 - [x] **USAGE-01**: System tracks token usage and cost per request, aggregated by session, user, model, and provider
-- [ ] **USAGE-02**: Dashboard displays cost charts by provider, model, time period with date range filters
+- [x] **USAGE-02**: Dashboard displays cost charts by provider, model, time period with date range filters
 
 ## v1.2 Requirements
 
@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-02 | Phase 11 | Complete |
 | UI-03 | Phase 10 | Pending |
 | USAGE-01 | Phase 12 | Complete |
-| USAGE-02 | Phase 12 | Pending |
+| USAGE-02 | Phase 12 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 16 total

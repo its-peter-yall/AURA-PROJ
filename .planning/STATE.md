@@ -3,13 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: active
-last_updated: "2026-03-11T09:10:00Z"
-last_activity: "2026-03-11 - Completed Plan 12-01 (Usage Tracking Foundation)"
+stopped_at: Completed 12-02-PLAN.md (Backend API endpoints + SSE completion usage data)
+last_updated: "2026-03-11T09:22:30Z"
+last_activity: "2026-03-11 - Completed Plan 12-02 (Backend API endpoints + SSE completion usage data)"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 20
+  completed_plans: 18
+  percent: 90
 ---
 
 # Project State
@@ -24,11 +26,11 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 ## Current Position
 
 Phase: 12 of 13 (Usage Tracking + Cost Dashboard)
-Plan: 1 of 4 complete (12-01 done)
+Plan: 2 of 4 complete (12-01, 12-02 done)
 Status: Active
-Last activity: 2026-03-11 - Completed Plan 12-01 (Usage Tracking Foundation)
+Last activity: 2026-03-11 - Completed Plan 12-02 (Backend API endpoints + SSE completion usage data)
 
-Progress: [██████████████░░░░░░] 25%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -61,6 +63,7 @@ Progress: [██████████████░░░░░░] 25%
 | Phase 11 P03 | 15m | 2 tasks | 5 files |
 | Phase 11 P04 | 25m | 2 tasks | 9 files |
 | Phase 12 P01 | 2 min | 2 tasks | 7 files |
+| Phase 12 P02 | 5 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -113,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 12]: Use Redis sorted sets with timestamp scores for both global usage history and session-scoped summaries.
 - [Phase 12]: Late-bind UsageTracker and CostCalculator into ModelRouter so the shared singleton can initialize before Redis is available.
 - [Phase 12]: Fall back to character-count token estimation for streams and swallow telemetry failures so tracking never breaks responses.
+- [Phase 12]: Reuse get_redis() from each app's settings.py for usage tracker Redis dependency injection.
+- [Phase 12]: Inject usage data into SSE complete events at the event_generator level rather than modifying rag_engine internals.
+- [Phase 12]: Wrap all SSE usage estimation in try/except to guarantee zero-regression behavior for existing streaming.
 
 ### Pending Todos
 
@@ -129,10 +135,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-11
-Stopped at: Completed Plan 12-01 (Usage Tracking Foundation)
+Last session: 2026-03-11T09:22:30.413Z
+Stopped at: Completed 12-02-PLAN.md (Backend API endpoints + SSE completion usage data)
 Resume file: None
-Next action: Plan 12-02 (Backend API endpoints + SSE completion usage data)
+Next action: Plan 12-03 (Frontend usage dashboard)
 
 ### Quick Tasks Completed
 
