@@ -28,7 +28,7 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 Phase: 13 of 13 (Polish + Integration Testing)
 Plan: 3 of 3 complete (13-01, 13-02, and 13-03 done)
 Status: Complete
-Last activity: 2026-03-11 - Completed quick task 9: Implement admin vs user access control restrictions in AURA-CHAT
+Last activity: 2026-03-11 - Completed quick task 10: Fix admin login block while maintaining API restrictions
 
 Progress: [██████████] 100%
 
@@ -97,3 +97,4 @@ Next action: Milestone complete; ready for summary verification and closure.
 | 7 | Update AGENTS.md, CLAUDE.md, and GEMINI.md to reflect current codebase | 2026-03-06 | 2e57d3a |
 | 8 | Fix model-router invalid provider handling and OpenRouter metadata classification | 2026-03-10 | 7dff94d |
 | 9 | Implement admin vs user access control with role-based routing | 2026-03-11 | a731d13 |
+| 10 | Fix admin login block while maintaining API restrictions | 2026-03-11 | 349c5dd |
