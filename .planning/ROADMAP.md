@@ -224,7 +224,7 @@ Plans:
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
-| 12. Usage Tracking + Dashboard | 4/4 | Complete   | 2026-03-11 | - |
+| 12. Usage Tracking + Dashboard | 4/4 | Complete    | 2026-03-11 | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 
 ---
