@@ -52,7 +52,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 - [x] **Phase 8: Shared Package Foundation + Vertex AI Migration** - Installable shared router package with types, error hierarchy, and Vertex AI provider wrapping existing code
 - [x] **Phase 9: OpenRouter Provider + Streaming Normalization** - OpenRouter integration with 200+ models, normalized SSE streaming, and thinking mode abstraction across providers
 - [x] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management (completed 2026-03-10)
-- [ ] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence
+- [x] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence (completed 2026-03-11)
 - [ ] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters
 - [ ] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification
 
@@ -156,7 +156,7 @@ Plans:
 
 **Build note:** Components built in AURA-CHAT (React 19) first, then copied to AURA-NOTES-MANAGER (React 18). React version gap prevents a shared npm package.
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 11-01-PLAN.md — Data layer foundation: settings types, model grouping function, Zustand model store, TanStack Query settings hooks (TDD)
@@ -221,7 +221,7 @@ Plans:
 | 8. Shared Package + Vertex AI | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
-| 11. Frontend Settings + Model UI | 3/4 | In Progress|  | - |
+| 11. Frontend Settings + Model UI | 4/4 | Complete   | 2026-03-11 | - |
 | 12. Usage Tracking + Dashboard | v1.1 | 0/TBD | Not started | - |
 | 13. Polish + Integration Testing | v1.1 | 0/TBD | Not started | - |
 

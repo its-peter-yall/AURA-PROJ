@@ -8,8 +8,8 @@ last_activity: "2026-03-11 - Completed Plan 11-03 (Compact Model Selection UI)"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 13
+  completed_plans: 13
 ---
 
 # Project State
@@ -24,9 +24,9 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 ## Current Position
 
 Phase: 11 of 13 (Frontend Provider Settings)
-Plan: 3 of 4 complete (11-03 done)
-Status: Active
-Last activity: 2026-03-11 - Completed Plan 11-03 (Compact Model Selection UI)
+Plan: 4 of 4 complete (11-04 done)
+Status: Complete
+Last activity: 2026-03-11 - Completed Plan 11-04 (AURA-NOTES-MANAGER Adaptation)
 
 Progress: [██████████] 100%
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100%
 | Phase 11 P01 | 4m | 2 tasks | 6 files |
 | Phase 11 P02 | 6m | 2 tasks | 7 files |
 | Phase 11 P03 | 15m | 2 tasks | 5 files |
+| Phase 11 P04 | 25m | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -106,10 +107,10 @@ Recent decisions affecting current work:
 - [Phase 11]: Use InlineModelPicker as a compact replacement for the flat Dropdown in the chat input bar
 - [Phase 11]: Persist model selection per session ID in Zustand's useModelStore (sessionStorage)
 - [Phase 11]: Update formatModelLabel to handle API display_name and OpenRouter vendor prefixes
+- [Phase 11]: Use @/lib/cn in AURA-NOTES-MANAGER for settings components
 
 ### Pending Todos
 
-- Phase 11 Plan 04: AURA-NOTES-MANAGER adaptation: copy + adapt all settings components, create SettingsPage + routing.
 - Phase 10 follow-up: migrate or remove `AURA-CHAT/test_real_models.py` and extend the compliance audit to catch direct provider HTTP bypasses.
 - Phase 08 Plan 03: close the outstanding cross-app regression validation and nested-repo docs/state follow-up.
 
