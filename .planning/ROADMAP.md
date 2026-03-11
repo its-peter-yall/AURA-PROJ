@@ -211,8 +211,8 @@ Plans:
 
 Plans:
 - [x] 13-01-PLAN.md — Cross-provider integration tests + router overhead benchmark ([summary](./phases/13-polish-integration-testing/13-01-SUMMARY.md))
-- [ ] 13-02-PLAN.md — Full regression sweep across all test suites
-- [ ] 13-03-PLAN.md — Requirements verification + traceability closure
+- [x] 13-02-PLAN.md — Full regression sweep across all test suites ([summary](./phases/13-polish-integration-testing/13-02-SUMMARY.md))
+- [x] 13-03-PLAN.md — Requirements verification + traceability closure ([summary](./phases/13-polish-integration-testing/13-03-SUMMARY.md))
 
 ---
 
@@ -227,7 +227,7 @@ Plans:
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
 | 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
 | 12. Usage Tracking + Dashboard | 4/4 | Complete    | 2026-03-11 | - |
-| 13. Polish + Integration Testing | v1.1 | 1/3 | In Progress | - |
+| 13. Polish + Integration Testing | v1.1 | 3/3 | Complete | 2026-03-11 |
 
 ---
 
