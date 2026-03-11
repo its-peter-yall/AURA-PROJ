@@ -24,6 +24,13 @@ _MISSING_MASTER_KEY_MESSAGE = (
 )
 
 
+def _decode_redis_text(value: str | bytes) -> str:
+    """Normalize Redis text responses to Python strings."""
+    if isinstance(value, bytes):
+        return value.decode()
+    return value
+
+
 class KeyManager:
     """Encrypt, decrypt, and validate provider API keys."""
 
@@ -67,7 +74,8 @@ class KeyManager:
         encrypted_key = await self._redis.hget(KEYS_HASH, provider)
         if encrypted_key is None:
             return None
-        return self._fernet.decrypt(encrypted_key.encode()).decode()
+        normalized_key = _decode_redis_text(encrypted_key)
+        return self._fernet.decrypt(normalized_key.encode()).decode()
 
     async def get_masked_key(self, provider: str) -> str | None:
         """Return a masked key string if a provider key exists."""

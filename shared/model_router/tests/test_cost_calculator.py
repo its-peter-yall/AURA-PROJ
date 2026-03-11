@@ -174,6 +174,32 @@ class TestCostCalculatorVertexAI:
 
         assert cost == 0.0
 
+    def test_vertex_version_suffix_matches_base_model(self) -> None:
+        """Vertex AI model with version suffix matches base pricing."""
+        calc = CostCalculator()
+        usage = UsageInfo(input_tokens=1000, output_tokens=500)
+
+        cost = calc.estimate(
+            usage, "gemini-2.0-flash-001", ProviderType.VERTEX_AI,
+        )
+
+        # Should match gemini-2.0-flash pricing
+        assert cost == pytest.approx(0.0003, abs=1e-7)
+
+    def test_vertex_preview_suffix_matches_base_model(self) -> None:
+        """Vertex AI model with preview suffix matches base pricing."""
+        calc = CostCalculator()
+        usage = UsageInfo(input_tokens=1000, output_tokens=500)
+
+        cost = calc.estimate(
+            usage,
+            "gemini-2.5-pro-preview-05-06",
+            ProviderType.VERTEX_AI,
+        )
+
+        # Should match gemini-2.5-pro pricing
+        assert cost == pytest.approx(0.00375, abs=1e-7)
+
     def test_vertex_includes_thinking_tokens_in_output_cost(self) -> None:
         """Thinking tokens are priced at output rate for Vertex AI."""
         calc = CostCalculator()

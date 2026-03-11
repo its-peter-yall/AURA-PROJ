@@ -14,21 +14,26 @@ import ast
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+ROOT_VENV_PYTHON = (
+    REPO_ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+)
 FORBIDDEN_PATTERNS = [
     r"from\s+vertexai",
     r"import\s+vertexai",
     r"from\s+google\.generativeai",
     r"import\s+google\.generativeai",
     r"from\s+google\.genai\s",
+    r"import\s+google\.genai\b",
     r"from\s+google\s+import\s+genai",
     r"import\s+openai\b",
     r"from\s+openai\s",
     r"from\s+google\.cloud\s+import\s+aiplatform",
+    r"from\s+google\.cloud\.aiplatform\b",
+    r"import\s+google\.cloud\.aiplatform\b",
     r"from\s+vertexai\.language_models",
     r"from\s+google\.auth",
     r"import\s+google\.auth",
@@ -63,6 +68,24 @@ def _iter_python_files(base_dirs: list[str]) -> list[Path]:
     return sorted(files)
 
 
+def _build_import_candidates(node: ast.Import | ast.ImportFrom) -> list[str]:
+    """Return normalized candidate strings for an import node."""
+    if isinstance(node, ast.Import):
+        return [f"import {alias.name}" for alias in node.names]
+
+    module = node.module or ""
+    return [f"from {module} import {alias.name}" for alias in node.names]
+
+
+def _matches_forbidden_import(node: ast.Import | ast.ImportFrom) -> bool:
+    """Return whether an import node matches a forbidden SDK pattern."""
+    return any(
+        re.search(pattern, candidate)
+        for candidate in _build_import_candidates(node)
+        for pattern in FORBIDDEN_PATTERNS
+    )
+
+
 def _find_violations_for_dirs(label: str, base_dirs: list[str]) -> list[str]:
     del label
     violations: list[str] = []
@@ -76,27 +99,31 @@ def _find_violations_for_dirs(label: str, base_dirs: list[str]) -> list[str]:
             if isinstance(node, (ast.Import, ast.ImportFrom))
         ]
         for node in imports:
-            matched = False
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    candidate = f"import {alias.name}"
-                    if any(
-                        re.search(pattern, candidate) for pattern in FORBIDDEN_PATTERNS
-                    ):
-                        matched = True
-                        break
-            else:
-                module = node.module or ""
-                candidate = f"from {module} import sentinel"
-                matched = any(
-                    re.search(pattern, candidate) for pattern in FORBIDDEN_PATTERNS
-                )
-
-            if matched:
+            if _matches_forbidden_import(node):
                 relative_path = path.relative_to(REPO_ROOT)
                 import_line = lines[node.lineno - 1].strip()
                 violations.append(f"{relative_path}:{node.lineno}: {import_line}")
     return violations
+
+
+def _parse_single_import(source: str) -> ast.Import | ast.ImportFrom:
+    """Parse a source snippet and return its single import node."""
+    tree = ast.parse(source)
+    node = tree.body[0]
+    assert isinstance(node, (ast.Import, ast.ImportFrom))
+    return node
+
+
+def test_matches_forbidden_from_import_member() -> None:
+    node = _parse_single_import("from google import genai as google_genai")
+
+    assert _matches_forbidden_import(node) is True
+
+
+def test_matches_forbidden_module_import() -> None:
+    node = _parse_single_import("import google.genai as google_genai")
+
+    assert _matches_forbidden_import(node) is True
 
 
 def _find_violations(app_name: str) -> list[str]:
@@ -107,7 +134,7 @@ def _run_python(cwd: Path, code: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["AURA_TEST_MODE"] = "true"
     return subprocess.run(
-        [sys.executable, "-c", code],
+        [str(ROOT_VENV_PYTHON), "-c", code],
         cwd=str(cwd),
         capture_output=True,
         text=True,

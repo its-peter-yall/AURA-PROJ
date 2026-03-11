@@ -66,13 +66,21 @@ class CostCalculator:
 
         Args:
             usage: Token counts from the generation response.
-            model: Model identifier, optionally with 'models/' prefix.
+            model: Model identifier, optionally with 'models/' prefix
+                   or version suffix (e.g. 'gemini-2.0-flash-001').
 
         Returns:
             Estimated cost in USD rounded to 6 decimals.
         """
         normalized = model.replace("models/", "")
-        pricing = self._VERTEX_PRICING.get(normalized, {})
+        pricing = self._VERTEX_PRICING.get(normalized)
+        if pricing is None:
+            for key, val in self._VERTEX_PRICING.items():
+                if normalized.startswith(key):
+                    pricing = val
+                    break
+        if pricing is None:
+            return 0.0
         input_cost = (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
         # Thinking tokens priced at output rate (industry standard)
         total_output_tokens = usage.output_tokens + usage.thinking_tokens

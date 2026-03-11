@@ -1,5 +1,16 @@
+# test_vertex_ai_provider.py
+# Tests for the shared Vertex AI provider implementations.
+
+# Covers test-mode behavior, live request shaping, credential propagation,
+# and shared error mapping for the Vertex-backed generation and embedding
+# providers used by the router.
+
+# @see: model_router/providers/vertex_ai.py - Vertex provider implementation
+# @note: Live-call tests stub the SDK client instead of touching the network.
+
 """Tests for the shared Vertex AI provider implementations."""
 
+import os
 from types import SimpleNamespace
 
 import pytest
@@ -16,6 +27,7 @@ from model_router.errors import (
 from model_router.providers.vertex_ai import (
     VertexAIEmbeddingProvider,
     VertexAIProvider,
+    _extract_response_metadata,
     _extract_response_parts,
     _extract_usage,
     _map_vertex_error,
@@ -31,20 +43,62 @@ class FakeVertexError(Exception):
         self.code = code
 
 
+class FakeVertexModels:
+    """Fake models namespace capturing live provider request parameters."""
+
+    def __init__(self, response: object) -> None:
+        self._response = response
+        self.generate_calls: list[dict[str, object]] = []
+
+    def generate_content(self, **kwargs: object) -> object:
+        self.generate_calls.append(kwargs)
+        return self._response
+
+
+class FakeVertexClient:
+    """Fake Vertex client exposing models.generate_content."""
+
+    def __init__(self, response: object) -> None:
+        self.models = FakeVertexModels(response)
+
+
 def make_config() -> VertexAIConfig:
     """Create a minimal test config for Vertex AI providers."""
-    return VertexAIConfig(project_id='test-project', region='global')
+    return VertexAIConfig(project_id="test-project", region="global")
+
+
+def make_live_response() -> object:
+    """Create a fake live SDK response with usage and metadata."""
+    part = SimpleNamespace(
+        text="Live output.",
+        thought=False,
+        thought_summary=None,
+    )
+    candidate = SimpleNamespace(
+        content=SimpleNamespace(parts=[part]),
+        finish_reason="STOP",
+    )
+    return SimpleNamespace(
+        text="Live output.",
+        candidates=[candidate],
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=11,
+            candidates_token_count=22,
+            thoughts_token_count=33,
+        ),
+        prompt_feedback=SimpleNamespace(block_reason="SAFETY"),
+    )
 
 
 @pytest.mark.asyncio
 async def test_generate_returns_correct_shape() -> None:
     provider = VertexAIProvider(make_config())
-    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+    request = GenerateRequest(model="gemini-2.0-flash", contents="hello")
 
     response = await provider.generate(request)
 
     assert isinstance(response, GenerateResponse)
-    assert response.text == 'Test-mode output.'
+    assert response.text == "Test-mode output."
     assert response.provider is ProviderType.VERTEX_AI
     assert response.usage.input_tokens == 0
     assert response.usage.output_tokens == 0
@@ -54,23 +108,73 @@ async def test_generate_returns_correct_shape() -> None:
 @pytest.mark.asyncio
 async def test_generate_uses_request_model() -> None:
     provider = VertexAIProvider(make_config())
-    request = GenerateRequest(model='gemini-2.5-pro', contents='hello')
+    request = GenerateRequest(model="gemini-2.5-pro", contents="hello")
 
     response = await provider.generate(request)
 
-    assert response.model_used == 'gemini-2.5-pro'
+    assert response.model_used == "gemini-2.5-pro"
+
+
+@pytest.mark.asyncio
+async def test_generate_normalizes_model_and_forwards_config() -> None:
+    from vertexai.generative_models import (
+        HarmBlockThreshold,
+        HarmCategory,
+        SafetySetting,
+    )
+
+    provider = VertexAIProvider(make_config())
+    provider._test_mode = False
+    provider._client = FakeVertexClient(make_live_response())
+    request = GenerateRequest(
+        model="models/gemini-2.5-pro",
+        contents="hello",
+        top_p=0.95,
+        response_mime_type="application/json",
+        thinking_config={
+            "thinking_budget": 128,
+            "include_thoughts": True,
+        },
+        safety_settings=[
+            SafetySetting(
+                category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=HarmBlockThreshold.BLOCK_NONE,
+            )
+        ],
+    )
+
+    response = await provider.generate(request)
+
+    call = provider._client.models.generate_calls[0]
+    config = call["config"]
+    assert call["model"] == "gemini-2.5-pro"
+    assert response.model_used == "gemini-2.5-pro"
+    assert response.text == "Live output."
+    assert response.usage.input_tokens == 11
+    assert response.usage.output_tokens == 22
+    assert response.usage.thinking_tokens == 33
+    assert response.metadata == {
+        "finish_reason": "STOP",
+        "prompt_feedback_block_reason": "SAFETY",
+    }
+    assert config.response_mime_type == "application/json"
+    assert config.top_p == 0.95
+    assert config.thinking_config.thinking_budget == 128
+    assert config.thinking_config.include_thoughts is True
+    assert config.safety_settings[0].category.value == "HARM_CATEGORY_HATE_SPEECH"
+    assert config.safety_settings[0].threshold.value == "BLOCK_NONE"
 
 
 @pytest.mark.asyncio
 async def test_stream_yields_chunks() -> None:
     provider = VertexAIProvider(make_config())
-    request = GenerateRequest(model='gemini-2.0-flash', contents='hello')
+    request = GenerateRequest(model="gemini-2.0-flash", contents="hello")
 
     chunks = [chunk async for chunk in provider.stream(request)]
 
     assert len(chunks) == 1
-    assert chunks[0].type == 'content'
-    assert chunks[0].text == 'Test-mode stream output.'
+    assert chunks[0].type == "content"
+    assert chunks[0].text == "Test-mode stream output."
 
 
 @pytest.mark.asyncio
@@ -80,9 +184,9 @@ async def test_list_models_returns_gemini_models() -> None:
     models = await provider.list_models()
 
     assert [model.name for model in models] == [
-        'gemini-2.0-flash',
-        'gemini-2.5-flash',
-        'gemini-2.5-pro',
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
     ]
 
 
@@ -93,11 +197,44 @@ async def test_health_check_passes() -> None:
     assert await provider.health_check() is True
 
 
+def test_get_client_applies_credentials_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    from google import genai
+
+    monkeypatch.setenv("AURA_TEST_MODE", "false")
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    provider = VertexAIProvider(
+        VertexAIConfig(
+            project_id="test-project",
+            region="global",
+            credentials_path="C:/test/creds.json",
+        )
+    )
+    provider._test_mode = False
+    captured: dict[str, object] = {}
+
+    def fake_client(**kwargs: object) -> object:
+        captured["kwargs"] = kwargs
+        captured["credentials"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        return "fake-client"
+
+    monkeypatch.setattr(genai, "Client", fake_client)
+
+    client = provider._get_client()
+
+    assert client == "fake-client"
+    assert captured["credentials"] == "C:/test/creds.json"
+    assert captured["kwargs"] == {
+        "vertexai": True,
+        "project": "test-project",
+        "location": "global",
+    }
+
+
 @pytest.mark.asyncio
 async def test_embed_returns_768_dim_vectors() -> None:
     provider = VertexAIEmbeddingProvider(make_config())
 
-    vectors = await provider.embed(['hello', 'world'])
+    vectors = await provider.embed(["hello", "world"])
 
     assert len(vectors) == 2
     assert len(vectors[0]) == 768
@@ -108,7 +245,7 @@ async def test_embed_returns_768_dim_vectors() -> None:
 async def test_embed_single_returns_single_vector() -> None:
     provider = VertexAIEmbeddingProvider(make_config())
 
-    vector = await provider.embed_single('hello')
+    vector = await provider.embed_single("hello")
 
     assert len(vector) == 768
 
@@ -122,58 +259,72 @@ async def test_embed_empty_returns_empty() -> None:
     assert vectors == []
 
 
-def test_map_vertex_error_auth() -> None:
-    original = FakeVertexError('403 permission_denied', code=403)
+@pytest.mark.asyncio
+async def test_numeric_test_mode_flag_uses_test_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AURA_TEST_MODE", "1")
+    provider = VertexAIProvider(make_config())
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    response = await provider.generate(
+        GenerateRequest(model="gemini-2.0-flash", contents="hello")
+    )
+
+    assert response.text == "Test-mode output."
+
+
+def test_map_vertex_error_auth() -> None:
+    original = FakeVertexError("403 permission_denied", code=403)
+
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert isinstance(mapped, AuthenticationError)
 
 
 def test_map_vertex_error_rate_limit() -> None:
-    original = FakeVertexError('429 resource_exhausted', code=429)
+    original = FakeVertexError("429 resource_exhausted", code=429)
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert isinstance(mapped, RateLimitError)
 
 
 def test_map_vertex_error_content_policy() -> None:
-    original = FakeVertexError('400 blocked by safety settings', code=400)
+    original = FakeVertexError("400 blocked by safety settings", code=400)
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert isinstance(mapped, ContentPolicyError)
 
 
 def test_map_vertex_error_not_found() -> None:
-    original = FakeVertexError('404 not_found', code=404)
+    original = FakeVertexError("404 not_found", code=404)
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert isinstance(mapped, ModelUnavailableError)
 
 
 def test_map_vertex_error_timeout() -> None:
-    original = FakeVertexError('deadline exceeded while waiting')
+    original = FakeVertexError("deadline exceeded while waiting")
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert isinstance(mapped, ProviderTimeoutError)
 
 
 def test_map_vertex_error_generic() -> None:
-    original = FakeVertexError('unexpected upstream failure')
+    original = FakeVertexError("unexpected upstream failure")
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert type(mapped) is ModelRouterError
 
 
 def test_error_preserves_original_cause() -> None:
-    original = FakeVertexError('403 permission_denied', code=403)
+    original = FakeVertexError("403 permission_denied", code=403)
 
-    mapped = _map_vertex_error(original, model='gemini-2.0-flash')
+    mapped = _map_vertex_error(original, model="gemini-2.0-flash")
 
     assert mapped.original is original
     assert mapped.__cause__ is original
@@ -182,12 +333,12 @@ def test_error_preserves_original_cause() -> None:
 def test_extract_response_parts_with_thinking() -> None:
     """Thinking parts are separated from answer text."""
     thinking_part = SimpleNamespace(
-        text='thinking step',
+        text="thinking step",
         thought=True,
         thought_summary=None,
     )
     content_part = SimpleNamespace(
-        text='the answer',
+        text="the answer",
         thought=False,
         thought_summary=None,
     )
@@ -197,19 +348,19 @@ def test_extract_response_parts_with_thinking() -> None:
 
     text, thinking_text = _extract_response_parts(response)
 
-    assert text == 'the answer'
-    assert thinking_text == 'thinking step'
+    assert text == "the answer"
+    assert thinking_text == "thinking step"
 
 
 def test_extract_response_parts_with_thought_summary() -> None:
     """Thought-summary parts are treated as thinking output."""
     summary_part = SimpleNamespace(
-        text='summary',
+        text="summary",
         thought=False,
-        thought_summary='brief',
+        thought_summary="brief",
     )
     content_part = SimpleNamespace(
-        text='result',
+        text="result",
         thought=False,
         thought_summary=None,
     )
@@ -219,14 +370,14 @@ def test_extract_response_parts_with_thought_summary() -> None:
 
     text, thinking_text = _extract_response_parts(response)
 
-    assert text == 'result'
-    assert thinking_text == 'summary'
+    assert text == "result"
+    assert thinking_text == "summary"
 
 
 def test_extract_response_parts_no_thinking() -> None:
     """Responses without thought parts return no thinking_text."""
     content_part = SimpleNamespace(
-        text='just content',
+        text="just content",
         thought=False,
         thought_summary=None,
     )
@@ -236,7 +387,7 @@ def test_extract_response_parts_no_thinking() -> None:
 
     text, thinking_text = _extract_response_parts(response)
 
-    assert text == 'just content'
+    assert text == "just content"
     assert thinking_text is None
 
 
@@ -267,3 +418,15 @@ def test_extract_usage_without_thinking_tokens() -> None:
     usage = _extract_usage(response)
 
     assert usage.thinking_tokens == 0
+
+
+def test_extract_response_metadata() -> None:
+    """Finish reason and prompt feedback are preserved in metadata."""
+    response = make_live_response()
+
+    metadata = _extract_response_metadata(response)
+
+    assert metadata == {
+        "finish_reason": "STOP",
+        "prompt_feedback_block_reason": "SAFETY",
+    }

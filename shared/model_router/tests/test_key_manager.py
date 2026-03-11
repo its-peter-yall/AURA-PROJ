@@ -61,6 +61,18 @@ async def test_get_key_missing(fake_redis, master_key: str) -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_key_decodes_redis_bytes(
+    fake_redis_bytes,
+    master_key: str,
+) -> None:
+    manager = KeyManager(fake_redis_bytes)
+
+    await manager.store_key("openrouter", "sk-ant-api03-longkey")
+
+    assert await manager.get_key("openrouter") == "sk-ant-api03-longkey"
+
+
+@pytest.mark.asyncio
 async def test_delete_key(fake_redis, master_key: str) -> None:
     manager = KeyManager(fake_redis)
     await manager.store_key("openrouter", "sk-ant-api03-longkey")

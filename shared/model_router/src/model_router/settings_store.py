@@ -18,6 +18,13 @@ from typing import Any
 SETTINGS_KEY = "aura:model_router:settings"
 
 
+def _decode_redis_text(value: str | bytes) -> str:
+    """Normalize Redis text responses to Python strings."""
+    if isinstance(value, bytes):
+        return value.decode()
+    return value
+
+
 class SettingsStore:
     """Read and write default model settings from Redis."""
 
@@ -36,7 +43,10 @@ class SettingsStore:
             Mapping of use case to provider/model pair.
         """
         raw_defaults = await self._redis.hgetall(SETTINGS_KEY)
-        return {use_case: json.loads(value) for use_case, value in raw_defaults.items()}
+        return {
+            _decode_redis_text(use_case): json.loads(_decode_redis_text(value))
+            for use_case, value in raw_defaults.items()
+        }
 
     async def set_default(
         self,
@@ -66,4 +76,4 @@ class SettingsStore:
         raw_value = await self._redis.hget(SETTINGS_KEY, use_case)
         if raw_value is None:
             return None
-        return json.loads(raw_value)
+        return json.loads(_decode_redis_text(raw_value))

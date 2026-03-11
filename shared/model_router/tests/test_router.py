@@ -329,6 +329,50 @@ async def test_router_stream_with_usage_no_container() -> None:
 
 
 @pytest.mark.asyncio
+async def test_stream_with_usage_records_once() -> None:
+    """stream_with_usage() must record usage exactly once to tracker."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    router = ModelRouter(make_config())
+    mock_tracker = MagicMock()
+    mock_tracker.record = AsyncMock()
+    mock_calculator = MagicMock()
+    mock_calculator.estimate = MagicMock(return_value=0.001)
+    router.set_usage_tracking(mock_tracker, mock_calculator)
+
+    usage_data: list[UsageInfo] = []
+    chunks = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="hello",
+            usage_out=usage_data,
+        )
+    ]
+
+    assert len(chunks) == 1
+    assert len(usage_data) == 1
+    # Critical: record() must be called exactly once, not twice
+    assert mock_tracker.record.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_stream_with_usage_no_instance_state() -> None:
+    """stream_with_usage() must not set _stream_usage_info on router."""
+    router = ModelRouter(make_config())
+
+    _ = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="hello",
+        )
+    ]
+
+    assert not hasattr(router, "_stream_usage_info")
+
+
+@pytest.mark.asyncio
 async def test_router_list_models_all_providers() -> None:
     """list_models() with no filter aggregates from all providers."""
     router = ModelRouter(make_config())

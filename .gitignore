@@ -180,6 +180,7 @@ run.bat
 test_pdf/*
 !test_pdf/.gitkeep
 
+.gemini/
 .tmp/
 *.tmp
 *.temp

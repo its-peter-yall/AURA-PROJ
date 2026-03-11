@@ -29,11 +29,28 @@ def enable_test_mode() -> None:
 class FakeAsyncRedis:
     """In-memory async Redis double used by unit tests."""
 
-    def __init__(self) -> None:
+    def __init__(self, decode_responses: bool = True) -> None:
+        self._decode_responses = decode_responses
         self._hashes: dict[str, dict[str, str]] = {}
         self._values: dict[str, str] = {}
         self._expirations: dict[str, float] = {}
         self._time_offset = 0.0
+        self._sorted_sets: dict[str, dict[str, float]] = {}
+
+    def _format_value(self, value: str | None) -> str | bytes | None:
+        """Return string or bytes based on the configured response mode."""
+        if value is None or self._decode_responses:
+            return value
+        return value.encode()
+
+    def _format_hash(
+        self,
+        bucket: dict[str, str],
+    ) -> dict[str | bytes, str | bytes]:
+        """Return hash contents using the configured response mode."""
+        if self._decode_responses:
+            return dict(bucket)
+        return {key.encode(): value.encode() for key, value in bucket.items()}
 
     def _now(self) -> float:
         """Return the fake clock timestamp."""
@@ -59,13 +76,13 @@ class FakeAsyncRedis:
         bucket[key] = value
         return 1 if is_new else 0
 
-    async def hget(self, name: str, key: str) -> str | None:
+    async def hget(self, name: str, key: str) -> str | bytes | None:
         """Return a hash field value if present."""
-        return self._hashes.get(name, {}).get(key)
+        return self._format_value(self._hashes.get(name, {}).get(key))
 
-    async def hgetall(self, name: str) -> dict[str, str]:
+    async def hgetall(self, name: str) -> dict[str | bytes, str | bytes]:
         """Return all fields for a hash."""
-        return dict(self._hashes.get(name, {}))
+        return self._format_hash(self._hashes.get(name, {}))
 
     async def hdel(self, name: str, key: str) -> int:
         """Delete a hash field and report whether it existed."""
@@ -75,10 +92,10 @@ class FakeAsyncRedis:
         del bucket[key]
         return 1
 
-    async def get(self, key: str) -> str | None:
+    async def get(self, key: str) -> str | bytes | None:
         """Return a string value if present and unexpired."""
         self._purge_if_expired(key)
-        return self._values.get(key)
+        return self._format_value(self._values.get(key))
 
     async def setex(self, key: str, ttl_seconds: int, value: str) -> bool:
         """Store a string value with TTL semantics."""
@@ -101,6 +118,45 @@ class FakeAsyncRedis:
         self._purge_if_expired(key)
         return self._values.get(key)
 
+    # ---- Sorted set methods (for UsageTracker tests) ----
+
+    async def zadd(
+        self,
+        name: str,
+        mapping: dict[str, float],
+    ) -> int:
+        """Add members to a sorted set with scores."""
+        zset = self._sorted_sets.setdefault(name, {})
+        added = 0
+        for member, score in mapping.items():
+            if member not in zset:
+                added += 1
+            zset[member] = score
+        return added
+
+    async def zrangebyscore(
+        self,
+        name: str,
+        min: float | str = "-inf",  # noqa: A002
+        max: float | str = "+inf",  # noqa: A002
+    ) -> list[str | bytes]:
+        """Return members in a sorted set within the score range."""
+        zset = self._sorted_sets.get(name, {})
+        min_val = float("-inf") if min == "-inf" else float(min)
+        max_val = float("inf") if max == "+inf" else float(max)
+        results = [
+            member
+            for member, score in sorted(zset.items(), key=lambda x: x[1])
+            if min_val <= score <= max_val
+        ]
+        if not self._decode_responses:
+            return [r.encode() if isinstance(r, str) else r for r in results]
+        return results
+
+    async def zcard(self, name: str) -> int:
+        """Return the number of members in a sorted set."""
+        return len(self._sorted_sets.get(name, {}))
+
 
 @pytest.fixture
 def monkeypatch_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
@@ -112,6 +168,12 @@ def monkeypatch_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
 def fake_redis() -> FakeAsyncRedis:
     """Return an in-memory fake async Redis client."""
     return FakeAsyncRedis()
+
+
+@pytest.fixture
+def fake_redis_bytes() -> FakeAsyncRedis:
+    """Return a fake Redis client that responds with bytes."""
+    return FakeAsyncRedis(decode_responses=False)
 
 
 @pytest.fixture
