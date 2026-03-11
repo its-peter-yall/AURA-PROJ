@@ -54,7 +54,7 @@ Module-centric learning platform with knowledge graphs, persistent study session
 - [x] **Phase 10: Cross-App Migration + Backend Integration** - Both apps migrated to shared router with admin configuration endpoints and API key management (completed 2026-03-10)
 - [x] **Phase 11: Frontend Provider Settings + Model Selection UI** - Hierarchical model selector, inline chat model picker, per-session model persistence (completed 2026-03-11)
 - [x] **Phase 12: Usage Tracking + Cost Dashboard** - Token/cost tracking per request with aggregated dashboard and date range filters (completed 2026-03-11)
-- [ ] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification
+- [x] **Phase 13: Polish + Integration Testing** - Cross-provider edge cases, thinking mode UI validation, full regression, performance verification (completed 2026-03-11)
 
 ## Phase Details
 
@@ -207,7 +207,7 @@ Plans:
 
 **Key risks:** Low risk if phases 8-12 are individually well-tested. Primary concern is cross-cutting interactions that unit tests miss (e.g., thinking mode + streaming + session persistence + provider switching in one flow).
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 13-01-PLAN.md — Cross-provider integration tests + router overhead benchmark ([summary](./phases/13-polish-integration-testing/13-01-SUMMARY.md))
@@ -225,8 +225,8 @@ Plans:
 | 8. Shared Package + Vertex AI | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 9. OpenRouter + Streaming | v1.1 | 3/3 | Complete | 2026-03-10 |
 | 10. Cross-App Migration + Config | v1.1 | 6/6 | Complete | 2026-03-10 |
-| 11. Frontend Settings + Model UI | 4/4 | Complete    | 2026-03-11 | - |
-| 12. Usage Tracking + Dashboard | 4/4 | Complete    | 2026-03-11 | - |
+| 11. Frontend Settings + Model UI | v1.1 | 4/4 | Complete | 2026-03-11 |
+| 12. Usage Tracking + Dashboard | v1.1 | 4/4 | Complete | 2026-03-11 |
 | 13. Polish + Integration Testing | v1.1 | 3/3 | Complete | 2026-03-11 |
 
 ---
