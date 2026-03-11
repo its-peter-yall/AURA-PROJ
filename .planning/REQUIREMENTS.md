@@ -22,16 +22,16 @@ Requirements for multi-provider LLM support. Each maps to roadmap phases.
 
 ### Configuration
 
-- [ ] **CONFIG-01**: Admin can set default provider and model for each use case (chat, embeddings, entity extraction) via a settings page
+- [x] **CONFIG-01**: Admin can set default provider and model for each use case (chat, embeddings, entity extraction) via a settings page
 - [x] **CONFIG-02**: Student can select a different chat model for their study session that persists for the session duration
-- [ ] **CONFIG-03**: System dynamically discovers available models from each configured provider with cached model lists
-- [ ] **CONFIG-04**: Admin can securely store, validate, and manage API keys for each provider with masked display
+- [x] **CONFIG-03**: System dynamically discovers available models from each configured provider with cached model lists
+- [x] **CONFIG-04**: Admin can securely store, validate, and manage API keys for each provider with masked display
 
 ### Frontend UI
 
 - [x] **UI-01**: Provider selection uses a hierarchical UI: 2-level for Vertex AI, 3-level for OpenRouter (provider > vendor > model) with search/filter
 - [x] **UI-02**: Chat interface includes an inline compact model picker for quick mid-session model switching
-- [ ] **UI-03**: Both AURA-CHAT and AURA-NOTES-MANAGER use the shared model router for all LLM calls with no direct provider imports
+- [x] **UI-03**: Both AURA-CHAT and AURA-NOTES-MANAGER use the shared model router for all LLM calls with no direct provider imports
 
 ### Usage Tracking
 
@@ -79,21 +79,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROV-01 | Phase 8 | Complete |
 | PROV-02 | Phase 9 | Complete |
 | PROV-03 | Phase 9 | Complete |
-| CONFIG-01 | Phase 10 | Pending |
+| CONFIG-01 | Phase 10 | Complete |
 | CONFIG-02 | Phase 11 | Complete |
-| CONFIG-03 | Phase 10 | Pending |
-| CONFIG-04 | Phase 10 | Pending |
+| CONFIG-03 | Phase 10 | Complete |
+| CONFIG-04 | Phase 10 | Complete |
 | UI-01 | Phase 11 | Complete |
 | UI-02 | Phase 11 | Complete |
-| UI-03 | Phase 10 | Pending |
+| UI-03 | Phase 10 | Complete |
 | USAGE-01 | Phase 12 | Complete |
 | USAGE-02 | Phase 12 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 16 total
+- Complete: 16/16
 - Mapped to phases: 16
 - Unmapped: 0
 
+**Verification note:** All requirements verified complete as of Phase 13
+(2026-03-11).
+
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after roadmap creation (phases 8-13)*
+*Last updated: 2026-03-11 after Phase 13 verification closure*
