@@ -17,6 +17,7 @@ import json
 import pytest
 
 from model_router.cost_calculator import CostCalculator
+from model_router.config import OpenRouterConfig, RouterConfig, VertexAIConfig
 from model_router.router import ModelRouter
 from model_router.types import GenerateRequest, ProviderType, StreamChunk
 from model_router.usage_tracker import USAGE_KEY, USAGE_SESSION_PREFIX, UsageTracker
@@ -28,6 +29,15 @@ from .test_streaming import (
     make_vertex_chunk,
     make_vertex_provider,
 )
+
+
+def make_config() -> RouterConfig:
+    """Create a test-mode router config with both providers enabled."""
+    return RouterConfig(
+        test_mode=True,
+        vertex_ai=VertexAIConfig(project_id="test-project", region="global"),
+        openrouter=OpenRouterConfig(api_key="test-key"),
+    )
 
 
 @pytest.mark.asyncio
