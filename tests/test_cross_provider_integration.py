@@ -30,8 +30,9 @@ def make_config() -> RouterConfig:
 
 
 @pytest.fixture(autouse=True)
-def reset_router_singleton() -> None:
+def reset_router_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep compat-layer router singleton state isolated between tests."""
+    monkeypatch.setenv("AURA_TEST_MODE", "true")
     reset_default_router()
     yield
     reset_default_router()

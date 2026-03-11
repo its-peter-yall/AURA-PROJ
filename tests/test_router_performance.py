@@ -34,6 +34,12 @@ def make_config() -> RouterConfig:
     )
 
 
+@pytest.fixture(autouse=True)
+def enable_test_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Force offline provider test mode for repo-root benchmarks."""
+    monkeypatch.setenv("AURA_TEST_MODE", "true")
+
+
 @pytest.mark.asyncio
 async def test_router_generate_overhead_under_10ms() -> None:
     """Router generate overhead stays below the 10ms target."""
