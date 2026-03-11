@@ -36,7 +36,7 @@ requirements-completed: [USAGE-02]
 
 # Metrics
 duration: 3 min
-completed: 2026-03-11
+completed: 2026-03-11T15:15:00Z
 ---
 
 # Phase 12 Plan 04: AURA-NOTES-MANAGER Usage Dashboard Adaptation Summary
@@ -65,6 +65,9 @@ Each task was committed atomically:
 1. **Task 1: Install Recharts + types + hooks + chart components** - `3740de4` (feat)
 2. **Task 2: UsagePage + routing with admin protection** - `b681e48` (feat)
 
+**Post-execution fixes:**
+3. **Fix TypeScript errors in chart tooltip formatters** - `d22d0a0` (fix)
+
 **Submodule update:** `13459da` (feat: update AURA-NOTES-MANAGER submodule)
 
 _Plan metadata commit recorded after state/roadmap updates._
@@ -88,7 +91,31 @@ _Plan metadata commit recorded after state/roadmap updates._
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bug] Fixed TypeScript errors in Recharts tooltip formatters**
+- **Found during:** Verification step (TypeScript compilation)
+- **Issue:** Tooltip formatter functions had type signatures that didn't match Recharts' `Formatter<ValueType, NameType>` type. The value parameter was typed as `number` but Recharts passes `ValueType | undefined`.
+- **Fix:** Changed formatters to use `Number(value).toFixed(4)` pattern and adjusted type assertions for the tooltip payload in CostByModelChart.
+- **Files modified:**
+  - `AURA-NOTES-MANAGER/frontend/src/features/usage/components/CostOverTimeChart.tsx`
+  - `AURA-NOTES-MANAGER/frontend/src/features/usage/components/CostByProviderChart.tsx`
+  - `AURA-NOTES-MANAGER/frontend/src/features/usage/components/CostByModelChart.tsx`
+- **Verification:** Build passes with `npm run build`
+- **Committed in:** `d22d0a0` (fix: TypeScript errors in chart tooltip formatters)
+
+**2. [Rule 3 - Blocking] Removed unused import in DefaultModelSection**
+- **Found during:** Verification step (TypeScript compilation)
+- **Issue:** `cn` utility was imported but never used, causing "declared but never read" error
+- **Fix:** Removed the unused `cn` import from DefaultModelSection.tsx
+- **Files modified:** `AURA-NOTES-MANAGER/frontend/src/features/settings/components/DefaultModelSection.tsx`
+- **Verification:** Build passes
+- **Committed in:** `d22d0a0` (same commit as above)
+
+---
+
+**Total deviations:** 2 auto-fixed (1 bug fix, 1 blocking issue)
+**Impact on plan:** Both fixes were necessary for TypeScript compilation. No scope creep.
 
 ## Issues Encountered
 
