@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: complete
-stopped_at: Completed quick task 17: Remove AURA-CHAT Settings and Usage Pages
-last_updated: "2026-03-13T12:20:00Z"
-last_activity: "2026-03-13 - Completed quick task 17: Remove AURA-CHAT Settings and Usage Pages"
+stopped_at: Completed quick task 18: Implement lazy OpenRouter registration from KeyManager
+last_updated: "2026-03-13T13:15:00Z"
+last_activity: "2026-03-13 - Completed quick task 18: Implement lazy OpenRouter registration from KeyManager"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -54,6 +54,7 @@ Recent metric entries:
 - Phase 13 P03 | 18 min | 2 tasks | 3 files
 | Phase quick P14 | 15 | 2 tasks | 2 files |
 | Phase quick P15 | 8 | 3 tasks | 2 files |
+| Phase quick P19 | 22 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,7 @@ Recent metric entries:
 - [Phase 13]: Treat Playwright as manual-UAT/live-backend validation when config web servers cannot boot in the offline regression environment.
 - [Phase 13]: Mark CONFIG-01, CONFIG-03, CONFIG-04, and UI-03 complete from verified Phase 10 evidence instead of reopening implementation work.
 - [Phase 13]: Use workspace-local pytest and Vitest runners for final validation on Windows to avoid monorepo discovery conflicts.
+- [Quick 18]: Implement lazy OpenRouter registration that fetches API key from KeyManager when slash-form model IDs are used, eliminating need for OPENROUTER_API_KEY env var at router initialization
 
 ### Pending Todos
 
@@ -86,8 +88,8 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-12T06:24:00Z
-Stopped at: Completed quick task 15: Rewrite AURA-NOTES-MANAGER SettingsPage to mirror AURA-CHAT structure
+Last session: 2026-03-13T13:15:00Z
+Stopped at: Completed quick task 19: Implement lazy OpenRouter registration from KeyManager
 Resume file: None
 Next action: Ready for next quick task or phase completion.
 
@@ -106,3 +108,4 @@ Next action: Ready for next quick task or phase completion.
 | 15 | Rewrite AURA-NOTES-MANAGER SettingsPage to mirror AURA-CHAT structure | 2026-03-12 | 50ec4cc | [15-entirely-rewrite-aura-notes-manager-sett](./quick/15-entirely-rewrite-aura-notes-manager-sett/) |
 | 17 | Remove AURA-CHAT Settings and Usage Pages | 2026-03-13 | b7f8c5b | [17-remove-aura-chat-settings-and-usage-page](./quick/17-remove-aura-chat-settings-and-usage-page/) |
 | 18 | Display dual system status (ANM + Chat) in settings page | 2026-03-13 | [system-status-dual] | [18-system-status-both-apps](./quick/system-status-both-apps/) |
+| 19 | Implement lazy OpenRouter registration from KeyManager | 2026-03-13 | f610b91 | [18-implement-lazy-openrouter-registration-f](./quick/18-implement-lazy-openrouter-registration-f/) |
