@@ -105,3 +105,4 @@ Next action: Ready for next quick task or phase completion.
 | 14 | Mirror AURA-CHAT settings and usage page styling to AURA-NOTES-MANAGER | 2026-03-11 | 98ccb76 | [14-mirror-aura-chat-settings-and-usage-page](./quick/14-mirror-aura-chat-settings-and-usage-page/) |
 | 15 | Rewrite AURA-NOTES-MANAGER SettingsPage to mirror AURA-CHAT structure | 2026-03-12 | 50ec4cc | [15-entirely-rewrite-aura-notes-manager-sett](./quick/15-entirely-rewrite-aura-notes-manager-sett/) |
 | 17 | Remove AURA-CHAT Settings and Usage Pages | 2026-03-13 | b7f8c5b | [17-remove-aura-chat-settings-and-usage-page](./quick/17-remove-aura-chat-settings-and-usage-page/) |
+| 18 | Display dual system status (ANM + Chat) in settings page | 2026-03-13 | [system-status-dual] | [18-system-status-both-apps](./quick/system-status-both-apps/) |
