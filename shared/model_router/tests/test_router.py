@@ -514,3 +514,254 @@ async def test_router_openrouter_credit_balance_via_get_provider() -> None:
     assert "usage" in credits
     assert "limit" in credits
     assert "is_free_tier" in credits
+
+
+# =============================================================================
+# Lazy OpenRouter Registration Tests
+# =============================================================================
+
+
+class MockKeyManager:
+    """Mock KeyManager for lazy registration tests."""
+
+    def __init__(self, keys: dict[str, str]) -> None:
+        self._keys = keys
+
+    async def get_key(self, provider: str) -> str | None:
+        return self._keys.get(provider)
+
+
+@pytest.mark.asyncio
+async def test_lazy_openrouter_registration_with_key() -> None:
+    """Lazy registration succeeds when key exists in KeyManager."""
+    # Create router WITHOUT test_mode and WITHOUT openrouter api_key
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),  # No key in config
+    )
+    router = ModelRouter(config)
+
+    # Verify OpenRouter is NOT registered initially
+    assert ProviderType.OPENROUTER not in router._providers
+
+    # Create mock KeyManager with openrouter key
+    mock_key_manager = MockKeyManager({"openrouter": "sk-or-test-key-123"})
+    router._key_manager = mock_key_manager
+
+    # Call _resolve_provider with slash-form model ID
+    provider = await router._resolve_provider(
+        GenerateRequest(
+            model="anthropic/claude-3-opus",
+            contents="hello",
+        )
+    )
+
+    # OpenRouter should now be registered
+    assert ProviderType.OPENROUTER in router._providers
+    assert isinstance(provider, OpenRouterProvider)
+
+
+@pytest.mark.asyncio
+async def test_lazy_registration_no_key_raises_error() -> None:
+    """Lazy registration fails gracefully when no key in KeyManager."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),
+    )
+    router = ModelRouter(config)
+
+    # Verify OpenRouter is NOT registered
+    assert ProviderType.OPENROUTER not in router._providers
+
+    # Create mock KeyManager with NO openrouter key
+    mock_key_manager = MockKeyManager({})  # Empty - no keys
+    router._key_manager = mock_key_manager
+
+    # Should raise ModelUnavailableError
+    with pytest.raises(ModelUnavailableError) as exc_info:
+        await router._resolve_provider(
+            GenerateRequest(
+                model="anthropic/claude-3-opus",
+                contents="hello",
+            )
+        )
+
+    assert "No provider registered" in str(exc_info.value)
+    assert ProviderType.OPENROUTER not in router._providers
+
+
+@pytest.mark.asyncio
+async def test_lazy_registration_caches_provider() -> None:
+    """Lazy registration should only run get_key() once per provider."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),
+    )
+    router = ModelRouter(config)
+
+    # Track get_key calls
+    call_count = 0
+
+    class CountingKeyManager(MockKeyManager):
+        async def get_key(self, provider: str) -> str | None:
+            nonlocal call_count
+            call_count += 1
+            return await super().get_key(provider)
+
+    mock_key_manager = CountingKeyManager({"openrouter": "sk-or-test-key-123"})
+    router._key_manager = mock_key_manager
+
+    # Call _resolve_provider twice
+    provider1 = await router._resolve_provider(
+        GenerateRequest(model="anthropic/claude-3-opus", contents="hello")
+    )
+    provider2 = await router._resolve_provider(
+        GenerateRequest(model="openai/gpt-4", contents="world")
+    )
+
+    # Should be same provider instance (cached)
+    assert provider1 is provider2
+    # get_key should only be called once
+    assert call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_lazy_registration_skips_if_already_registered() -> None:
+    """Lazy registration should not run if provider already registered."""
+    # Create router with OpenRouter already registered (via test_mode)
+    config = RouterConfig(
+        test_mode=True,
+        openrouter=OpenRouterConfig(api_key="test-key"),
+    )
+    router = ModelRouter(config)
+
+    # Verify OpenRouter IS registered initially
+    assert ProviderType.OPENROUTER in router._providers
+
+    # Create mock KeyManager (should not be used)
+    mock_key_manager = MockKeyManager({"openrouter": "should-not-be-used"})
+    router._key_manager = mock_key_manager
+
+    # Call _resolve_provider
+    provider = await router._resolve_provider(
+        GenerateRequest(
+            model="anthropic/claude-3-opus",
+            contents="hello",
+        )
+    )
+
+    # Should still work with original provider (not from KeyManager)
+    assert isinstance(provider, OpenRouterProvider)
+
+
+@pytest.mark.asyncio
+async def test_lazy_registration_no_key_manager() -> None:
+    """Lazy registration should not run if no KeyManager is set."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),
+    )
+    router = ModelRouter(config)
+
+    # No key_manager set (None by default)
+    assert router._key_manager is None
+
+    # Should raise ModelUnavailableError
+    with pytest.raises(ModelUnavailableError) as exc_info:
+        await router._resolve_provider(
+            GenerateRequest(
+                model="anthropic/claude-3-opus",
+                contents="hello",
+            )
+        )
+
+    assert "No provider registered" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_generate_triggers_lazy_registration() -> None:
+    """generate() method should trigger lazy OpenRouter registration."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),
+    )
+    router = ModelRouter(config)
+
+    # Verify OpenRouter is NOT registered initially
+    assert ProviderType.OPENROUTER not in router._providers
+
+    # Set up mock KeyManager with key
+    mock_key_manager = MockKeyManager({"openrouter": "sk-or-test-key-123"})
+    router._key_manager = mock_key_manager
+
+    # Call generate with slash-form model ID
+    response = await router.generate(
+        model="anthropic/claude-3-opus",
+        contents="hello",
+    )
+
+    # Should have auto-registered and succeeded
+    assert ProviderType.OPENROUTER in router._providers
+    assert response.provider is ProviderType.OPENROUTER
+
+
+@pytest.mark.asyncio
+async def test_stream_triggers_lazy_registration() -> None:
+    """stream() method should trigger lazy OpenRouter registration."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(api_key=""),
+    )
+    router = ModelRouter(config)
+
+    # Verify OpenRouter is NOT registered initially
+    assert ProviderType.OPENROUTER not in router._providers
+
+    # Set up mock KeyManager with key
+    mock_key_manager = MockKeyManager({"openrouter": "sk-or-test-key-123"})
+    router._key_manager = mock_key_manager
+
+    # Call stream with slash-form model ID
+    chunks = [
+        chunk
+        async for chunk in router.stream(
+            model="anthropic/claude-3-opus",
+            contents="hello",
+        )
+    ]
+
+    # Should have auto-registered and streamed
+    assert ProviderType.OPENROUTER in router._providers
+    assert len(chunks) >= 1
+
+
+@pytest.mark.asyncio
+async def test_lazy_registration_uses_correct_config() -> None:
+    """Lazy registration should preserve base_url and site settings from config."""
+    config = RouterConfig(
+        test_mode=False,
+        openrouter=OpenRouterConfig(
+            api_key="",
+            base_url="https://custom.openrouter.ai/api/v1",
+            site_url="https://aura.example.com",
+            site_name="AURA Test",
+        ),
+    )
+    router = ModelRouter(config)
+
+    mock_key_manager = MockKeyManager({"openrouter": "sk-or-test-key-123"})
+    router._key_manager = mock_key_manager
+
+    # Trigger lazy registration
+    provider = await router._resolve_provider(
+        GenerateRequest(
+            model="anthropic/claude-3-opus",
+            contents="hello",
+        )
+    )
+
+    # Verify provider was created with correct config
+    assert isinstance(provider, OpenRouterProvider)
+    assert provider._config.base_url == "https://custom.openrouter.ai/api/v1"
+    assert provider._config.site_url == "https://aura.example.com"
+    assert provider._config.site_name == "AURA Test"

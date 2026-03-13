@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, AsyncGenerator
 
-from model_router.config import RouterConfig
+from model_router.config import OpenRouterConfig, RouterConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
 from model_router.providers.vertex_ai import (
@@ -121,7 +121,8 @@ class ModelRouter:
                     OpenRouterConfig(
                         api_key=api_key,
                         base_url=openrouter_config.base_url,
-                        timeout=openrouter_config.timeout,
+                        site_url=openrouter_config.site_url,
+                        site_name=openrouter_config.site_name,
                     )
                 )
                 self.register_provider(ProviderType.OPENROUTER, provider)
