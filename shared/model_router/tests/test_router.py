@@ -109,22 +109,24 @@ async def test_router_embed_single_text() -> None:
     assert len(vectors[0]) == 768
 
 
-def test_router_resolve_vertex_default() -> None:
+@pytest.mark.asyncio
+async def test_router_resolve_vertex_default() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(model="gemini-2.0-flash", contents="hello")
     )
 
     assert isinstance(provider, VertexAIProvider)
 
 
-def test_router_resolve_openrouter_slash() -> None:
+@pytest.mark.asyncio
+async def test_router_resolve_openrouter_slash() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(
-            model="anthropic/claude-sonnet-4",
+            model="anthropic/claude_sonnet-4",
             contents="hello",
         )
     )
@@ -132,10 +134,11 @@ def test_router_resolve_openrouter_slash() -> None:
     assert isinstance(provider, OpenRouterProvider)
 
 
-def test_router_resolve_models_prefix_to_vertex() -> None:
+@pytest.mark.asyncio
+async def test_router_resolve_models_prefix_to_vertex() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(
             model="models/gemini-2.5-pro",
             contents="hello",
@@ -151,12 +154,13 @@ def test_router_openrouter_auto_registered_in_test_mode() -> None:
     assert ProviderType.OPENROUTER in router._providers
 
 
-def test_router_resolve_openrouter_succeeds() -> None:
+@pytest.mark.asyncio
+async def test_router_resolve_openrouter_succeeds() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(
-            model="anthropic/claude-sonnet-4",
+            model="anthropic/claude_sonnet-4",
             contents="hello",
         )
     )
@@ -164,12 +168,13 @@ def test_router_resolve_openrouter_succeeds() -> None:
     assert isinstance(provider, OpenRouterProvider)
 
 
-def test_router_resolve_explicit_provider() -> None:
+@pytest.mark.asyncio
+async def test_router_resolve_explicit_provider() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(
-            model="anthropic/claude-sonnet-4",
+            model="anthropic/claude_sonnet-4",
             contents="hello",
             provider="vertex_ai",
         )
@@ -240,7 +245,7 @@ async def test_router_stream_yields_chunks() -> None:
 async def test_router_stream_delegates_to_openrouter() -> None:
     router = ModelRouter(make_config())
 
-    provider = router._resolve_provider(
+    provider = await router._resolve_provider(
         GenerateRequest(
             model="anthropic/claude-sonnet-4",
             contents="hello",

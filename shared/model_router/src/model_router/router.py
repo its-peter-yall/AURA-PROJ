@@ -33,6 +33,7 @@ from model_router.types import (
 
 if TYPE_CHECKING:
     from model_router.cost_calculator import CostCalculator
+    from model_router.key_manager import KeyManager
     from model_router.usage_tracker import UsageTracker
 
 logger = logging.getLogger(__name__)
@@ -62,12 +63,17 @@ def _coerce_metadata_provider_type(value: ProviderType | str) -> ProviderType:
 class ModelRouter:
     """Route generation and embedding requests to registered providers."""
 
-    def __init__(self, config: RouterConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: RouterConfig | None = None,
+        key_manager: "KeyManager | None" = None,
+    ) -> None:
         self._config = config or RouterConfig()
         self._providers: dict[ProviderType, BaseProvider] = {}
         self._embedding_provider: BaseEmbeddingProvider | None = None
         self._usage_tracker: "UsageTracker | None" = None
         self._cost_calculator: "CostCalculator | None" = None
+        self._key_manager: "KeyManager | None" = key_manager
 
         if self._should_auto_register_vertex():
             vertex_provider = VertexAIProvider(self._config.vertex_ai)
@@ -88,6 +94,43 @@ class ModelRouter:
     def _should_auto_register_openrouter(self) -> bool:
         """Return True when config should bootstrap the OpenRouter provider."""
         return self._config.test_mode or bool(self._config.openrouter.api_key)
+
+    async def _maybe_lazy_register_openrouter(self) -> None:
+        """Lazily register OpenRouter provider if key exists in KeyManager.
+
+        This enables UI-stored API keys to work without OPENROUTER_API_KEY
+        env var at router initialization. Called when a slash-form model ID
+        routes to OpenRouter but the provider is not yet registered.
+        """
+        # Already registered - nothing to do
+        if ProviderType.OPENROUTER in self._providers:
+            return
+
+        # No KeyManager available - cannot lazy register
+        if self._key_manager is None:
+            return
+
+        try:
+            api_key = await self._key_manager.get_key("openrouter")
+            if api_key:
+                from model_router.providers.openrouter import OpenRouterProvider
+
+                openrouter_config = self._config.openrouter
+                # Create provider with fetched key (override any empty config key)
+                provider = OpenRouterProvider(
+                    OpenRouterConfig(
+                        api_key=api_key,
+                        base_url=openrouter_config.base_url,
+                        timeout=openrouter_config.timeout,
+                    )
+                )
+                self.register_provider(ProviderType.OPENROUTER, provider)
+                logger.info("Lazy registered OpenRouter provider from KeyManager")
+        except Exception:
+            logger.warning(
+                "Failed to lazy register OpenRouter provider",
+                exc_info=True,
+            )
 
     def set_usage_tracking(
         self,
@@ -156,10 +199,17 @@ class ModelRouter:
             return ProviderType.OPENROUTER
         return self._config.default_provider
 
-    def _resolve_provider(self, request: GenerateRequest) -> BaseProvider:
+    async def _resolve_provider(self, request: GenerateRequest) -> BaseProvider:
         """Resolve the provider instance for a generation request."""
         resolved_type = self._determine_provider_type(request)
         provider = self._providers.get(resolved_type)
+
+        # Attempt lazy OpenRouter registration if needed
+        if provider is None and resolved_type is ProviderType.OPENROUTER:
+            await self._maybe_lazy_register_openrouter()
+            # Re-check after lazy registration attempt
+            provider = self._providers.get(resolved_type)
+
         if provider is None:
             raise ModelUnavailableError(
                 f"No provider registered for {resolved_type.value}",
@@ -187,7 +237,7 @@ class ModelRouter:
     ) -> GenerateResponse:
         """Generate content through the resolved provider."""
         resolved_request = self._build_request(request, kwargs)
-        provider = self._resolve_provider(resolved_request)
+        provider = await self._resolve_provider(resolved_request)
         response = await provider.generate(resolved_request)
 
         if self._usage_tracker and self._cost_calculator:
@@ -283,7 +333,7 @@ class ModelRouter:
     ) -> AsyncGenerator[StreamChunk, None]:
         """Stream normalized chunks from the resolved provider."""
         resolved_request = self._build_request(request, kwargs)
-        provider = self._resolve_provider(resolved_request)
+        provider = await self._resolve_provider(resolved_request)
 
         total_text = ""
         async for chunk in provider.stream(resolved_request):
@@ -346,7 +396,7 @@ class ModelRouter:
             # usage_data[0] now contains the UsageInfo
         """
         resolved_request = self._build_request(request, kwargs)
-        provider = self._resolve_provider(resolved_request)
+        provider = await self._resolve_provider(resolved_request)
 
         total_output_text = ""
         total_thinking_text = ""
