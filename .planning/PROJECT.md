@@ -11,69 +11,74 @@ AURA is a **module-centric learning platform** with interconnected knowledge gra
 
 Transform from document-centric to module-centric learning, enabling contextual study sessions with persistent history and cross-module concept discovery.
 
-## Current State (v1.0 Shipped)
+## Current State (v1.1 Shipped)
 
-**Shipped:** March 8, 2026
-**Status:** MVP Complete
+**Shipped:** March 16, 2026
+**Status:** Multi-Provider LLM Architecture Complete
 
-### What's Built
+### What's Built (v1.1)
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Neo4j Schema | ✓ | Module nodes, vector indices, StudySession/Message nodes |
-| KG Processor | ✓ | Celery async processing, entity extraction, embeddings |
-| Module Management | ✓ | Full CRUD, hierarchical organization, document assignment |
-| Session-Based Chat | ✓ | Persistent sessions, message history, module-aware RAG |
-| Frontend UI | ✓ | KG processing UI, module selector, study session sidebar |
-| Testing | ✓ | 210+ unit tests, 65+ E2E tests, performance benchmarks |
-| Docker Deploy | ✓ | 8-service Docker Compose stack |
+| Model Router | ✓ | Shared `shared/model_router/` package with ABC providers |
+| Vertex AI Provider | ✓ | Wrapped existing code, full compatibility |
+| OpenRouter Provider | ✓ | 200+ models, normalized SSE streaming |
+| Thinking Mode | ✓ | Unified enable/budget across providers |
+| Cross-App Migration | ✓ | Both apps use router exclusively |
+| Admin Settings API | ✓ | Provider config, model cache, key management |
+| Provider Settings UI | ✓ | Hierarchical model picker, inline chat picker |
+| Usage Tracking | ✓ | Token/cost per request, Redis persistence |
+| Cost Dashboard | ✓ | Provider/model breakdown, date filters |
+| Integration Tests | ✓ | 1100+ tests passing |
 
-### Technology Stack
+### Technology Stack (v1.1 additions)
 
-- **Backend:** Python 3.11+, FastAPI 0.109, Celery 5.3.6, Neo4j 5.15, Redis 7
-- **Frontend:** React 18/19, TypeScript 5.3, TanStack Query, Zustand, TailwindCSS
-- **AI/ML:** Gemini (embeddings), Vertex AI (chat)
-- **Testing:** Pytest, Vitest, Playwright, Locust
+- **Model Router:** `shared/model_router/` (Python package)
+- **LLM Providers:** Vertex AI, OpenRouter (200+ models), Ollama (stub)
+- **Usage:** Recharts for dashboard visualization
 
-### Performance Achieved
+### Performance Achieved (v1.1)
 
 | Metric | Target | Achieved |
 |--------|--------|----------|
-| Module list load | < 100ms | ✓ |
-| KG processing | < 60s/doc | ✓ |
-| RAG query (single) | < 2s | ✓ |
-| Frontend TTI | < 1.5s | ✓ |
+| Router overhead | < 10ms | ✓ Verified |
+| Provider switch | Seamless | ✓ No context loss |
+| Streaming | Normalized | ✓ Identical SSE format |
+
+---
 
 ## Validated Requirements (v1.0)
 
-- ✓ Module-centric architecture (Neo4j schema, module hierarchy)
-- ✓ Knowledge graph processing (async pipeline, entity extraction)
-- ✓ Session-based chat (persistent sessions, message history)
-- ✓ Module-aware RAG (filtering, cross-module discovery)
-- ✓ Staff portal UI (document management, KG processing)
-- ✓ Student chat UI (module selection, study sessions)
-- ✓ Testing infrastructure (unit, E2E, performance)
-- ✓ Docker deployment (8-service Compose stack)
+- ✓ Module-centric architecture (Neo4j schema, module hierarchy) — v1.0
+- ✓ Knowledge graph processing (async pipeline, entity extraction) — v1.0
+- ✓ Session-based chat (persistent sessions, message history) — v1.0
+- ✓ Module-aware RAG (filtering, cross-module discovery) — v1.0
+- ✓ Staff portal UI (document management, KG processing) — v1.0
+- ✓ Student chat UI (module selection, study sessions) — v1.0
+- ✓ Testing infrastructure (unit, E2E, performance) — v1.0
 
-## Current Milestone: v1.1 Multi-Provider LLM Architecture
+### Validated Requirements (v1.1)
 
-**Goal:** Transform both AURA applications from single-provider (Vertex AI) to a shared, provider-agnostic Model Router supporting multiple LLM providers with full UI and cost tracking.
+- ✓ ROUTER-01: Router interface (`generate()`, `embed()`) — v1.1
+- ✓ ROUTER-02: Provider ABC and VertexAI implementation — v1.1
+- ✓ ROUTER-03: Provider routing and delegation — v1.1
+- ✓ ROUTER-04: Error hierarchy and typed exceptions — v1.1
+- ✓ PROV-01: Vertex AI provider full feature parity — v1.1
+- ✓ PROV-02: OpenRouter provider (200+ models) — v1.1
+- ✓ PROV-03: Normalized SSE streaming across providers — v1.1
+- ✓ UI-01: Hierarchical model selector — v1.1
+- ✓ UI-02: Inline chat model picker — v1.1
+- ✓ UI-03: Per-session model persistence — v1.1
+- ✓ CONFIG-01: Admin settings REST endpoints — v1.1
+- ✓ CONFIG-02: Default provider/model configuration — v1.1
+- ✓ CONFIG-03: Dynamic model discovery with caching — v1.1
+- ✓ CONFIG-04: API key management with masking — v1.1
+- ✓ USAGE-01: Token/cost tracking per request — v1.1
+- ✓ USAGE-02: Cost dashboard with filters — v1.1
 
-**Target features:**
-- Model Router abstraction layer (shared package, `generate()` / `embed()` interface)
-- Vertex AI provider (refactored from existing tightly-coupled code)
-- OpenRouter provider (200+ models via unified API)
-- Ollama provider stub (interface + local detection, implementation deferred)
-- Cross-project migration (both apps use shared router)
-- Hierarchical provider selection UI (2-level for Vertex/Ollama, 3-level for OpenRouter)
-- Hybrid settings UI (global settings page + inline contextual selectors)
-- Configuration system (global defaults + per-session overrides)
-- Usage tracking & cost dashboard with budget controls
-- Error handling normalization across providers
+## Active Requirements (v1.2)
 
-## Active Requirements (v1.1)
-
-To be defined — see REQUIREMENTS.md after scoping.
+*Coming soon — start with `/gsd-new-milestone`*
 
 ## Out of Scope
 
@@ -81,8 +86,6 @@ To be defined — see REQUIREMENTS.md after scoping.
 - Video chat (use external tools)
 - Real-time collaboration (async focus)
 - Third-party LMS integration (future consideration)
-
-## Key Decisions
 
 | Decision | Outcome | Status |
 |----------|---------|--------|
@@ -92,15 +95,18 @@ To be defined — see REQUIREMENTS.md after scoping.
 | Celery for KG processing | Async pipeline works well | ✓ Good |
 | Feature-based frontend | Reusable, maintainable | ✓ Good |
 | Separate frontend versions | React 18 vs 19 for gradual migration | ⚠ Revisit |
-| Shared Model Router package | Single source of truth for both apps | — Pending |
-| OpenRouter as primary multi-model provider | 200+ models via single API key | — Pending |
-| Hybrid UI for provider selection | Settings page + inline selectors | — Pending |
+| Shared Model Router package | Single source of truth for both apps | ✓ Good |
+| OpenRouter as primary multi-model provider | 200+ models via single API key | ✓ Good |
+| Hybrid UI for provider selection | Settings page + inline selectors | ✓ Good |
+| Late-bind UsageTracker into ModelRouter | Redis-safe startup | ✓ Good |
+| Workspace-local test runners | Avoid monorepo discovery conflicts | ✓ Good |
 
 ## Context
 
-- **Total LOC:** ~121,035 (Python + TypeScript)
-- **Timeline:** 46 days (Jan 19 → Mar 8, 2026)
-- **Commits:** 200+
+- **Total LOC:** ~135,000 (Python + TypeScript)
+- **Timeline v1.0:** 46 days (Jan 19 → Mar 8, 2026)
+- **Timeline v1.1:** 5 days (Mar 10 → Mar 16, 2026)
+- **Commits:** 250+
 - **Test Coverage:** >85% backend, >80% frontend
 
 ## Constraints
@@ -111,4 +117,4 @@ To be defined — see REQUIREMENTS.md after scoping.
 - **Performance**: Abstraction layer overhead < 10ms per request
 
 ---
-*Last updated: 2026-03-10 after v1.1 milestone start*
+*Last updated: 2026-03-16 after v1.1 milestone completion*

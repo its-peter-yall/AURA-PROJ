@@ -62,3 +62,13 @@ Shared Infrastructure
 - [v1.0-ROADMAP.md](./milestones/v1.0-ROADMAP.md) - Full archived roadmap
 
 ---
+
+## v1.1 Multi-Provider LLM Architecture (Shipped: 2026-03-16)
+
+**Phases completed:** 6 phases, 23 plans, 0 tasks
+
+**Key accomplishments:**
+- (none recorded)
+
+---
+
