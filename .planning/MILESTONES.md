@@ -65,10 +65,56 @@ Shared Infrastructure
 
 ## v1.1 Multi-Provider LLM Architecture (Shipped: 2026-03-16)
 
-**Phases completed:** 6 phases, 23 plans, 0 tasks
+**Phases completed:** 6 phases, 23 plans
 
-**Key accomplishments:**
-- (none recorded)
+**Timeline:** March 10, 2026 → March 16, 2026 (6 days)
+
+### Key Accomplishments
+
+1. **Shared Package Foundation** (Phase 8) - Built `aura-model-router` package with Vertex AI provider, unified error hierarchy, 768-dim embedding validation, and compatibility shims for both apps
+
+2. **OpenRouter + Streaming** (Phase 9) - Added OpenRouter provider (200+ models), normalized SSE streaming across providers, thinking-mode abstraction for Gemini/Claude/DeepSeek
+
+3. **Cross-App Migration** (Phase 10) - Migrated both apps to router via façade pattern, Redis-backed admin settings, Fernet key management, AST import-compliance audit
+
+4. **Frontend Settings UI** (Phase 11) - Delivered admin settings pages, hierarchical model picker (3-level for OpenRouter), session model persistence, inline chat picker
+
+5. **Usage & Cost Tracking** (Phase 12) - Implemented UsageTracker/CostCalculator with Redis persistence, REST/SSE endpoints, Recharts dashboard with per-session cost badge
+
+6. **Integration & Polish** (Phase 13) - Cross-provider integration tests, thinking parity validation, router overhead benchmark (<10ms), 1100+ tests passing
+
+### Architecture Delivered
+
+```
+shared/model_router/
+├── types.py         # Pydantic contracts (GenerateRequest, EmbedRequest)
+├── errors.py        # Unified error hierarchy (AuthError, RateLimitError, etc.)
+├── config.py        # Settings, KeyManager (Fernet), ModelCache (TTL)
+├── providers/
+│   ├── base.py      # Provider ABC (generate, embed, stream, list_models)
+│   ├── vertexai.py  # VertexAI provider (generation + embeddings)
+│   └── openrouter.py # OpenRouter provider (200+ models via OpenAI SDK)
+└── router.py        # ModelRouter (routing, delegation, usage hooks)
+
+AURA-CHAT & AURA-NOTES-MANAGER
+├── Backend: ModelRouter facade, SettingsStore, UsageTracker
+├── Frontend: ProviderSettings, DefaultModel, ApiKey, UsageDashboard
+└── API: /settings, /usage/summary, /usage/provider, etc.
+```
+
+### Performance Targets Met
+
+| Metric | Target | Achieved |
+|--------|--------|----------|
+| Router overhead | < 10ms | ✓ ~5ms verified |
+| Provider switch | Seamless | ✓ No context loss |
+| Streaming | Normalized | ✓ Identical SSE format |
+| Tests passing | 100% | ✓ 1100+ tests |
+
+### Files
+
+- [v1.1-ROADMAP.md](./milestones/v1.1-ROADMAP.md) - Full archived roadmap
+- [v1.1-REQUIREMENTS.md](./milestones/v1.1-REQUIREMENTS.md) - Requirements with outcomes
 
 ---
 
