@@ -276,6 +276,8 @@ class ModelRouter:
         all_models: list[ModelInfo] = []
         for registered_provider in self._providers.values():
             all_models.extend(await registered_provider.list_models())
+        if self._embedding_provider is not None:
+            all_models.extend(await self._embedding_provider.list_models())
         return all_models
 
     async def health_check(

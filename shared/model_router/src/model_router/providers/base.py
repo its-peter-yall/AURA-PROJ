@@ -61,3 +61,7 @@ class BaseEmbeddingProvider(ABC):
     async def embed_single(self, text: str) -> list[float]:
         """Embed a single text and return the first vector."""
         return (await self.embed([text]))[0]
+
+    @abstractmethod
+    async def list_models(self) -> list[ModelInfo]:
+        """List embedding models available from this provider."""

@@ -82,6 +82,7 @@ class ModelInfo(BaseModel):
     name: str
     provider: ProviderType
     display_name: str | None = None
+    model_type: Literal["generation", "embedding"] = "generation"
 
 
 class UsageRecord(BaseModel):

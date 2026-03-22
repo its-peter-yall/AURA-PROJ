@@ -59,6 +59,27 @@ _GEMINI_MODELS = [
     ),
 ]
 
+_EMBEDDING_MODELS = [
+    ModelInfo(
+        name="text-embedding-004",
+        provider=ProviderType.VERTEX_AI,
+        display_name="Text Embedding 004",
+        model_type="embedding",
+    ),
+    ModelInfo(
+        name="text-embedding-005",
+        provider=ProviderType.VERTEX_AI,
+        display_name="Text Embedding 005",
+        model_type="embedding",
+    ),
+    ModelInfo(
+        name="text-multilingual-embedding-002",
+        provider=ProviderType.VERTEX_AI,
+        display_name="Text Multilingual Embedding 002",
+        model_type="embedding",
+    ),
+]
+
 _TEST_MODE_TRUTHY_VALUES = {"1", "true", "yes", "on"}
 
 
@@ -611,6 +632,10 @@ class VertexAIEmbeddingProvider(_VertexAuthMixin, BaseEmbeddingProvider):
                 error,
                 model="text-embedding-004",
             ) from error
+
+    async def list_models(self) -> list[ModelInfo]:
+        """Return the supported Vertex AI embedding model list."""
+        return list(_EMBEDDING_MODELS)
 
 
 __all__ = [
