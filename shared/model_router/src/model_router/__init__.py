@@ -27,7 +27,11 @@ from model_router.key_manager import KeyManager
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
 from model_router.providers.openrouter import OpenRouterProvider
 from model_router.router import ModelRouter, get_default_router, reset_default_router
-from model_router.settings_store import SettingsStore
+from model_router.settings_store import (
+    SettingsStore,
+    clear_defaults_cache,
+    get_default_sync,
+)
 from model_router.types import (
     GenerateRequest,
     GenerateResponse,
@@ -45,11 +49,13 @@ __all__ = [
     "BaseProvider",
     "CostCalculator",
     "get_cached_models",
+    "clear_defaults_cache",
     "ContentPolicyError",
     "EmbeddingDimensionError",
     "GenerateRequest",
     "GenerateResponse",
     "get_default_router",
+    "get_default_sync",
     "KeyManager",
     "ModelInfo",
     "ModelCache",

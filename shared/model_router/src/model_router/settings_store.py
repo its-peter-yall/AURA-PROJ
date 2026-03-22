@@ -13,9 +13,18 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
+import time
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 SETTINGS_KEY = "aura:model_router:settings"
+
+_DEFAULTS_CACHE_TTL = 300  # 5 minutes
+
+_defaults_cache: dict[str, dict] = {}
 
 
 def _decode_redis_text(value: str | bytes) -> str:
@@ -23,6 +32,78 @@ def _decode_redis_text(value: str | bytes) -> str:
     if isinstance(value, bytes):
         return value.decode()
     return value
+
+
+def _cache_is_valid(use_case: str) -> bool:
+    """Return True if the cached entry for use_case is still fresh."""
+    entry = _defaults_cache.get(use_case)
+    if entry is None:
+        return False
+    return (time.time() - entry["_cached_at"]) < _DEFAULTS_CACHE_TTL
+
+
+def get_default_sync(
+    use_case: str,
+    redis_url: str | None = None,
+    redis_client: Any = None,
+) -> dict[str, str] | None:
+    """Synchronously read a provider/model default from Redis.
+
+    Designed for sync call-sites (embedding services, entity extractors)
+    that cannot await the async ``SettingsStore.get_default`` method.
+
+    Args:
+        use_case: Logical use case such as ``chat``, ``embeddings``, or
+            ``entity_extraction``.
+        redis_url: Redis connection URL.  Defaults to the ``REDIS_URL``
+            environment variable.
+        redis_client: Pre-created synchronous Redis client.  When provided
+            ``redis_url`` is ignored.
+
+    Returns:
+        A dict ``{"provider": str, "model": str}`` when a default is
+        configured, or ``None`` on any error or missing key.
+    """
+    if _cache_is_valid(use_case):
+        return _defaults_cache[use_case]["value"]
+
+    client_to_close = None
+    try:
+        client: Any = redis_client
+        if client is None:
+            import redis as _redis  # type: ignore[import-untyped]
+
+            url = redis_url or os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+            client = _redis.Redis.from_url(url)
+            client_to_close = client
+
+        raw = client.hget(SETTINGS_KEY, use_case)
+        if raw is None:
+            logger.debug("No default configured for use_case=%s", use_case)
+            _defaults_cache[use_case] = {"value": None, "_cached_at": time.time()}
+            return None
+
+        parsed = json.loads(_decode_redis_text(raw))
+        _defaults_cache[use_case] = {"value": parsed, "_cached_at": time.time()}
+        return parsed
+    except Exception:
+        logger.debug(
+            "Failed to read sync default for use_case=%s, returning None",
+            use_case,
+            exc_info=True,
+        )
+        return None
+    finally:
+        if client_to_close is not None:
+            try:
+                client_to_close.close()
+            except Exception:
+                pass
+
+
+def clear_defaults_cache() -> None:
+    """Clear the in-memory defaults cache.  Useful for testing."""
+    _defaults_cache.clear()
 
 
 class SettingsStore:
