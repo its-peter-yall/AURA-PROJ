@@ -5,7 +5,7 @@ milestone_name: milestone
 status: completed
 stopped_at: "Completed quick task 260322-wb4: Wire SettingsStore model defaults for gatekeeper and summarization"
 last_updated: "2026-03-22T18:00:56.468Z"
-last_activity: "2026-03-22 - Completed quick task 20: Remove hardcoded RAG model allowlist"
+last_activity: "2026-03-22 - Completed quick task 260322-wb4: Wire SettingsStore model defaults to gatekeeper + summarizers"
 progress:
   total_phases: 6
   completed_phases: 0
@@ -28,7 +28,7 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 Phase: 13 of 13 (Polish + Integration Testing)
 Plan: 3 of 3 complete (13-01, 13-02, and 13-03 done)
 Status: Complete
-Last activity: 2026-03-22 - Completed quick task 20: Remove hardcoded RAG model allowlist
+Last activity: 2026-03-22 - Completed quick task 260322-wb4: Wire SettingsStore model defaults to gatekeeper + summarizers
 
 Progress: [██████████] 100%
 
@@ -112,3 +112,4 @@ Next action: Ready for next quick task or phase completion.
 | 19 | Implement lazy OpenRouter registration from KeyManager | 2026-03-13 | a2431a6 | [18-implement-lazy-openrouter-registration-f](./quick/18-implement-lazy-openrouter-registration-f/) |
 | 20 | Remove hardcoded RAG model allowlist, make /config dynamic | 2026-03-22 | ed5062a | [260322-o9o-fix-hardcoded-rag-model-allowlist-suppor](./quick/260322-o9o-fix-hardcoded-rag-model-allowlist-suppor/) |
 | 260322-re3 | Fix embeddings dropdown showing generation models (add model_type filtering) | 2026-03-22 | b153ae8, 6dac031 | [260322-re3-embeddings-model-dropdown-shows-generati](./quick/260322-re3-embeddings-model-dropdown-shows-generati/) |
+| 260322-wb4 | Wire SettingsStore model defaults to gatekeeper + summarizers | 2026-03-22 | c1a4388 | [260322-wb4-wire-openrouter-api-keys-and-model-selec](./quick/260322-wb4-wire-openrouter-api-keys-and-model-selec/) |
