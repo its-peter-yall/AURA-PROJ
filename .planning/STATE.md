@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: complete
-stopped_at: Completed quick task 20: Remove hardcoded RAG model allowlist
-last_updated: "2026-03-22T12:00:00Z"
-last_activity: "2026-03-22 - Completed quick task 20: Remove hardcoded RAG model allowlist"
+stopped_at: "Completed quick task 260322-re3: Embeddings model dropdown shows generation models"
+last_updated: "2026-03-22T14:18:28Z"
+last_activity: "2026-03-22 - Completed quick task 260322-re3: Embeddings model dropdown shows generation models"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -55,6 +55,7 @@ Recent metric entries:
 | Phase quick P14 | 15 | 2 tasks | 2 files |
 | Phase quick P15 | 8 | 3 tasks | 2 files |
 | Phase quick P19 | 22 | 2 tasks | 2 files |
+| Phase quick 260322-re3 | 3 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -88,8 +89,8 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-22T12:00:00Z
-Stopped at: Completed quick task 20: Remove hardcoded RAG model allowlist
+Last session: 2026-03-22T14:18:28Z
+Stopped at: Completed quick task 260322-re3: Embeddings model dropdown shows generation models
 Resume file: None
 Next action: Ready for next quick task or phase completion.
 
@@ -110,3 +111,4 @@ Next action: Ready for next quick task or phase completion.
 | 18 | Display dual system status (ANM + Chat) in settings page | 2026-03-13 | [system-status-dual] | [18-system-status-both-apps](./quick/system-status-both-apps/) |
 | 19 | Implement lazy OpenRouter registration from KeyManager | 2026-03-13 | a2431a6 | [18-implement-lazy-openrouter-registration-f](./quick/18-implement-lazy-openrouter-registration-f/) |
 | 20 | Remove hardcoded RAG model allowlist, make /config dynamic | 2026-03-22 | ed5062a | [260322-o9o-fix-hardcoded-rag-model-allowlist-suppor](./quick/260322-o9o-fix-hardcoded-rag-model-allowlist-suppor/) |
+| 260322-re3 | Fix embeddings dropdown showing generation models (add model_type filtering) | 2026-03-22 | b153ae8, 6dac031 | [260322-re3-embeddings-model-dropdown-shows-generati](./quick/260322-re3-embeddings-model-dropdown-shows-generati/) |
