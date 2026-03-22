@@ -41,6 +41,7 @@ def make_manual_router() -> ModelRouter:
         VertexAIProvider(provider_config),
     )
     router.register_embedding_provider(
+        ProviderType.VERTEX_AI,
         VertexAIEmbeddingProvider(provider_config),
     )
     return router
@@ -200,21 +201,26 @@ async def test_router_no_embedding_provider_raises() -> None:
 
 
 @pytest.mark.asyncio
-async def test_router_embed_rejects_non_vertex_provider() -> None:
+async def test_router_embed_supports_openrouter_provider() -> None:
     router = ModelRouter(make_config())
 
-    with pytest.raises(ModelRouterError):
-        await router.embed(
-            texts=["hello"],
-            provider=ProviderType.OPENROUTER,
-        )
+    result = await router.embed(
+        texts=["hello"],
+        provider=ProviderType.OPENROUTER,
+    )
+
+    assert len(result) == 1
+    assert len(result[0]) == 768
 
 
 def test_router_from_config_auto_registers() -> None:
     router = ModelRouter(make_config())
 
     assert isinstance(router._providers[ProviderType.VERTEX_AI], VertexAIProvider)
-    assert isinstance(router._embedding_provider, VertexAIEmbeddingProvider)
+    assert isinstance(
+        router._embedding_providers[ProviderType.VERTEX_AI],
+        VertexAIEmbeddingProvider,
+    )
 
 
 def test_get_default_router_singleton() -> None:

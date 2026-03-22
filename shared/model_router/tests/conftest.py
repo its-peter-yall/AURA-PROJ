@@ -193,6 +193,9 @@ class TestEmbeddingProvider(BaseEmbeddingProvider):
     async def _embed_raw(self, texts: list[str]) -> list[list[float]]:
         return self._vectors[: len(texts)]
 
+    async def list_models(self) -> list:
+        return []
+
 
 @pytest.fixture
 def embedding_provider_factory():

@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import os
 from typing import Any, AsyncGenerator
 
@@ -26,7 +28,11 @@ from model_router.errors import (
     ProviderTimeoutError,
     RateLimitError,
 )
-from model_router.providers.base import BaseProvider
+from model_router.providers.base import (
+    AURA_EMBEDDING_DIMENSIONS,
+    BaseEmbeddingProvider,
+    BaseProvider,
+)
 from model_router.types import (
     GenerateRequest,
     GenerateResponse,
@@ -82,6 +88,25 @@ _TEST_MODELS = [
         provider=ProviderType.OPENROUTER,
         display_name="Qwen 2.5 72B Instruct",
     ),
+]
+
+_EMBEDDING_TEST_MODELS = [
+    ModelInfo(
+        name="openai/text-embedding-3-small",
+        provider=ProviderType.OPENROUTER,
+        display_name="Text Embedding 3 Small",
+        model_type="embedding",
+    ),
+    ModelInfo(
+        name="openai/text-embedding-3-large",
+        provider=ProviderType.OPENROUTER,
+        display_name="Text Embedding 3 Large",
+        model_type="embedding",
+    ),
+]
+
+_OPENROUTER_EMBEDDING_PREFIXES = [
+    "openai/text-embedding",
 ]
 
 
@@ -510,4 +535,94 @@ class OpenRouterProvider(BaseProvider):
         }
 
 
-__all__ = ["OpenRouterProvider", "_map_openrouter_error"]
+class OpenRouterEmbeddingProvider(BaseEmbeddingProvider):
+    """Embedding provider backed by OpenRouter's OpenAI-compatible embeddings API."""
+
+    def __init__(self, config: OpenRouterConfig) -> None:
+        self._config = config
+        self._test_mode = _is_test_mode()
+
+    def _build_test_vector(self, text: str) -> list[float]:
+        """Create a deterministic 768-dimension vector for test mode."""
+        digest = hashlib.sha256(text.encode("utf-8")).digest()
+        seed = int.from_bytes(digest[:4], "big")
+        return [
+            ((seed + index + digest[index % len(digest)]) % 1000) / 1000.0
+            for index in range(AURA_EMBEDDING_DIMENSIONS)
+        ]
+
+    async def _embed_raw(self, texts: list[str]) -> list[list[float]]:
+        """Return raw embedding vectors for the provided texts."""
+        if self._test_mode:
+            return [self._build_test_vector(text) for text in texts]
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as http_client:
+                response = await http_client.post(
+                    f"{self._config.base_url.rstrip('/')}/embeddings",
+                    headers=_build_headers(self._config),
+                    json={
+                        "model": "openai/text-embedding-3-small",
+                        "input": texts,
+                        "dimensions": AURA_EMBEDDING_DIMENSIONS,
+                    },
+                )
+                response.raise_for_status()
+        except Exception as error:
+            raise _map_openrouter_error(error) from error
+
+        payload = response.json().get("data", [])
+        vectors: list[list[float]] = []
+        for item in sorted(payload, key=lambda x: x.get("index", 0)):
+            embedding = item.get("embedding", [])
+            vectors.append(list(embedding))
+
+        if len(vectors) != len(texts):
+            raise RuntimeError(f"Expected {len(texts)} embeddings, got {len(vectors)}")
+        return vectors
+
+    async def list_models(self) -> list[ModelInfo]:
+        """Return OpenRouter embedding models."""
+        if self._test_mode:
+            return list(_EMBEDDING_TEST_MODELS)
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
+                response = await http_client.get(
+                    f"{self._config.base_url.rstrip('/')}/models/embeddings",
+                    headers=_build_headers(self._config),
+                )
+                response.raise_for_status()
+        except Exception as error:
+            raise _map_openrouter_error(error) from error
+
+        payload = response.json().get("data", [])
+        models: list[ModelInfo] = []
+        for item in payload:
+            name = item.get("id", "")
+            if not isinstance(name, str):
+                continue
+            if not any(
+                name.startswith(prefix) for prefix in _OPENROUTER_EMBEDDING_PREFIXES
+            ):
+                continue
+
+            display_name = item.get("name")
+            models.append(
+                ModelInfo(
+                    name=name,
+                    provider=ProviderType.OPENROUTER,
+                    display_name=(
+                        display_name if isinstance(display_name, str) else None
+                    ),
+                    model_type="embedding",
+                )
+            )
+        return models
+
+
+__all__ = [
+    "OpenRouterProvider",
+    "OpenRouterEmbeddingProvider",
+    "_map_openrouter_error",
+]

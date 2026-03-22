@@ -70,7 +70,7 @@ class ModelRouter:
     ) -> None:
         self._config = config or RouterConfig()
         self._providers: dict[ProviderType, BaseProvider] = {}
-        self._embedding_provider: BaseEmbeddingProvider | None = None
+        self._embedding_providers: dict[ProviderType, BaseEmbeddingProvider] = {}
         self._usage_tracker: "UsageTracker | None" = None
         self._cost_calculator: "CostCalculator | None" = None
         self._key_manager: "KeyManager | None" = key_manager
@@ -79,13 +79,20 @@ class ModelRouter:
             vertex_provider = VertexAIProvider(self._config.vertex_ai)
             embedding_provider = VertexAIEmbeddingProvider(self._config.vertex_ai)
             self.register_provider(ProviderType.VERTEX_AI, vertex_provider)
-            self.register_embedding_provider(embedding_provider)
+            self.register_embedding_provider(ProviderType.VERTEX_AI, embedding_provider)
 
         if self._should_auto_register_openrouter():
-            from model_router.providers.openrouter import OpenRouterProvider
+            from model_router.providers.openrouter import (
+                OpenRouterEmbeddingProvider,
+                OpenRouterProvider,
+            )
 
             openrouter_provider = OpenRouterProvider(self._config.openrouter)
             self.register_provider(ProviderType.OPENROUTER, openrouter_provider)
+            self.register_embedding_provider(
+                ProviderType.OPENROUTER,
+                OpenRouterEmbeddingProvider(self._config.openrouter),
+            )
 
     def _should_auto_register_vertex(self) -> bool:
         """Return True when config should bootstrap the Vertex AI providers."""
@@ -113,19 +120,25 @@ class ModelRouter:
         try:
             api_key = await self._key_manager.get_key("openrouter")
             if api_key:
-                from model_router.providers.openrouter import OpenRouterProvider
+                from model_router.providers.openrouter import (
+                    OpenRouterEmbeddingProvider,
+                    OpenRouterProvider,
+                )
 
                 openrouter_config = self._config.openrouter
                 # Create provider with fetched key (override any empty config key)
-                provider = OpenRouterProvider(
-                    OpenRouterConfig(
-                        api_key=api_key,
-                        base_url=openrouter_config.base_url,
-                        site_url=openrouter_config.site_url,
-                        site_name=openrouter_config.site_name,
-                    )
+                or_config = OpenRouterConfig(
+                    api_key=api_key,
+                    base_url=openrouter_config.base_url,
+                    site_url=openrouter_config.site_url,
+                    site_name=openrouter_config.site_name,
                 )
+                provider = OpenRouterProvider(or_config)
                 self.register_provider(ProviderType.OPENROUTER, provider)
+                self.register_embedding_provider(
+                    ProviderType.OPENROUTER,
+                    OpenRouterEmbeddingProvider(or_config),
+                )
                 logger.info("Lazy registered OpenRouter provider from KeyManager")
         except Exception:
             logger.warning(
@@ -160,10 +173,11 @@ class ModelRouter:
 
     def register_embedding_provider(
         self,
+        provider_type: ProviderType,
         provider: BaseEmbeddingProvider,
     ) -> None:
-        """Register the deployment-wide embedding provider."""
-        self._embedding_provider = provider
+        """Register an embedding provider implementation."""
+        self._embedding_providers[provider_type] = provider
 
     def get_provider(
         self,
@@ -276,8 +290,8 @@ class ModelRouter:
         all_models: list[ModelInfo] = []
         for registered_provider in self._providers.values():
             all_models.extend(await registered_provider.list_models())
-        if self._embedding_provider is not None:
-            all_models.extend(await self._embedding_provider.list_models())
+        for embedding_provider in self._embedding_providers.values():
+            all_models.extend(await embedding_provider.list_models())
         return all_models
 
     async def health_check(
@@ -305,29 +319,35 @@ class ModelRouter:
         provider: ProviderType | str | None = None,
     ) -> list[list[float]]:
         """Generate validated embeddings through the configured provider."""
+        if text is not None and texts is None:
+            texts = [text]
+
+        if not self._embedding_providers:
+            raise ModelRouterError("No embedding provider registered")
+
         if provider is not None:
             try:
                 provider_type = _coerce_provider_type(provider)
             except ValueError as error:
                 raise ModelRouterError(
-                    "Embeddings are only available through Vertex AI",
+                    "Unknown embedding provider",
                     provider=str(provider),
                     original=error,
                 ) from error
 
-            if provider_type is not ProviderType.VERTEX_AI:
+            embedding_provider = self._embedding_providers.get(provider_type)
+            if embedding_provider is None:
+                available = ", ".join(p.value for p in self._embedding_providers)
                 raise ModelRouterError(
-                    "Embeddings are only available through Vertex AI",
+                    f"No embedding provider registered for {provider_type.value}. "
+                    f"Available: {available}",
                     provider=provider_type.value,
                 )
+            return await embedding_provider.embed(texts or [])
 
-        if text is not None and texts is None:
-            texts = [text]
-
-        if self._embedding_provider is None:
-            raise ModelRouterError("No embedding provider registered")
-
-        return await self._embedding_provider.embed(texts or [])
+        # Default: use the first registered embedding provider
+        first_provider = next(iter(self._embedding_providers.values()))
+        return await first_provider.embed(texts or [])
 
     async def stream(
         self,
