@@ -282,7 +282,6 @@ Plans:
 ## References
 
 - [PROJECT.md](./PROJECT.md) - Current project state
-- [REQUIREMENTS.md](./REQUIREMENTS.md) - v1.1 requirements with traceability
 - [MILESTONES.md](./MILESTONES.md) - Milestone history
 - [research/SUMMARY.md](./research/SUMMARY.md) - v1.1 research findings
 

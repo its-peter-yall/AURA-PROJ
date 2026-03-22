@@ -47,6 +47,15 @@ Transform from document-centric to module-centric learning, enabling contextual 
 
 ---
 
+## Requirements
+
+This project tracks requirements in two buckets:
+
+- **Validated Requirements**: completed and verified requirements from shipped milestones
+- **Active Requirements**: requirements targeted by the current milestone
+
+See the detailed requirement lists below.
+
 ## Validated Requirements (v1.0)
 
 - ✓ Module-centric architecture (Neo4j schema, module hierarchy) — v1.0
