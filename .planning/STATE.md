@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: milestone
-status: completed
-stopped_at: "Completed quick task 260322-wb4: Wire SettingsStore model defaults for gatekeeper and summarization"
-last_updated: "2026-03-22T18:00:56.468Z"
-last_activity: "2026-03-22 - Completed quick task 260322-wb4: Wire SettingsStore model defaults to gatekeeper + summarizers"
+milestone: v1.2
+milestone_name: Settings Wiring E2E
+status: active
+stopped_at: "Starting new milestone — defining requirements"
+last_updated: "2026-03-23T00:00:00.000Z"
+last_activity: "2026-03-23 — Milestone v1.2 started: Settings Wiring E2E"
 progress:
-  total_phases: 6
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
+See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 
 **Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 13 - Polish + Integration Testing
+**Current focus:** v1.2 — Settings Wiring E2E
 
 ## Current Position
 
-Phase: 13 of 13 (Polish + Integration Testing)
-Plan: 3 of 3 complete (13-01, 13-02, and 13-03 done)
-Status: Complete
-Last activity: 2026-03-22 - Completed quick task 260322-wb4: Wire SettingsStore model defaults to gatekeeper + summarizers
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-23 — Milestone v1.2 started (Settings Wiring E2E)
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 

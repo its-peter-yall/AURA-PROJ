@@ -11,10 +11,15 @@ AURA is a **module-centric learning platform** with interconnected knowledge gra
 
 Transform from document-centric to module-centric learning, enabling contextual study sessions with persistent history and cross-module concept discovery.
 
-## Current State (v1.1 Shipped)
+## Current Milestone: v1.2 Settings Wiring E2E
 
-**Shipped:** March 16, 2026
-**Status:** Multi-Provider LLM Architecture Complete
+**Goal:** Wire SettingsStore end-to-end so every AI feature respects per-use-case model/provider configuration — no more hardcoded env vars or silent provider skips.
+
+**Target features:**
+- All use cases configurable via settings API (including gatekeeper, relationship_extraction)
+- KG processor, entity extraction, embeddings, gatekeeper all read from SettingsStore
+- Provider field explicitly passed through in all ModelRouter calls
+- Chat config fallback and thinking mode model list handle multi-provider gracefully
 
 ### What's Built (v1.1)
 
@@ -87,7 +92,7 @@ See the detailed requirement lists below.
 
 ## Active Requirements (v1.2)
 
-*Coming soon — start with `/gsd-new-milestone`*
+*Defining requirements — see REQUIREMENTS.md for scoped list*
 
 ## Out of Scope
 
@@ -126,4 +131,4 @@ See the detailed requirement lists below.
 - **Performance**: Abstraction layer overhead < 10ms per request
 
 ---
-*Last updated: 2026-03-16 after v1.1 milestone completion*
+*Last updated: 2026-03-23 after v1.2 milestone started (Settings Wiring E2E)*
