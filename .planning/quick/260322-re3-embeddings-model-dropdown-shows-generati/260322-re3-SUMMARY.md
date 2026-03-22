@@ -81,3 +81,7 @@ None — plan executed exactly as written.
 - [x] Entity Extraction dropdown: shows generation models only
 - [x] All existing backend tests pass (67/67)
 - [x] TypeScript compilation passes
+
+## Self-Check: PASSED
+
+All 7 modified files verified present. All 4 commits verified in git log (`b153ae8`, `4187cd4`, `6dac031`, `9417dd4`). Backend 67/67 tests pass. Frontend TypeScript compiles clean.
