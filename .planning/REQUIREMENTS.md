@@ -51,24 +51,24 @@ Deferred to future milestones:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| PP-01 | TBD | Pending |
-| PP-02 | TBD | Pending |
-| PP-03 | TBD | Pending |
-| PP-04 | TBD | Pending |
-| PP-05 | TBD | Pending |
-| PP-06 | TBD | Pending |
-| PP-07 | TBD | Pending |
-| PP-08 | TBD | Pending |
-| FB-01 | TBD | Pending |
-| FB-02 | TBD | Pending |
+| API-01 | Phase 14 | Pending |
+| API-02 | Phase 14 | Pending |
+| PP-01 | Phase 15 | Pending |
+| PP-02 | Phase 15 | Pending |
+| PP-03 | Phase 15 | Pending |
+| PP-04 | Phase 15 | Pending |
+| PP-05 | Phase 16 | Pending |
+| PP-06 | Phase 16 | Pending |
+| PP-07 | Phase 16 | Pending |
+| PP-08 | Phase 16 | Pending |
+| FB-01 | Phase 14 | Pending |
+| FB-02 | Phase 14 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12 ⚠️ (roadmap pending)
+- Mapped to phases: 12 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after initial definition*
+*Last updated: 2026-03-23 after roadmap creation (12/12 mapped)*

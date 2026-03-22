@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Settings Wiring E2E
 status: active
-stopped_at: "Starting new milestone — defining requirements"
+stopped_at: "Roadmap created — ready for Phase 14 planning"
 last_updated: "2026-03-23T00:00:00.000Z"
-last_activity: "2026-03-23 — Milestone v1.2 started: Settings Wiring E2E"
+last_activity: "2026-03-23 — v1.2 roadmap created: 4 phases, 12 requirements mapped"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -25,12 +25,12 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 14 (Foundation — Config Resolver + Allowlist + Cache Fixes)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-23 — Milestone v1.2 started (Settings Wiring E2E)
+Status: Roadmap created, ready for Phase 14 planning
+Last activity: 2026-03-23 — v1.2 roadmap created (4 phases, 12/12 requirements mapped)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (0/4 phases, 0 plans)
 
 ## Performance Metrics
 
@@ -48,9 +48,6 @@ Progress: [░░░░░░░░░░] 0%
 | 13 | 3 | 31 min | 10 min |
 
 Recent metric entries:
-- Phase 12 P04 | 3 min | 2 tasks | 10 files
-- Phase 13 P01 | 7 min | 2 tasks | 3 files
-- Phase 13 P02 | 24 min | 2 tasks | 16 files
 - Phase 13 P03 | 18 min | 2 tasks | 3 files
 | Phase quick P14 | 15 | 2 tasks | 2 files |
 | Phase quick P15 | 8 | 3 tasks | 2 files |
@@ -75,6 +72,10 @@ Recent metric entries:
 - [Phase 13]: Mark CONFIG-01, CONFIG-03, CONFIG-04, and UI-03 complete from verified Phase 10 evidence instead of reopening implementation work.
 - [Phase 13]: Use workspace-local pytest and Vitest runners for final validation on Windows to avoid monorepo discovery conflicts.
 - [Quick 18]: Implement lazy OpenRouter registration that fetches API key from KeyManager when slash-form model IDs are used, eliminating need for OPENROUTER_API_KEY env var at router initialization
+- [v1.2 scoping]: 4-phase structure: Foundation → AURA-CHAT wiring → NOTES wiring → Frontend+E2E (Phases 15+16 parallel)
+- [v1.2 scoping]: `resolve_use_case_config()` utility centralizes 3-step resolution chain (SettingsStore → env var → hardcoded default)
+- [v1.2 scoping]: Zombie-None cache fix with shorter error TTL (30s) before any consumer wiring
+- [v1.2 scoping]: `gatekeeper` and `relationship_extraction` added to ALLOWED_USE_CASES in both settings routers
 
 ### Pending Todos
 
@@ -86,13 +87,15 @@ Recent metric entries:
 - [Phase 8]: Compatibility shim rollout in 08-03 still needs formal closure in docs/state
 - [Phase 9]: Live OpenRouter reasoning-field behavior (`reasoning_content` vs fallback fields) still needs end-to-end validation in a later integration phase
 - [Phase 10]: `AURA-CHAT/test_real_models.py` still builds direct Vertex AI REST requests and needs gap-closure validation
+- [v1.2 Phase 15]: Gatekeeper OpenRouter JSON mode support needs live API verification — blanket skip may be unnecessary now
+- [v1.2 Phase 15]: Thinking-capable OpenRouter models undocumented — start with static list extension, plan dynamic for v1.3
 
 ## Session Continuity
 
-Last session: 2026-03-22T18:00:56.464Z
-Stopped at: Completed quick task 260322-wb4: Wire SettingsStore model defaults for gatekeeper and summarization
+Last session: 2026-03-23T00:00:00.000Z
+Stopped at: Created v1.2 roadmap — 4 phases, 12 requirements, ready for Phase 14 planning
 Resume file: None
-Next action: Ready for next quick task or phase completion.
+Next action: `/gsd-plan-phase 14` to plan Foundation phase (config resolver + allowlist + cache fixes)
 
 ### Quick Tasks Completed
 
