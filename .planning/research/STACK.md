@@ -1,352 +1,467 @@
-# Technology Stack: Multi-Provider LLM Architecture (v1.1)
+# Technology Stack: SettingsStore Wiring Patterns
 
-**Project:** AURA Multi-Provider LLM Support
-**Researched:** 2026-03-10
-**Scope:** NEW dependencies only -- existing stack (FastAPI, React, Neo4j, TanStack Query, etc.) is validated and excluded
-
----
-
-## Recommended Stack
-
-### Core Provider Libraries (Python Backend)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `openai` | >=2.26.0 | OpenRouter provider client | Mature (v2.26.0), OpenAI-compatible API used by OpenRouter via `base_url`. Typed responses, async (`AsyncOpenAI`), streaming SSE, automatic retries. OpenRouter officially documents this approach. Avoids the beta-quality official `openrouter` SDK (v0.7.11) which has breaking changes between versions. |
-| `ollama` | >=0.6.1 | Ollama provider client (local models) | Official Python client (MIT, 9.5k stars). Has `chat()`, `generate()`, `embed()`, `list()` methods that map directly to our router interface. Built on httpx. AsyncClient for async operations. |
-
-### Configuration & Validation (Python Backend)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `pydantic-settings` | >=2.13.0 | Hierarchical configuration system | Already in requirements (>=2.1.0), upgrade to >=2.13.0 for latest .env nesting support. `BaseSettings` classes with env var loading for provider configs, API keys, defaults. Supports nested models for global + per-session overrides. |
-| `pydantic` | >=2.6.0 | Provider response/request schemas | Already in requirements. Use for typed provider configs, usage tracking models, and normalized response schemas. |
-
-### Shared Package Infrastructure (Python)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `pyproject.toml` | (build config) | Shared package definition | Standard Python packaging for `shared/model_router/`. Both apps install via `pip install -e ../shared/model_router` for development. No external dependency needed -- uses Python's native packaging. |
-
-### Cost Dashboard (Frontend)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `recharts` | ^3.8.0 | Usage/cost dashboard charts | Composable React chart library built on SVG + D3 submodules. Supports area, bar, line, pie charts. Lightweight, works with both React 18 (NOTES) and React 19 (CHAT). MIT licensed. Install in whichever app(s) render the dashboard. |
+**Project:** AURA v1.2 — Settings Wiring E2E
+**Researched:** 2026-03-23
+**Focus:** Patterns to wire SettingsStore consistently across all backend consumers
 
 ---
 
-## What NOT to Add
+## Problem Summary
 
-These were considered and explicitly rejected:
+Only chat in AURA-CHAT reads SettingsStore end-to-end. Six other consumers
+(entity extraction, embeddings, gatekeeper, KG processor, summarization,
+relationship extraction) either bypass SettingsStore with hardcoded env vars,
+ignore the `provider` field, or are missing from `ALLOWED_USE_CASES` entirely.
 
-| Library | Why NOT |
-|---------|---------|
-| `openrouter` (official SDK) | Beta (v0.7.11), breaking changes between versions, less battle-tested than `openai` SDK. OpenRouter itself supports the OpenAI SDK approach. Pin to `openai` for stability. |
-| `litellm` | Large dependency surface (~100+ transitive deps). Abstracts 100+ providers but we only need 3 (Vertex AI, OpenRouter, Ollama). Our custom Protocol-based abstraction is thinner and tailored to our exact needs. |
-| `langchain` / `langchain-core` | Massive framework dependency. We are building a routing layer, not an orchestration chain. LangChain's model abstraction is buried deep in its framework. |
-| `instructor` | Structured output library. Not needed -- we use Pydantic directly with Gemini's native JSON mode. |
-| New state management lib | Zustand (client state) + TanStack Query (server state) already handle settings/dashboard needs. No new frontend state library required. |
-| New UI component library | Existing TailwindCSS + lucide-react + framer-motion + clsx/tailwind-merge cover all settings/dashboard UI needs. No Radix or shadcn needed for AURA-CHAT (AURA-NOTES already has @radix-ui/react-slot). |
-| `d3` (direct) | recharts wraps D3 submodules already. No need to add D3 directly. |
-| Additional charting libs (Chart.js, Nivo, Victory) | recharts is sufficient, lightweight, and React-native. No reason to use heavier alternatives. |
+The `ModelRouter.generate()` already supports `provider` on `GenerateRequest`
+and `_determine_provider_type()` checks it first — callers just never pass it.
 
 ---
 
-## Detailed Rationale
+## Recommended Pattern: `resolve_use_case_config()`
 
-### Why `openai` SDK for OpenRouter (not the official `openrouter` SDK)
+### Core Idea
 
-OpenRouter's API is OpenAI-compatible at `https://openrouter.ai/api/v1`. The `openai` Python SDK (v2.26.0) supports custom `base_url` configuration:
+Add a single utility function to `shared/model_router/` that every consumer
+calls to get `{provider, model}` for a use case. The resolution chain:
+
+```
+SettingsStore (Redis) → env var override → hardcoded default → never None
+```
+
+Both sync and async call-sites get a clean entry point.
+
+### Implementation Location
+
+Add to `shared/model_router/src/model_router/settings_store.py`:
 
 ```python
-from openai import AsyncOpenAI
+# Use-case to env-var mapping for fallback resolution
+_USE_CASE_ENV_VARS: dict[str, str] = {
+    "chat": "RAG_MODEL_DEFAULT",
+    "embeddings": "EMBEDDING_MODEL",
+    "entity_extraction": "LLM_ENTITY_EXTRACTION_MODEL",
+    "summarization": "LLM_SUMMARIZATION_MODEL",
+    "gatekeeper": "LLM_GATEKEEPER_MODEL",
+    "relationship_extraction": "LLM_RELATIONSHIP_MODEL",
+}
 
-client = AsyncOpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=openrouter_api_key,
+_USE_CASE_DEFAULT_MODELS: dict[str, str] = {
+    "chat": "gemini-2.5-flash-lite",
+    "embeddings": "text-embedding-004",
+    "entity_extraction": "gemini-2.5-flash-lite",
+    "summarization": "gemini-2.5-flash-lite",
+    "gatekeeper": "gemini-2.5-flash-lite",
+    "relationship_extraction": "gemini-2.5-flash-lite",
+}
+
+_USE_CASE_DEFAULT_PROVIDER: str = "vertex_ai"
+
+
+def resolve_use_case_config(
+    use_case: str,
+    redis_url: str | None = None,
+    redis_client: Any = None,
+    env_overrides: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Resolve provider+model for a use case with fallback chain.
+
+    Resolution order:
+      1. SettingsStore (Redis) — admin-configured default
+      2. Environment variable — per-use-case env override
+      3. Hardcoded default — last resort
+
+    Args:
+        use_case: Logical use case (chat, embeddings, etc.)
+        redis_url: Redis connection URL override.
+        redis_client: Pre-created sync Redis client.
+        env_overrides: Optional dict of env var name->value overrides
+            for testing. When None, reads from os.environ.
+
+    Returns:
+        Dict with "provider" and "model" keys. Never returns None;
+        falls back to hardcoded defaults.
+    """
+    # 1. Try SettingsStore
+    default = get_default_sync(use_case, redis_url, redis_client)
+    if default and default.get("model"):
+        return {
+            "provider": default.get("provider", _USE_CASE_DEFAULT_PROVIDER),
+            "model": default["model"],
+        }
+
+    # 2. Try env var
+    env_var_name = _USE_CASE_ENV_VARS.get(use_case)
+    if env_var_name:
+        env_val: str | None = None
+        if env_overrides is not None:
+            env_val = env_overrides.get(env_var_name)
+        else:
+            env_val = os.getenv(env_var_name)
+        if env_val:
+            return {
+                "provider": _USE_CASE_DEFAULT_PROVIDER,
+                "model": env_val,
+            }
+
+    # 3. Hardcoded default
+    return {
+        "provider": _USE_CASE_DEFAULT_PROVIDER,
+        "model": _USE_CASE_DEFAULT_MODELS.get(
+            use_case, "gemini-2.5-flash-lite"
+        ),
+    }
+```
+
+### Why This Pattern
+
+| Concern | How It's Handled |
+|---------|-----------------|
+| Sync consumers | Direct call — no async needed |
+| Async consumers | Same function works; can also use `SettingsStore.get_default()` directly |
+| Redis down | Falls through to env var → hardcoded default |
+| Missing env var | Falls through to hardcoded default |
+| Provider always set | Returns `provider` in every case — no "accidentally works" name-based routing |
+| Testable | `env_overrides` dict avoids global state mutation in tests |
+
+### New Constants Are Single Source of Truth
+
+The `_USE_CASE_ENV_VARS` and `_USE_CASE_DEFAULT_MODELS` dicts centralize
+what was previously scattered across `AURA-CHAT/backend/utils/config.py` and
+`AURA-NOTES-MANAGER/api/config.py`. After wiring:
+
+- `config.LLM_ENTITY_EXTRACTION_MODEL` → still read as env fallback, but via
+  `resolve_use_case_config("entity_extraction")` instead of direct import
+- `config.RAG_ALLOWED_MODELS` → still used for chat config fallback list
+- `config.CHAT_MODELS_WITH_THINKING` → needs expansion (see below)
+
+---
+
+## Pattern for Each Consumer Type
+
+### Type A: Sync Consumers (most of them)
+
+These call `get_model()` directly or use Vertex AI SDK synchronously.
+
+**Files:** `llm_entity_extractor.py` (both apps), `llm_gatekeeper.py`,
+`embeddings.py` (both apps), `kg_processor.py`, `summarizer.py`
+
+**Before (broken):**
+```python
+# Reads model from env var, ignores provider entirely
+LLM_ENTITY_EXTRACTION_MODEL = os.getenv(
+    "LLM_ENTITY_EXTRACTION_MODEL", "gemini-2.5-flash-lite"
 )
+model = get_model(LLM_ENTITY_EXTRACTION_MODEL)
+```
 
-response = await client.chat.completions.create(
-    model="anthropic/claude-4.5-sonnet",
-    messages=[{"role": "user", "content": "Hello"}],
-    extra_headers={
-        "HTTP-Referer": "https://aura.edu",
-        "X-OpenRouter-Title": "AURA Learning Platform",
-    },
+**After (wired):**
+```python
+from model_router.settings_store import resolve_use_case_config
+
+_cfg = resolve_use_case_config("entity_extraction")
+_model = _cfg["model"]
+_provider = _cfg["provider"]  # Always present
+
+# When using ModelRouter directly:
+from model_router import get_default_router, GenerateRequest
+
+router = get_default_router()
+response = await router.generate(
+    GenerateRequest(
+        model=_model,
+        provider=_provider,  # Explicit — no name-based guessing
+        contents=prompt,
+        response_mime_type="application/json",
+    )
 )
 ```
 
-The `openai` SDK advantages over the official `openrouter` package:
-- **Stable API**: v2.26.0 with semantic versioning. The openrouter SDK (v0.7.11) warns of breaking changes without major bumps.
-- **Battle-tested**: Used by millions of developers; excellent typing, error handling, retry logic.
-- **Async-first**: `AsyncOpenAI` with native `asyncio` support, matching our FastAPI async patterns.
-- **Streaming**: Built-in SSE streaming that matches our existing `generate_content_stream` patterns.
-- **Community**: Extensive documentation, Stack Overflow answers, and examples.
+### Type B: Async FastAPI Consumers (chat already works)
 
-**Confidence: HIGH** -- Verified via OpenRouter official docs and PyPI.
+**Files:** `AURA-CHAT/server/routers/chat.py`
 
-### Why `ollama` for Local Models
+Chat already uses async `SettingsStore.get_default("chat")` via DI.
+The fix is minor: ensure `provider` is passed through to
+`rag_engine.set_model()` or the underlying `GenerateRequest`.
 
-The official `ollama` Python package (v0.6.1) is the only maintained client:
+**Current wiring (mostly correct):**
+```python
+_store = SettingsStore(get_redis())
+_default = await _store.get_default("chat")
+if _default and _default.get("model"):
+    rag_engine.set_model(_default["model"])
+    # _default["provider"] is available but not explicitly passed
+```
+
+**Fix:** Add provider passthrough to `RAGEngine` so that when it builds
+`GenerateRequest` internally, it includes the provider. Or use
+`resolve_use_case_config()` for consistency.
+
+### Type C: Background Task Consumers (ARQ workers)
+
+**Files:** `AURA-CHAT/backend/tasks/document_tasks.py`
+
+Background tasks run in separate processes. They should call
+`resolve_use_case_config()` at task start (not at module import time)
+to get fresh config from Redis.
+
+**Pattern:**
+```python
+async def process_document_task(ctx, document_id: str):
+    _cfg = resolve_use_case_config("entity_extraction")
+    extractor = LLMEntityExtractor(
+        model_name=_cfg["model"],
+        provider=_cfg["provider"],
+    )
+    # ... process
+```
+
+---
+
+## Provider Passthrough: Critical Detail
+
+The `ModelRouter._determine_provider_type()` already handles the `provider`
+field on `GenerateRequest`:
 
 ```python
-from ollama import AsyncClient
-
-client = AsyncClient(host="http://127.0.0.1:11434")
-
-# Chat
-response = await client.chat(
-    model="gemma3",
-    messages=[{"role": "user", "content": "Hello"}],
-)
-
-# Embeddings
-embeddings = await client.embed(
-    model="gemma3",
-    input="The sky is blue",
-)
-
-# List available models
-models = await client.list()
+# router.py:196-207
+def _determine_provider_type(self, request: GenerateRequest) -> ProviderType:
+    if request.provider:          # <- Explicit provider wins
+        return _coerce_provider_type(request.provider)
+    # Fallback: name-based heuristics
+    if "/" in model_name:
+        return ProviderType.OPENROUTER
+    return self._config.default_provider
 ```
 
-Key advantages:
-- **Official**: Maintained by Ollama team (MIT licensed, 9.5k GitHub stars).
-- **API parity**: Methods mirror the Ollama REST API exactly (`chat`, `generate`, `embed`, `list`).
-- **AsyncClient**: Native async support for FastAPI integration.
-- **Detection**: `client.list()` can check if Ollama is running and what models are available, enabling the "local detection" feature in the stub.
-- **httpx-based**: Same HTTP library already in our stack.
+**The problem is callers never set `request.provider`.** The fix is simple:
+every consumer must pass `provider` from `resolve_use_case_config()` into
+the `GenerateRequest` or `router.embed()` call.
 
-**Confidence: HIGH** -- Verified via official GitHub README and PyPI.
+### Where `provider` Must Be Passed
 
-### Why Custom Protocol Abstraction (not LiteLLM)
+| Consumer | Current Provider Handling | Fix Needed |
+|----------|--------------------------|------------|
+| `llm_entity_extractor.py` (CHAT) | Ignores `_default["provider"]` at line 307 | Pass to `GenerateRequest.provider` |
+| `llm_entity_extractor.py` (NOTES) | Reads `_default["provider"]` at line 204, ignores it | Pass to `GenerateRequest.provider` |
+| `embeddings.py` (CHAT) | Passes `provider=` to `router.embed()` at line 158 | Already correct — verify |
+| `embeddings.py` (NOTES) | Passes `provider=` to `router.embed()` | Already correct — verify |
+| `llm_gatekeeper.py` | Skips OpenRouter explicitly at line 153 | Remove skip + pass provider |
+| `kg_processor.py` | Uses `GeminiClient` — bypasses router entirely | Refactor to use router |
+| `summarizer.py` | Uses `genai_client` — bypasses router entirely | Refactor to use router |
 
-The model router needs a thin abstraction with two core methods: `generate()` and `embed()`. A Python Protocol-based approach is ideal:
+---
+
+## `ALLOWED_USE_CASES` Expansion
+
+**Current (both settings routers):**
+```python
+ALLOWED_USE_CASES = {"chat", "embeddings", "entity_extraction", "summarization"}
+```
+
+**Required additions:**
+```python
+ALLOWED_USE_CASES = {
+    "chat",
+    "embeddings",
+    "entity_extraction",
+    "summarization",
+    "gatekeeper",               # NEW
+    "relationship_extraction",  # NEW
+}
+```
+
+**Files to change:**
+- `AURA-CHAT/server/routers/settings.py:55`
+- `AURA-NOTES-MANAGER/api/settings.py` (does not exist — needs creation or
+  use AURA-CHAT's settings router via shared mounting)
+
+**Impact:** The settings UI in AURA-NOTES-MANAGER reads use cases from the
+API, so adding them to `ALLOWED_USE_CASES` auto-populates the UI.
+
+---
+
+## Gatekeeper: OpenRouter Structured Output Issue
+
+The gatekeeper skips OpenRouter because it requires
+`response_mime_type: "application/json"` for structured output.
+
+**Resolution (HIGH confidence):** OpenRouter now supports `response_mime_type`
+for Gemini models (passes through to Google's API). The blanket skip at
+lines 153-159 should be removed.
+
+**Instead of blanket skip, use provider-aware error handling:**
 
 ```python
-from typing import Protocol, AsyncIterator
+# Remove lines 153-159 (the OpenRouter skip)
+# Let ModelRouter route to OpenRouter if configured
+# If a specific model doesn't support it, the provider raises a clear error
 
-class LLMProvider(Protocol):
-    async def generate(
-        self, messages: list[Message], config: GenerationConfig
-    ) -> GenerationResult: ...
-
-    async def generate_stream(
-        self, messages: list[Message], config: GenerationConfig
-    ) -> AsyncIterator[StreamChunk]: ...
-
-    async def embed(
-        self, texts: list[str], model: str
-    ) -> list[list[float]]: ...
-
-    async def list_models(self) -> list[ModelInfo]: ...
-```
-
-Why not LiteLLM:
-- LiteLLM pulls in ~100 transitive dependencies (including its own httpx, aiohttp, tokenizers, etc.)
-- We only need 3 providers (Vertex AI, OpenRouter, Ollama). LiteLLM supports 100+.
-- LiteLLM's abstraction would fight with our existing Vertex AI wrapper patterns.
-- Our Protocol approach adds zero dependencies and gives us full control over error normalization, cost tracking hooks, and configuration.
-
-**Confidence: HIGH** -- Architecture decision based on codebase analysis.
-
-### Why `recharts` for Dashboard
-
-The cost/usage dashboard needs line charts (usage over time), bar charts (cost by provider/model), and pie charts (distribution). recharts v3.8.0 is the right choice:
-
-- **React-native**: Composable components (`<LineChart>`, `<BarChart>`, `<PieChart>`, `<AreaChart>`).
-- **Lightweight**: SVG-based with D3 submodule dependencies (not full D3).
-- **React 18 + 19 compatible**: Works with both AURA-CHAT and AURA-NOTES-MANAGER.
-- **Well-maintained**: v3.8.0 (MIT, widely adopted in React ecosystem).
-- **TailwindCSS friendly**: SVG output can be styled alongside existing Tailwind patterns.
-
-Only install in the app(s) that render the dashboard (likely AURA-NOTES-MANAGER for staff cost tracking, possibly AURA-CHAT for per-session usage display).
-
-**Confidence: MEDIUM** -- recharts v3 verified via official site; version confirmed. Exact component API not independently verified via Context7.
-
----
-
-## Shared Package Structure
-
-The `shared/model_router/` package at project root, importable by both apps:
-
-```
-AURA-PROJ/
-  shared/
-    model_router/
-      pyproject.toml          # Package definition
-      src/
-        model_router/
-          __init__.py          # Public API: ModelRouter, generate, embed
-          protocols.py         # LLMProvider Protocol definition
-          router.py            # ModelRouter class (provider registry, routing)
-          config.py            # ProviderConfig, RouterConfig (pydantic-settings)
-          schemas.py           # Message, GenerationResult, StreamChunk, ModelInfo, Usage
-          exceptions.py        # Normalized exceptions (ProviderError, RateLimitError, etc.)
-          tracking.py          # UsageTracker, CostCalculator
-          providers/
-            __init__.py
-            base.py            # Base provider with common patterns
-            vertex_ai.py       # Vertex AI provider (wraps existing vertex_ai_client.py)
-            openrouter.py      # OpenRouter provider (uses openai SDK)
-            ollama.py          # Ollama provider stub (uses ollama SDK)
-```
-
-**pyproject.toml** for the shared package:
-
-```toml
-[build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
-
-[project]
-name = "model-router"
-version = "0.1.0"
-requires-python = ">=3.10"
-dependencies = [
-    "pydantic>=2.6.0",
-    "pydantic-settings>=2.13.0",
-    "openai>=2.26.0",
-    "ollama>=0.6.1",
-    # Vertex AI deps already installed in root venv
-    "google-genai>=1.59.0",
-    "google-cloud-aiplatform>=1.71.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-]
-```
-
-**Installation** (both apps use root venv):
-
-```bash
-# From project root, install shared package in editable mode
-.venv/Scripts/pip install -e shared/model_router/
-```
-
-This means changes to `shared/model_router/` are immediately available to both apps without reinstallation.
-
----
-
-## Integration Points with Existing Stack
-
-### Backend (FastAPI)
-
-| Existing Component | Integration Approach |
-|-------------------|---------------------|
-| `AURA-CHAT/backend/utils/vertex_ai_client.py` | **Refactor into** `shared/model_router/providers/vertex_ai.py`. Keep existing public API (`get_model`, `generate_content`, `generate_content_stream`) as thin wrappers calling the new provider. |
-| `AURA-NOTES-MANAGER/services/vertex_ai_client.py` | Same pattern -- delegate to shared provider. Existing `get_model()` and `generate_content()` become pass-throughs. |
-| `AURA-CHAT/backend/rag_engine.py` | Inject `ModelRouter` via constructor/dependency. Replace direct `get_model()` calls with `router.generate()`. Phase migration -- old path works during transition. |
-| FastAPI `Depends()` | Register `ModelRouter` as a FastAPI dependency. Inject into routers that need LLM access. |
-| Pydantic schemas | Extend existing Pydantic patterns for provider config, usage tracking models. |
-| Redis (caching) | Use existing Redis for caching model lists, provider health status. No new infrastructure. |
-
-### Frontend (React/TypeScript)
-
-| Existing Component | Integration Approach |
-|-------------------|---------------------|
-| TanStack Query | Use for fetching provider configs, model lists, usage data. Standard `useQuery`/`useMutation` patterns. |
-| Zustand stores | Add `providerSettingsStore` for client-side settings state (selected provider, model preferences). |
-| Axios | Existing HTTP client for new API endpoints (`/api/settings/providers`, `/api/usage`). |
-| TailwindCSS | All settings/dashboard UI uses existing Tailwind classes + Cyber Yellow theme. |
-| lucide-react | Icons for provider logos, settings toggles, chart decorations. |
-| framer-motion | Animate settings panels, dashboard transitions. |
-
-### New API Endpoints Needed
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/providers` | GET | List configured providers with status |
-| `/api/v1/providers/models` | GET | List available models across providers |
-| `/api/v1/settings/provider` | GET/PUT | Global provider settings |
-| `/api/v1/sessions/{id}/provider` | GET/PUT | Per-session provider override |
-| `/api/v1/usage` | GET | Usage/cost data (with date range filters) |
-| `/api/v1/usage/summary` | GET | Aggregated cost summary for dashboard |
-
----
-
-## New Environment Variables
-
-| Variable | Description | Required By | Example |
-|----------|-------------|-------------|---------|
-| `OPENROUTER_API_KEY` | OpenRouter API key | Model Router | `sk-or-v1-abc123...` |
-| `OLLAMA_HOST` | Ollama server address | Model Router (optional) | `http://127.0.0.1:11434` |
-| `DEFAULT_PROVIDER` | Default LLM provider | Model Router | `vertex_ai` |
-| `DEFAULT_CHAT_MODEL` | Default model for chat | Model Router | `gemini-2.5-flash` |
-| `DEFAULT_EMBED_MODEL` | Default model for embeddings | Model Router | `text-embedding-004` |
-| `USAGE_TRACKING_ENABLED` | Enable cost/usage tracking | Model Router | `true` |
-| `MONTHLY_BUDGET_LIMIT` | Monthly spend cap (USD) | Model Router (optional) | `50.00` |
-
-Note: Existing `VERTEX_PROJECT`, `VERTEX_REGION`, `VERTEX_CREDENTIALS`, and `GOOGLE_APPLICATION_CREDENTIALS` remain unchanged for the Vertex AI provider.
-
----
-
-## Installation Summary
-
-### Python (Backend) -- New Dependencies
-
-```bash
-# Install to root venv (from project root)
-.venv/Scripts/pip install "openai>=2.26.0" "ollama>=0.6.1" "pydantic-settings>=2.13.0"
-
-# Install shared package in editable mode
-.venv/Scripts/pip install -e shared/model_router/
-```
-
-### JavaScript (Frontend) -- New Dependencies
-
-```bash
-# Install recharts in the app(s) that need the dashboard
-# AURA-NOTES-MANAGER (staff cost dashboard)
-cd AURA-NOTES-MANAGER/frontend && npm install recharts@^3.8.0
-
-# AURA-CHAT (optional -- per-session usage display)
-cd AURA-CHAT/client && npm install recharts@^3.8.0
-```
-
-### Updated Root requirements.txt Additions
-
-```txt
-# Multi-Provider LLM Support (v1.1)
-openai>=2.26.0
-ollama>=0.6.1
-pydantic-settings>=2.13.0  # upgrade from >=2.1.0
+try:
+    response = await router.generate(
+        GenerateRequest(
+            model=_gatekeeper_model,
+            provider=_gatekeeper_provider,
+            contents=prompt,
+            response_mime_type="application/json",
+        )
+    )
+except ModelRouterError as exc:
+    if "response_mime_type" in str(exc).lower():
+        # Specific model doesn't support structured output
+        logger.warning(
+            "Model %s doesn't support response_mime_type, "
+            "falling back to text extraction",
+            _gatekeeper_model,
+        )
+        response = await router.generate(
+            GenerateRequest(
+                model=_gatekeeper_model,
+                provider=_gatekeeper_provider,
+                contents=prompt,
+            )
+        )
+        # Parse JSON from text response manually
+    else:
+        raise
 ```
 
 ---
 
-## Alternatives Considered
+## Chat Config Fallback Fix
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| OpenRouter client | `openai` SDK (v2.26.0) | `openrouter` SDK (v0.7.11) | Beta quality, breaking changes between minor versions, less mature than openai SDK |
-| OpenRouter client | `openai` SDK (v2.26.0) | Raw `httpx` calls | Reinventing typed responses, streaming, retries. openai SDK handles all this. |
-| Provider abstraction | Custom Protocol | `litellm` (v1.x) | 100+ transitive deps, supports 100+ providers we do not need, fights existing Vertex AI patterns |
-| Provider abstraction | Custom Protocol | `langchain-core` | Heavy framework buy-in for a simple routing need |
-| Ollama client | `ollama` (v0.6.1) | Raw HTTP to Ollama REST API | Official client is thin and well-typed. No benefit to raw HTTP. |
-| Charts | `recharts` (v3.8.0) | `@nivo/core` | Heavier, more opinionated, not needed for simple cost charts |
-| Charts | `recharts` (v3.8.0) | `chart.js` + `react-chartjs-2` | Canvas-based (not SVG), harder to style with Tailwind |
-| Charts | `recharts` (v3.8.0) | `visx` (Airbnb) | Lower-level, requires more custom code for basic charts |
-| Config management | `pydantic-settings` (v2.13.0) | `python-decouple` | Already using pydantic-settings; no reason to add another config lib |
-| Shared package | `pip install -e` | Git submodule | Unnecessary complexity. Editable install is standard Python monorepo pattern. |
-| Shared package | `pip install -e` | Copy code to both apps | Violates DRY, maintenance nightmare for shared abstractions |
+**Problem:** When Redis is down, `/chat/config` returns hardcoded Vertex AI
+models (`RAG_ALLOWED_MODELS`) and thinking mode lists only Vertex AI models.
+
+**Recommended approach — Dynamic with graceful degradation:**
+
+```python
+@router.get("/config")
+async def get_config():
+    try:
+        router_inst = get_default_router()
+        model_infos = await router_inst.list_models()
+        allowed_models = [m.id for m in model_infos]
+    except Exception:
+        # Fallback: try resolve_use_case_config for chat default
+        # + env-based model list
+        _cfg = resolve_use_case_config("chat")
+        allowed_models = [_cfg["model"]] + config.RAG_ALLOWED_MODELS
+        allowed_models = list(dict.fromkeys(allowed_models))  # dedupe
+
+    # Thinking models: known list expanded for multi-provider
+    thinking_models = list(config.CHAT_MODELS_WITH_THINKING)
+    _OPENROUTER_THINKING_MODELS = [
+        "google/gemini-2.0-flash-thinking",
+        "google/gemini-2.5-flash",
+        "google/gemini-2.5-pro",
+    ]
+    thinking_models.extend(_OPENROUTER_THINKING_MODELS)
+
+    return {
+        "allowed_models": allowed_models,
+        "default_model": config.RAG_MODEL_DEFAULT,
+        "thinking": {
+            "enabled": config.ENABLE_THINKING,
+            "supported_models": thinking_models,
+            "enabled_modes": config.THINKING_ENABLED_MODES,
+        },
+    }
+```
+
+**Longer-term:** Add a `supports_thinking` flag to `ModelInfo` metadata
+so the thinking capability list is derived from provider capabilities,
+not hardcoded.
 
 ---
 
-## Version Compatibility Matrix
+## Integration with Existing ModelRouter
 
-| New Dependency | Python | Existing Deps | Compatible? |
-|----------------|--------|---------------|-------------|
-| `openai>=2.26.0` | >=3.9 (our 3.11+) | `httpx>=0.25.0` (openai uses httpx internally) | YES |
-| `ollama>=0.6.1` | >=3.8 (our 3.11+) | `httpx>=0.25.0` (ollama uses httpx internally) | YES |
-| `pydantic-settings>=2.13.0` | >=3.10 (our 3.11+) | `pydantic>=2.6.0` (already installed) | YES |
-| `recharts@^3.8.0` | N/A | React 18.3+ and React 19.2+ | YES (both) |
+### What Already Works (Do NOT Change)
+- `ModelRouter.generate()` accepts `provider` on `GenerateRequest`
+- `ModelRouter.embed()` accepts `provider` as keyword argument
+- `_determine_provider_type()` checks `request.provider` first
+- Lazy OpenRouter registration from `KeyManager` works
+- `get_default_sync()` provides 5-minute cached Redis reads
+- `SettingsStore` async class API is complete
+- `GenerateRequest.provider` field exists at `types.py:41`
 
-No known conflicts between new and existing dependencies. Both `openai` and `ollama` use `httpx` internally, which is already in our dependency tree.
+### What Needs Addition
+1. `resolve_use_case_config()` — centralized resolution function
+   in `shared/model_router/src/model_router/settings_store.py`
+2. `ALLOWED_USE_CASES` expansion — add `gatekeeper` and
+   `relationship_extraction` to both settings routers
+3. Provider passthrough in all consumers — 6 files need `_provider` passed
+   to `GenerateRequest.provider` or `router.embed(provider=...)`
+4. `kg_processor.py` — refactor `GeminiClient` to use ModelRouter for
+   entity extraction (embeddings already go through router)
+5. `summarizer.py` — refactor from `genai_client` to ModelRouter
+
+### What Should NOT Change
+- `ModelRouter` internals — routing logic is correct
+- `SettingsStore` class — async API is fine as-is
+- `KeyManager` — no changes needed
+- `GenerateRequest` / `GenerateResponse` types — provider field exists
+- Embedding services — provider passthrough already works
+
+---
+
+## Module-Level vs Instance-Level SettingsStore Reads
+
+### Anti-Pattern: Module-Level Read (Current in NOTES entity extractor)
+
+```python
+# services/llm_entity_extractor.py:204-222
+# This runs ONCE at import time — never updates without restart
+_LLM_ENTITY_EXTRACTION_DEFAULT = get_default_sync("entity_extraction", ...)
+LLM_ENTITY_EXTRACTION_MODEL = _LLM_ENTITY_EXTRACTION_DEFAULT["model"]
+```
+
+**Problem:** Settings read at import time. If admin changes the setting,
+the process must restart to pick it up. The 5-minute cache in
+`get_default_sync` doesn't help because the cached value is assigned
+to a module-level constant.
+
+**Fix:** Move to instance-level or function-level reads:
+
+```python
+class LLMEntityExtractor:
+    def __init__(self, model_name: str | None = None):
+        if model_name is None:
+            _cfg = resolve_use_case_config("entity_extraction")
+            model_name = _cfg["model"]
+            self._provider = _cfg["provider"]
+        # ...
+```
+
+### Pattern: Instance-Level Read (Recommended)
+
+```python
+class SomeProcessor:
+    def __init__(self):
+        _cfg = resolve_use_case_config("entity_extraction")
+        self._model = _cfg["model"]
+        self._provider = _cfg["provider"]
+        # Each instance gets fresh config from SettingsStore cache
+```
+
+The 5-minute TTL cache in `get_default_sync` handles performance — each
+call doesn't hit Redis, but the value can update within 5 minutes of
+an admin change.
+
+---
+
+## Recommended Dependency Additions
+
+No new packages needed. The wiring uses only existing shared packages:
+
+```python
+# Already available — just import from shared model_router
+from model_router.settings_store import resolve_use_case_config  # NEW function
+from model_router.settings_store import get_default_sync          # EXISTS
+from model_router import get_default_router, GenerateRequest      # EXISTS
+```
 
 ---
 
@@ -354,12 +469,15 @@ No known conflicts between new and existing dependencies. Both `openai` and `oll
 
 | Claim | Source | Confidence |
 |-------|--------|------------|
-| openai SDK v2.26.0 supports custom base_url | PyPI page (verified 2026-03-10) | HIGH |
-| OpenRouter recommends openai SDK approach | OpenRouter quickstart docs (verified 2026-03-10) | HIGH |
-| openrouter SDK v0.7.11 is beta with breaking changes | PyPI page description (verified 2026-03-10) | HIGH |
-| ollama v0.6.1 has chat/generate/embed/list | GitHub README + PyPI (verified 2026-03-10) | HIGH |
-| ollama AsyncClient for async support | GitHub README (verified 2026-03-10) | HIGH |
-| pydantic-settings v2.13.1 supports nested models | PyPI page (verified 2026-03-10) | HIGH |
-| recharts v3.8.0 works with React 18 and 19 | Official recharts.github.io (verified 2026-03-10) | MEDIUM |
-| OpenRouter API at /api/v1 is OpenAI-compatible | OpenRouter docs + OpenAPI spec (verified 2026-03-10) | HIGH |
-| httpx v0.28.1 is compatible with both openai and ollama | PyPI pages for all three packages (verified 2026-03-10) | HIGH |
+| `ModelRouter._determine_provider_type()` checks `request.provider` first | `shared/model_router/src/model_router/router.py:196-207` | HIGH |
+| `GenerateRequest` has `provider` field | `shared/model_router/src/model_router/types.py:41` | HIGH |
+| `get_default_sync()` returns `{provider, model}` | `shared/model_router/src/model_router/settings_store.py:45-101` | HIGH |
+| Chat wiring reads from SettingsStore | `AURA-CHAT/server/routers/chat.py:368-379` | HIGH |
+| Gatekeeper skips OpenRouter | `AURA-CHAT/backend/llm_gatekeeper.py:153-159` | HIGH |
+| Entity extraction ignores provider | `AURA-CHAT/backend/llm_entity_extractor.py:307-320` | HIGH |
+| KG processor bypasses SettingsStore | `AURA-NOTES-MANAGER/api/kg_processor.py:465` | HIGH |
+| Module-level SettingsStore read (anti-pattern) | `AURA-NOTES-MANAGER/services/llm_entity_extractor.py:204-222` | HIGH |
+| Embeddings passes provider to router | `AURA-CHAT/backend/utils/embeddings.py:154-161` | HIGH |
+| `ALLOWED_USE_CASES` missing gatekeeper | `AURA-CHAT/server/routers/settings.py:55` | HIGH |
+| OpenRouter supports response_mime_type for Gemini | OpenRouter API docs (verified 2026-03) | HIGH |
+| NOTES-MANAGER has no settings.py router | File search confirmed absence | HIGH |

@@ -1,313 +1,337 @@
-# Feature Landscape: Multi-Provider LLM Architecture
+# Feature Landscape: SettingsStore E2E Wiring
 
-**Domain:** Multi-provider LLM abstraction layer for academic RAG platform
-**Researched:** 2026-03-10
-**Confidence:** HIGH (OpenRouter/Ollama APIs verified via official docs, LiteLLM patterns verified, existing codebase analyzed)
-
----
+**Domain:** Multi-provider LLM configuration consistency across dual-app platform
+**Researched:** 2026-03-23
 
 ## Table Stakes
 
-Features users expect from a multi-provider LLM system. Missing any of these makes the feature feel broken or incomplete.
+Features that MUST work for this milestone to ship. Missing any = settings page
+is still misleading.
 
-### TS-1: Unified generate() Interface
+### 1. All Use Cases Configurable via Settings API
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Single `generate(prompt, config)` function that routes to the correct provider, hiding provider-specific SDKs |
-| **Why Expected** | This IS the core abstraction. Without it, callers must write provider-specific code and the entire milestone is pointless |
-| **Complexity** | Medium |
-| **AURA Dependency** | Replaces direct calls to `vertex_ai_client.get_model()` + `generate_content()` in both apps. AURA-CHAT's `rag_engine.py` and AURA-NOTES-MANAGER's `summarizer.py` are the primary consumers |
-| **Notes** | Must support both sync and async. Current AURA-CHAT uses `async` throughout (`generate_content_stream` is an `AsyncGenerator`). The interface should accept a model identifier string (e.g., `vertex_ai/gemini-2.5-flash`, `openrouter/anthropic/claude-sonnet-4`) and route accordingly. LiteLLM's prefix-based routing pattern is the proven approach here |
+**Why Expected:** The settings UI promises per-use-case defaults. If a use case
+cannot be configured via the API, the UI cannot control it. Currently
+`gatekeeper` and `relationship_extraction` return 400 on PUT.
 
-### TS-2: Unified embed() Interface
+| Use Case | Where It Lives Today | Current Read Pattern | Target |
+|----------|---------------------|---------------------|--------|
+| `chat` | SettingsStore (working) | `get_default_sync("chat")` | Already wired |
+| `embeddings` | SettingsStore (working) | `get_default_sync("embeddings")` — model read, provider fragile | Fix provider passthrough |
+| `entity_extraction` | SettingsStore (working) | `get_default_sync("entity_extraction")` in CHAT and NOTES services; env var in NOTES kg_processor | Wire kg_processor |
+| `summarization` | SettingsStore (working) | `get_default_sync("summarization")` in services/summarizer | Route through ModelRouter |
+| `gatekeeper` | **MISSING** from `ALLOWED_USE_CASES` | `get_default_sync("gatekeeper")` called, but API rejects config | Add to API + UI |
+| `relationship_extraction` | **MISSING entirely** | `LLM_RELATIONSHIP_MODEL` env var only | Add to API, SettingsStore, UI |
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Single `embed(text_or_texts, config)` function that produces embedding vectors regardless of provider |
-| **Why Expected** | AURA has TWO separate EmbeddingService implementations (AURA-CHAT and AURA-NOTES-MANAGER) both tightly coupled to Vertex AI. Embeddings are foundational to the RAG pipeline |
-| **Complexity** | High |
-| **AURA Dependency** | AURA uses 768-dimensional vectors from `text-embedding-004` stored in Neo4j HNSW indices. Changing embedding providers changes vector dimensions, which means ALL existing embeddings in Neo4j become incompatible. This is the single hardest migration constraint |
-| **Notes** | Embedding provider switching is NOT the same as chat model switching. Embeddings must remain consistent within a deployment. The `embed()` interface should exist for future flexibility, but the actual provider should be locked per-deployment (not per-session). OpenRouter supports embeddings via a dedicated endpoint. Ollama supports embeddings via `/api/embed`. Vertex AI uses `TextEmbeddingModel`. Dimension differences: OpenAI ada-002=1536, text-embedding-3-small=1536 (configurable), Vertex text-embedding-004=768, Cohere embed-v3=1024. Changing dimensions requires re-indexing |
+**Complexity:** Low — constant change in two files + type union update
 
-### TS-3: Streaming Response Support
+**Files:**
+- `AURA-CHAT/server/routers/settings.py:55` — add `"gatekeeper"`, `"relationship_extraction"`
+- `AURA-NOTES-MANAGER/api/routers/settings.py:55` — same
+- `AURA-NOTES-MANAGER/frontend/src/types/settings.ts:32` — update `UseCase` union
+- `AURA-NOTES-MANAGER/frontend/src/features/settings/components/DefaultModelSection.tsx:44-48` — add to `USE_CASES` array
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | All providers stream responses through a normalized SSE format to the frontend |
-| **Why Expected** | AURA-CHAT already streams via `generate_content_stream()` using SSE. Users see tokens appear in real-time. Removing streaming for non-Vertex providers would be a visible regression |
-| **Complexity** | Medium-High |
-| **AURA Dependency** | `AURA-CHAT/server/routers/chat.py` uses `StreamingResponse` with `AsyncGenerator`. The current `_normalize_stream_chunk()` in `vertex_ai_client.py` normalizes Vertex-specific chunks. Each provider has different streaming formats that must converge into AURA's existing `{type: "thinking"|"content", text: "..."}` chunk shape |
-| **Notes** | Vertex AI streams via google-genai SDK (sync iterator wrapped in `asyncio.to_thread`). OpenRouter streams SSE with `delta` chunks (OpenAI-compatible format). Ollama streams newline-delimited JSON objects. All three must normalize into the same downstream format. The key challenge is that streaming complicates cost tracking since token counts arrive incrementally (or only at stream end) |
+---
 
-### TS-4: Provider Configuration (Global Defaults)
+### 2. Provider Field Respected Everywhere
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | A settings page where staff/admin sets default provider and model for each use case (chat generation, embeddings, entity extraction, summarization) |
-| **Why Expected** | Without global defaults, every session starts unconfigured. Users need a "set it and forget it" experience for the common case |
-| **Complexity** | Medium |
-| **AURA Dependency** | Currently hardcoded: `RAG_MODEL_DEFAULT = "gemini-2.5-flash-lite"` in `rag_engine.py`, `EMBEDDING_MODEL` in config files. These become configurable values stored in a config store (Redis, Firestore, or a dedicated config table) |
-| **Notes** | Configuration hierarchy: Environment variables (deployment) -> Global settings (admin UI) -> Per-session override (user). Each level overrides the one above it. Store in Redis for fast reads since every request needs the current config |
+**Why Expected:** The whole point of multi-provider support is that selecting
+`"openrouter"` as the provider actually routes through OpenRouter. If the
+`provider` field is ignored, only the `model` field matters — the settings
+UI's provider selector is decorative.
 
-### TS-5: Per-Session Model Override
+**Current State — Provider Passthrough Matrix:**
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Students can select a different chat model for their study session, overriding the global default |
-| **Why Expected** | This is the primary user-facing value of multi-provider support. "Try Claude for this topic" or "Use a cheaper model for quick questions" |
-| **Complexity** | Low-Medium |
-| **AURA Dependency** | AURA-CHAT already has `StudySession` nodes in Neo4j with configurable properties. Add `model_id` field to session. The `ChatRequest` schema already accepts a `model` parameter. The override persists for the session duration |
-| **Notes** | Session model override should NOT change embedding provider (embeddings must stay consistent for vector search). Only the generation model changes. The model selector in the chat UI should show which model is active and allow mid-session switching |
+| Consumer | SettingsStore Read | Provider Used? | Gap |
+|----------|-------------------|----------------|-----|
+| AURA-CHAT chat | `get_default_sync("chat")` | YES — passed to `GenerateRequest.provider` | Working |
+| AURA-CHAT entity_extractor | `get_default_sync("entity_extraction")` | NO — reads `model` only, relies on `/` heuristic | Must pass provider |
+| AURA-CHAT gatekeeper | `get_default_sync("gatekeeper")` | NO — explicitly skips OpenRouter, uses Vertex only | Must remove skip |
+| AURA-CHAT embeddings | `get_default_sync("embeddings")` | Fragile — model override but provider inconsistency | Must pass provider to `router.embed()` |
+| AURA-CHAT relationship extraction | Not read at all | N/A — env var only | Must add SettingsStore + provider |
+| NOTES kg_processor | Not read at all | N/A — env var `LLM_ENTITY_EXTRACTION_MODEL` to `GeminiClient` | Must add SettingsStore + provider |
+| NOTES services/entity_extractor | `get_default_sync("entity_extraction")` | NO — reads model only | Must pass provider |
+| NOTES services/embeddings | `get_default_sync("embeddings")` | Fragile — same pattern as CHAT | Must pass provider |
+| NOTES services/summarizer | `get_default_sync("summarization")` | NO — reads model only, uses Vertex SDK directly | Must route through ModelRouter |
 
-### TS-6: Error Handling Normalization
+**Complexity:** Medium — touching 8+ files across both apps
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | All provider errors map to a unified error hierarchy (auth errors, rate limits, content policy, model unavailable, timeout) |
-| **Why Expected** | Without this, the frontend must handle N different error shapes. Users see cryptic provider-specific errors instead of actionable messages |
-| **Complexity** | Medium |
-| **AURA Dependency** | AURA already has `VertexAIRequestError` with `model`, `location`, `operation`, `original` fields. Generalize this to `ProviderError` with the same shape plus a `provider` field. Both apps' error handlers in `main.py` need updating |
-| **Notes** | LiteLLM's approach of mapping all exceptions to OpenAI-compatible types is proven. Key error categories: `AuthenticationError` (bad API key), `RateLimitError` (429), `ContentPolicyError` (safety filters), `ModelNotFoundError` (invalid model), `ProviderUnavailableError` (503/timeout), `InsufficientCreditsError` (OpenRouter-specific). Each should carry the original error for logging |
+**Pattern to Follow:**
+```python
+# Correct: pass both provider and model
+_default = get_default_sync("entity_extraction", redis_url=redis_url)
+if _default:
+    provider = _default.get("provider")
+    model = _default.get("model")
+    response = await router.generate(
+        model=model,
+        provider=provider,  # Explicit provider, don't rely on heuristics
+        ...
+    )
+```
 
-### TS-7: Model Discovery / Listing
+---
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | The system knows what models are available from each configured provider and exposes this to the UI |
-| **Why Expected** | The model selector needs to show real, available models -- not a hardcoded list that goes stale. Users need to see model names, capabilities, and pricing |
-| **Complexity** | Medium |
-| **AURA Dependency** | Currently `RAG_ALLOWED_MODELS` is a hardcoded list in `rag_engine.py`. Replace with dynamic discovery: Vertex AI models from config, OpenRouter models from `GET /api/v1/models`, Ollama models from `GET /api/tags` |
-| **Notes** | Cache model lists (refresh every 15-60 minutes for cloud providers, every 5 minutes for local Ollama). OpenRouter returns model metadata including pricing, context length, and capabilities. Ollama returns locally installed models with family/parameter info. Vertex AI models are known at configuration time (no discovery API needed -- use a curated list of supported Gemini models) |
+### 3. No Silent Env-Var Fallbacks When SettingsStore Has a Value
 
-### TS-8: API Key Management
+**Why Expected:** If an admin configures a model in the settings page, that
+should be authoritative. Silent fallback to env vars makes the settings page
+a lie.
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Secure storage and validation of API keys for each provider (OpenRouter API key, Vertex AI credentials, Ollama needs no key) |
-| **Why Expected** | Multi-provider means multi-credential. Users need to enter and validate keys without exposing them |
-| **Complexity** | Low-Medium |
-| **AURA Dependency** | Vertex AI already uses environment variables (`VERTEX_PROJECT`, `VERTEX_CREDENTIALS`, `GOOGLE_APPLICATION_CREDENTIALS`). Add `OPENROUTER_API_KEY` for OpenRouter. Ollama requires no authentication (dummy key accepted). Store encrypted in environment or secrets manager -- NOT in database |
-| **Notes** | Validation: call a lightweight endpoint to verify key validity (OpenRouter: `GET /api/v1/auth/key` returns remaining credits; Ollama: `GET /api/version` confirms reachability; Vertex AI: existing ADC check). Show validation status in settings UI. Never expose full keys in UI -- show masked versions |
+**Current Violations:**
+
+| File | Issue |
+|------|-------|
+| `AURA-CHAT/backend/llm_gatekeeper.py:153-159` | Silently skips OpenRouter even when explicitly configured |
+| `AURA-CHAT/backend/utils/config.py:59-63` | `RAG_ALLOWED_MODELS` hardcodes Vertex-only models as chat config fallback |
+| `AURA-CHAT/backend/utils/config.py:199-206` | `CHAT_MODELS_WITH_THINKING` hardcodes Vertex-only models |
+| `AURA-NOTES-MANAGER/api/config.py:62-73` | `LLM_ENTITY_EXTRACTION_MODEL`, `LLM_SUMMARIZATION_MODEL`, `EMBEDDING_MODEL` env vars used as primary source in kg_processor |
+
+**Expected Behavior:** When SettingsStore is reachable and returns a value, that
+value wins. Env vars serve as bootstrap defaults only — they must not shadow
+admin-configured settings.
+
+---
+
+### 4. Graceful Degradation When SettingsStore Is Unavailable
+
+**Why Expected:** Redis may be down during startup or intermittently. The system
+must not crash — it should degrade visibly, not silently.
+
+**Required Behaviors:**
+
+| Scenario | Expected | Current |
+|----------|----------|---------|
+| Redis down at startup | Log warning, use env var defaults, retry on next call | Partially works — `get_default_sync` catches exceptions and returns None, callers fall through to env vars |
+| Redis comes back mid-operation | Cache TTL (5 min) picks up new values | Works via `_DEFAULTS_CACHE_TTL` |
+| Redis down during settings page load | API returns error (500), UI shows "unable to load" | Works (FastAPI raises) |
+| Redis down during chat config fetch | Return env var fallback list, log warning | Works but returns Vertex-only list (see gap below) |
+
+**Key Gap:** The chat config fallback (`RAG_ALLOWED_MODELS`) should include
+models from all registered providers, not just Vertex AI. This is a
+differentiator (Feature 8) and can be deferred.
+
+---
+
+### 5. Gatekeeper Works with OpenRouter (No Silent Skip)
+
+**Why Expected:** If the admin configures gatekeeper to use an OpenRouter model,
+it should route through OpenRouter. The current explicit skip at
+`llm_gatekeeper.py:153-159` was added because gatekeeper requires
+`response_mime_type: "application/json"`, which was assumed to be Vertex-only.
+
+**Investigation Required:** Whether OpenRouter models (especially
+`google/gemini-*` via OpenRouter) support `response_mime_type`. If not, this
+needs provider-specific handling rather than a blanket skip.
+
+**Complexity:** Medium — requires testing OpenRouter's JSON mode support
+
+**Acceptance Criteria:**
+- If OpenRouter supports JSON mode: remove skip, route through ModelRouter
+- If not: replace silent skip with documented capability check, clear log
+  message, and provider-aware fallback (not generic env var)
+
+---
+
+### 6. Summarizer Routes Through ModelRouter
+
+**Why Expected:** The summarizer in `AURA-NOTES-MANAGER/services/summarizer.py`
+reads the model from SettingsStore but calls the Vertex AI SDK directly
+(`get_model()` from `vertexai`). It never goes through `ModelRouter.generate()`.
+Selecting OpenRouter as the summarization provider is impossible.
+
+**Current Pattern (Wrong):**
+```python
+_summarization_model = LLM_SUMMARIZATION_MODEL
+_admin_default = get_default_sync("summarization", redis_url=REDIS_URL)
+if _admin_default:
+    _summarization_model = _admin_default["model"]
+# Then calls Vertex SDK directly — provider field ignored entirely
+```
+
+**Target Pattern:**
+```python
+_default = get_default_sync("summarization", redis_url=REDIS_URL)
+if _default:
+    provider = _default.get("provider")
+    model = _default.get("model")
+# Route through ModelRouter.generate() with explicit provider
+```
+
+**Complexity:** Medium — summarizer uses synchronous Vertex SDK pattern;
+needs async ModelRouter integration or sync wrapper.
 
 ---
 
 ## Differentiators
 
-Features that set the product apart. Not expected by all users, but significantly increase value.
+Features that go beyond basic wiring. Valued, but not required for this milestone.
 
-### D-1: Hierarchical Provider Selection UI
+### 7. Dynamic Thinking Mode Model List
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | A 2-level selector for Vertex AI/Ollama (Provider -> Model) and 3-level selector for OpenRouter (Provider -> Vendor -> Model) that makes browsing 200+ models manageable |
-| **Why Expected** | N/A (differentiator) |
-| **Value Proposition** | OpenRouter exposes 200+ models from dozens of vendors. A flat list is unusable. Grouping by vendor (OpenAI, Anthropic, Meta, Google, Mistral, etc.) makes selection fast. TypingMind proves search+filter+sort is the pattern users love |
-| **Complexity** | Medium |
-| **AURA Dependency** | OpenRouter model IDs already use `vendor/model` format (e.g., `anthropic/claude-sonnet-4`, `openai/gpt-4o`). Parse the vendor prefix for grouping. Vertex AI and Ollama are simpler (no vendor level needed) |
-| **Notes** | UI pattern: Provider tabs (Vertex AI / OpenRouter / Ollama) -> within OpenRouter, collapsible vendor groups -> model cards within each group showing name, context length, price per token. Include search/filter within the selector. Show a "Recently Used" section at the top for quick access |
+**Value:** Instead of hardcoding `CHAT_MODELS_WITH_THINKING` in config.py,
+derive thinking-capable models from the provider's model metadata. OpenRouter
+models like `google/gemini-2.0-flash-thinking` would automatically appear as
+thinking-capable.
 
-### D-2: Inline Contextual Model Selector
+**Complexity:** High — requires model capability metadata from providers
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | A compact model picker embedded directly in the chat interface (next to the send button or in the session header) allowing quick model switches without navigating to settings |
-| **Why Expected** | N/A (differentiator) |
-| **Value Proposition** | Reduces friction from "open settings -> change model -> go back to chat" to a single click. ChatGPT, Claude, and TypingMind all use this pattern (model selector at top of chat). Mid-chat model switching is a power-user feature that dramatically improves exploration |
-| **Complexity** | Low-Medium |
-| **AURA Dependency** | AURA-CHAT's study session sidebar already shows session metadata. Add a compact model indicator (e.g., pill showing "Gemini 2.5 Flash") that expands into a dropdown. Changes propagate to the session's `model_id` |
-| **Notes** | Show only recently used + favorited models in the inline selector for speed. Full model browser available via "Browse all models" link that opens the hierarchical selector. Display current model's cost-per-token as a subtle indicator |
+**Recommendation:** Defer. For now, add a comment in config.py that the list
+must be manually updated when new providers are added. A future milestone can
+add capability metadata to `ModelInfo`.
 
-### D-3: Usage Tracking with Cost Dashboard
+---
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Track token usage and cost per request, aggregate by session/user/model/provider, display in a dashboard with charts |
-| **Why Expected** | N/A (differentiator) |
-| **Value Proposition** | Academic platforms have tight budgets. Seeing "this session cost $0.12" or "Claude costs 5x more than Gemini Flash for similar quality" enables informed model selection. No competitor in the academic RAG space does this well |
-| **Complexity** | High |
-| **AURA Dependency** | Create a `UsageRecord` model stored in Firestore or a dedicated table. Each AI call logs: `provider`, `model`, `input_tokens`, `output_tokens`, `cost`, `session_id`, `user_id`, `timestamp`, `operation` (chat/embed/extract). OpenRouter returns `cost` directly in the usage response. Vertex AI pricing must be calculated from token counts + known rates. Ollama is free (local) |
-| **Notes** | Dashboard views: daily/weekly/monthly cost charts, cost breakdown by provider, cost per session, top models by usage, cost trend over time. For OpenRouter, cost data comes from the response `usage.cost` field. For Vertex AI, calculate from published pricing tables (store as config). Real-time cost display: show running session cost in the chat UI |
+### 8. Chat Config Fallback Includes All Providers
 
-### D-4: Budget Controls with Alerts
+**Value:** When the model router is unavailable, the chat config endpoint
+should return a fallback list that includes models from all registered
+providers, not just Vertex AI. This prevents OpenRouter models from
+disappearing from the UI during Redis outages.
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Set spending limits (daily, weekly, monthly) per provider or globally. Alert when approaching limit. Block requests when exceeded |
-| **Why Expected** | N/A (differentiator) |
-| **Value Proposition** | Prevents runaway costs in an academic setting. A student accidentally running expensive queries in a loop could burn through a department's budget. This is a safety net |
-| **Complexity** | Medium-High |
-| **AURA Dependency** | Requires the usage tracking system (D-3) as a foundation. Budget state stored in Redis for fast check on every request. Budget enforcement happens in the model router before dispatching to provider |
-| **Notes** | Budget hierarchy: Global budget -> Per-provider budget -> Per-user budget (optional). When budget is hit: block new requests with a clear error message, optionally auto-downgrade to a cheaper model instead of blocking. Alert at 80% and 95% thresholds via UI notification. OpenRouter has its own credit system; integrate with `GET /api/v1/auth/key` to show remaining OpenRouter credits alongside internal budget tracking |
+**Complexity:** Medium — requires reading model list from a non-Redis source
 
-### D-5: Thinking Mode Standardization
+**Recommendation:** Defer to a resilience milestone. For now, document the
+Vertex-only fallback behavior.
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Normalize thinking/reasoning mode across providers so users get a consistent "show me the reasoning" experience regardless of model |
-| **Why Expected** | N/A (differentiator, but close to table stakes given AURA already has thinking mode for Vertex AI) |
-| **Value Proposition** | AURA-CHAT already supports Gemini thinking mode with `ThinkingConfig`. Extending this to Claude's extended thinking, DeepSeek R1, and OpenAI o-series reasoning provides a unified educational experience. Seeing the model's reasoning process is pedagogically valuable |
-| **Complexity** | High |
-| **AURA Dependency** | Current implementation in `vertex_ai_client.py` uses `types.ThinkingConfig` with `thinking_level` or `thinking_budget`. The `_normalize_stream_chunk()` function already separates thinking vs content parts. This normalization must extend to all providers |
-| **Notes** | Provider differences are significant: Gemini uses `thinking_config` with levels/budgets and returns `thought` parts. Anthropic uses `thinking` param with `budget_tokens` and returns `thinking_blocks` with `signature` (stateless -- client must resend blocks). OpenAI o-series uses `reasoning_effort` (stateful -- server stores reasoning). DeepSeek returns `reasoning_content`. OpenRouter normalizes some of this with `reasoning` output items that include a `format` field identifying the upstream provider format (`google-gemini-v1`, `anthropic-claude-v1`, etc.). The unified interface should: (a) accept a boolean `enable_thinking` + optional `thinking_budget`, (b) return thinking content in a standardized format, (c) handle the stateful vs stateless difference transparently |
+---
 
-### D-6: Provider Fallback
+### 9. Health Indicator for SettingsStore Connectivity
 
-| Aspect | Detail |
-|--------|--------|
-| **What** | Automatic failover to an alternate provider/model when the primary is unavailable (rate limited, down, or erroring) |
-| **Why Expected** | N/A (differentiator) |
-| **Value Proposition** | Academic use peaks around exams. If Vertex AI rate-limits, automatically falling back to OpenRouter keeps students studying. Zero downtime from provider outages |
-| **Complexity** | Medium-High |
-| **AURA Dependency** | The model router needs a fallback chain configuration: e.g., `gemini-2.5-flash` -> `openrouter/google/gemini-2.5-flash` -> `openrouter/anthropic/claude-3.5-haiku`. Fallback triggers: HTTP 429 (rate limit), 503 (unavailable), timeout (>30s), authentication failure |
-| **Notes** | LiteLLM's cooldown pattern is proven: on failure, cool down the failing deployment for N seconds, route to next in chain. Track health per-provider. Key design decision: fallback should be transparent to the user (they see the response, with a subtle indicator showing which model actually responded) OR explicit (ask user "Primary model unavailable, try X instead?"). Transparent is better UX for academic context. Log which fallback was used for cost attribution |
+**Value:** The settings page could show whether SettingsStore (Redis) is
+reachable, so admins know if their changes will actually take effect.
+
+**Complexity:** Low — add a health check endpoint
+
+**Recommendation:** Nice-to-have if time permits. Not blocking.
 
 ---
 
 ## Anti-Features
 
-Features to explicitly NOT build. Tempting but counterproductive.
+Things to explicitly NOT do in this milestone.
 
-### AF-1: User-Facing Embedding Provider Switching
+### Don't: Add New Providers
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Letting users change the embedding model/provider per session | Changing embedding models invalidates all existing vectors in Neo4j. A session using OpenAI embeddings cannot search against Gemini-embedded content -- cosine similarity across different embedding spaces is meaningless | Lock embedding provider at deployment level. Only changeable by admin, requires full re-indexing. The `embed()` interface exists for future flexibility and for supporting multiple deployment configurations, not for per-user switching |
+This is a wiring milestone, not a provider milestone. The existing providers
+(Vertex AI, OpenRouter, Ollama stub) are sufficient. Adding more providers
+would expand scope without addressing the core problem.
 
-### AF-2: Real-Time Provider Price Comparison
+### Don't: Refactor SettingsStore to Async-Only
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Building a live price comparison engine that fetches and compares pricing across all providers before each request | Adds latency to every request, pricing APIs are not real-time, and the complexity is enormous for marginal value | Cache pricing data from OpenRouter's model listing (includes `pricing` field). Update daily. Show static price indicators in the model selector. Good enough for decision-making without the complexity |
+`get_default_sync()` exists because many consumers are synchronous (embedding
+services, entity extractors run in thread pools). Removing the sync path would
+require async-ifying every consumer — scope creep.
 
-### AF-3: Build Your Own LLM Proxy/Gateway
+### Don't: Change the Redis Schema
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Building a full proxy server that sits between AURA and providers (like a self-hosted LiteLLM proxy) | Massive scope creep. AURA is a learning platform, not an LLM infrastructure product. A proxy adds deployment complexity, another service to monitor, and network latency | Use a library-level router (shared Python package) that runs in-process. No extra network hop. OpenRouter already IS a proxy for 200+ models -- use it as intended rather than rebuilding it |
+The current hash at `aura:model_router:settings` with `{provider, model}` per
+use case is adequate. Adding new fields (e.g., `temperature`, `max_tokens`)
+is a separate concern.
 
-### AF-4: Fine-Tuning / Custom Model Training UI
+### Don't: Build a Unified Config Migration System
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Building UI for fine-tuning models or managing custom model training | Completely out of scope for v1.1. Requires ML infrastructure, GPU management, dataset curation -- each a project larger than the entire AURA platform | If custom models are needed later, use Ollama (which can load any GGUF model) or OpenRouter (which supports custom fine-tuned models via API). The model router already supports any model these providers expose |
+Both apps have their own env var configs (`config.py`). This milestone should
+not try to unify them into one file. Instead, each consumer reads from
+SettingsStore first, env vars second.
 
-### AF-5: Per-User API Key Management
+### Don't: Add Provider-Specific Logic to SettingsStore
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Letting individual students enter their own API keys (BYOK) | Security nightmare in academic setting -- students may share keys, keys may be compromised, tracking/billing becomes impossible, support burden explodes | Admin manages all API keys. Budget controls limit per-user spend. If BYOK is needed later, it should be a separate feature with proper key isolation and audit logging |
-
-### AF-6: Provider-Specific Advanced Features
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Exposing every provider-specific parameter (Anthropic's `top_k`, OpenAI's `logprobs`, Gemini's `safety_settings`, etc.) in the UI | Creates an overwhelming UI that most users won't understand. Each parameter requires provider-specific validation. The matrix of features x providers is unmanageable | Expose only universally-supported parameters: `temperature`, `max_tokens`, `top_p`. Provider-specific params can be set in admin config as JSON overrides. Power users get what they need without polluting the student UI |
+SettingsStore should remain provider-agnostic. Provider capability checks
+(e.g., "does OpenRouter support JSON mode?") belong in the provider
+implementation, not the settings layer.
 
 ---
 
 ## Feature Dependencies
 
 ```
-                    TS-1: generate() interface
-                    /        |            \
-                   /         |             \
-    TS-3: Streaming    TS-6: Error      TS-5: Per-Session
-                       Normalization     Override
-                            |                |
-                            v                v
-                    D-6: Provider       D-2: Inline
-                    Fallback            Selector
-                                            |
-                                            v
-                                    D-1: Hierarchical
-                                    Provider UI
+Feature 1 (All use cases configurable)
+  └── Must complete before: Feature 2, 5, 6
 
-    TS-2: embed() interface (independent, but shares provider config)
+Feature 2 (Provider field respected everywhere)
+  └── Depends on: Feature 1
+  └── Must complete before: Feature 5, 6
 
-    TS-7: Model Discovery  -->  D-1: Hierarchical Provider UI
-                           -->  D-2: Inline Selector
+Feature 3 (No silent env-var fallbacks)
+  └── Depends on: Feature 1, 2
+  └── Parallel with: Feature 4
 
-    TS-4: Global Config  -->  TS-5: Per-Session Override (override needs defaults)
-                         -->  TS-8: API Key Management
+Feature 4 (Graceful degradation)
+  └── Depends on: Feature 3 (so we know what "graceful" means)
+  └── Parallel with: Feature 3
 
-    D-3: Usage Tracking  -->  D-4: Budget Controls (needs usage data)
-                         -->  D-3 depends on TS-1 (hook into every generate/embed call)
+Feature 5 (Gatekeeper with OpenRouter)
+  └── Depends on: Feature 1, 2
+  └── Needs investigation: OpenRouter JSON mode support
 
-    D-5: Thinking Mode  -->  depends on TS-1 + TS-3 (unified generate + streaming)
+Feature 6 (Summarizer through ModelRouter)
+  └── Depends on: Feature 2
+  └── Risk: Sync-to-async refactor
+
+Feature 7 (Dynamic thinking models)
+  └── No dependency on wiring — defer to later milestone
+
+Feature 8 (Multi-provider fallback)
+  └── Depends on: Feature 4 — defer to later milestone
 ```
-
-### Critical Path
-
-1. **TS-1** (generate interface) is the foundation -- everything else depends on it
-2. **TS-2** (embed interface) is independent but must be designed alongside TS-1
-3. **TS-4** (global config) + **TS-8** (API keys) enable providers to be configured
-4. **TS-7** (model discovery) feeds the UI components
-5. **TS-3** (streaming) + **TS-6** (error normalization) complete the runtime layer
-6. UI features (D-1, D-2) can only be built after the backend supports model listing and generation
-7. **D-3** (usage tracking) must be wired into TS-1 from the start (retrofitting is painful)
-8. **D-4** (budget controls) layers on top of D-3
 
 ---
 
 ## MVP Recommendation
 
-### Must Ship (Milestone v1.1 Core)
+### Must Ship (Table Stakes)
 
-1. **TS-1: Unified generate() interface** -- the entire point of the milestone
-2. **TS-2: Unified embed() interface** -- future-proofs embeddings, even if only Vertex AI is used initially
-3. **TS-3: Streaming support** -- regression without it
-4. **TS-4: Global configuration** -- system needs defaults to function
-5. **TS-5: Per-session model override** -- primary user-facing value
-6. **TS-6: Error normalization** -- unusable without clear errors
-7. **TS-7: Model discovery** -- model selector needs real data
-8. **TS-8: API key management** -- providers need credentials
+1. **Feature 1** — Add `gatekeeper` and `relationship_extraction` to
+   `ALLOWED_USE_CASES` + UI. Low risk, high value.
+2. **Feature 2** — Wire provider passthrough in all 8 consumer locations.
+   Medium risk, core of the milestone.
+3. **Feature 3** — Audit and fix all env-var-overrides-settingsStore patterns.
+   Shipped as part of Feature 2 verification.
 
-### Should Ship (High Value)
+### Should Ship
 
-9. **D-1: Hierarchical provider selection UI** -- makes 200+ OpenRouter models usable
-10. **D-2: Inline contextual model selector** -- the "wow" UX moment
-11. **D-3: Usage tracking** -- wire it in from the start; dashboard can be simple initially
-12. **D-5: Thinking mode standardization** -- AURA already has this for Vertex AI; extend it
+4. **Feature 4** — Document graceful degradation behavior. Verify
+   `get_default_sync` exception handling is correct (it mostly is already).
+5. **Feature 5** — Remove gatekeeper OpenRouter skip, test JSON mode support.
+   Medium risk, depends on investigation.
+6. **Feature 6** — Wire summarizer through ModelRouter. Medium risk, may
+   require sync-to-async work.
 
-### Defer to v1.2
+### Defer
 
-13. **D-4: Budget controls** -- valuable but can be added after usage tracking proves the data model
-14. **D-6: Provider fallback** -- nice to have, but manual model switching is acceptable for v1.1
-
-### Rationale
-
-All table stakes features are genuinely required -- they form the backbone of the abstraction. Among differentiators, the UI features (D-1, D-2) deliver the most visible user value. Usage tracking (D-3) should be wired in early because retrofitting instrumentation is much harder than building it alongside the router. Thinking mode (D-5) extends existing AURA capability. Budget controls (D-4) and fallback (D-6) are operationally valuable but can follow once the system is proven.
-
----
-
-## Existing AURA Code to Migrate
-
-Understanding what already exists is critical for scoping. These are the specific integration points that must be refactored.
-
-| Current Code | Location | What It Does | Migration Path |
-|-------------|----------|--------------|---------------|
-| `vertex_ai_client.py` (CHAT) | `AURA-CHAT/backend/utils/` | Wraps google-genai SDK, handles auth, streaming, thinking | Becomes the Vertex AI provider implementation inside the shared model router |
-| `vertex_ai_client.py` (NOTES) | `AURA-NOTES-MANAGER/services/` | Simpler Vertex AI wrapper for summarization | Same -- becomes provider impl |
-| `genai_client.py` (NOTES) | `AURA-NOTES-MANAGER/services/` | Legacy shim over Vertex AI | Remove after migration, replaced by model router |
-| `embeddings.py` (CHAT) | `AURA-CHAT/backend/utils/` | REST-based embedding via Vertex AI | Refactor into embed() interface; keep Vertex AI as default provider |
-| `embeddings.py` (NOTES) | `AURA-NOTES-MANAGER/services/` | SDK-based embedding via Vertex AI | Same refactor path |
-| `rag_engine.py` | `AURA-CHAT/backend/` | Calls `get_model()` and `generate_content()` directly | Change to `router.generate()` calls |
-| `summarizer.py` | `AURA-NOTES-MANAGER/services/` | Calls Vertex AI for note summarization | Change to `router.generate()` calls |
-| `llm_entity_extractor.py` | `AURA-CHAT/backend/` | Calls Vertex AI for entity extraction | Change to `router.generate()` calls |
-| `RAG_ALLOWED_MODELS` | `AURA-CHAT/backend/rag_engine.py` | Hardcoded model allowlist | Replace with dynamic model discovery |
-| `RAG_MODEL_DEFAULT` | `AURA-CHAT/backend/rag_engine.py` | Hardcoded default model | Replace with configurable default |
-| `EMBEDDING_MODEL` | Various config files | Hardcoded `text-embedding-004` | Replace with configurable embedding model |
+7. **Feature 7** — Dynamic thinking model list. Future milestone.
+8. **Feature 8** — Multi-provider chat config fallback. Future resilience milestone.
 
 ---
 
 ## Sources
 
-- **OpenRouter API** (openrouter.ai/openapi.json) -- OpenAPI 3.1 spec, verified 2026-03-10. Confirms: OpenAI-compatible endpoints, `usage.cost` field in responses, embedding endpoints, model listing, SSE streaming, provider routing via `service_tier`, reasoning output with cross-provider format tracking. **HIGH confidence.**
-- **OpenRouter Quickstart** (openrouter.ai/docs/quickstart) -- Confirmed base URL, auth headers, SDK compatibility. **HIGH confidence.**
-- **Ollama API** (github.com/ollama/ollama/blob/main/docs/api.md) -- Full REST API reference. Confirmed: `/api/chat`, `/api/embed`, `/api/tags`, streaming format (newline-delimited JSON), `think` parameter for reasoning models, OpenAI-compatible endpoint at `/v1/chat/completions`. **HIGH confidence.**
-- **LiteLLM Documentation** (docs.litellm.ai) -- Verified patterns for: unified interface, streaming normalization, error mapping to OpenAI exception types, embedding standardization across providers, router with fallback/cooldown, budget management, thinking/reasoning mode support across providers. **HIGH confidence.**
-- **LiteLLM Reasoning Content** (docs.litellm.ai/docs/reasoning_content) -- Confirmed cross-provider thinking mode differences: Anthropic stateless with `thinking_blocks` + `signature`, OpenAI stateful with `previous_response_id`, Gemini with `thinking_config`, DeepSeek with `reasoning_content`. LiteLLM normalizes to `reasoning_content` + optional `thinking_blocks`. **HIGH confidence.**
-- **LiteLLM Embeddings** (docs.litellm.ai/docs/embedding/supported_embedding) -- Confirmed dimension differences across providers, `dimensions` parameter only supported by OpenAI text-embedding-3. **HIGH confidence.**
-- **TypingMind Documentation** (docs.typingmind.com) -- UI patterns for model selection (search/filter/sort, mid-chat switching, per-model icons), cost estimation before send, hierarchical settings (global -> per-model -> per-agent). **MEDIUM confidence** (changelog-derived, not full feature docs).
-- **AURA Codebase Analysis** -- Direct code review of `vertex_ai_client.py` (both apps), `embeddings.py` (both apps), `rag_engine.py`, `genai_client.py`, `chat.py` router. **HIGH confidence.**
+- `.planning/PROJECT.md` — Project context and v1.1/v1.2 milestones
+- `.planning/issues/SETTINGS-WIRING-E2E.md` — Detailed problem analysis with
+  file references
+- `shared/model_router/src/model_router/settings_store.py` — SettingsStore
+  implementation (lines 45-101 for sync path, 109-160 for async)
+- `shared/model_router/src/model_router/router.py` — ModelRouter routing logic
+  (lines 196-215 for provider determination, 314-350 for embed)
+- `AURA-CHAT/server/routers/settings.py` — `ALLOWED_USE_CASES` at line 55
+- `AURA-CHAT/backend/llm_gatekeeper.py:138-166` — Gatekeeper provider
+  resolution with OpenRouter skip
+- `AURA-CHAT/backend/utils/embeddings.py:57-77` — Embeddings SettingsStore read
+- `AURA-CHAT/backend/utils/config.py:59-63, 199-206` — Hardcoded model lists
+- `AURA-CHAT/server/routers/chat.py:313-337` — Chat config endpoint fallback
+- `AURA-NOTES-MANAGER/api/routers/settings.py:55` — NOTES ALLOWED_USE_CASES
+- `AURA-NOTES-MANAGER/api/kg_processor.py:457-476` — GeminiClient with
+  env-var-only model
+- `AURA-NOTES-MANAGER/api/config.py:62-73` — Env var defaults (entity,
+  summarization, embedding)
+- `AURA-NOTES-MANAGER/services/llm_entity_extractor.py:204-222` — SettingsStore
+  read (model only)
+- `AURA-NOTES-MANAGER/services/embeddings.py:84-107` — SettingsStore read
+  (model only)
+- `AURA-NOTES-MANAGER/services/summarizer.py:64-72` — SettingsStore read +
+  direct Vertex SDK call
+- `AURA-NOTES-MANAGER/frontend/src/types/settings.ts:32` — `UseCase` union type
+  (missing 2 use cases)
+- `AURA-NOTES-MANAGER/frontend/src/features/settings/components/DefaultModelSection.tsx:44-48` —
+  UI use case list
