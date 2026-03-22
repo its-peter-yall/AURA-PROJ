@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Multi-Provider LLM Architecture
 status: complete
-stopped_at: Completed quick task 18: Implement lazy OpenRouter registration from KeyManager
-last_updated: "2026-03-13T13:15:00Z"
-last_activity: "2026-03-13 - Completed quick task 18: Implement lazy OpenRouter registration from KeyManager"
+stopped_at: Completed quick task 20: Remove hardcoded RAG model allowlist
+last_updated: "2026-03-22T12:00:00Z"
+last_activity: "2026-03-22 - Completed quick task 20: Remove hardcoded RAG model allowlist"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -28,7 +28,7 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-10)
 Phase: 13 of 13 (Polish + Integration Testing)
 Plan: 3 of 3 complete (13-01, 13-02, and 13-03 done)
 Status: Complete
-Last activity: 2026-03-13 - Completed quick task 19: Implement lazy OpenRouter registration from KeyManager (verified)
+Last activity: 2026-03-22 - Completed quick task 20: Remove hardcoded RAG model allowlist
 
 Progress: [██████████] 100%
 
@@ -88,8 +88,8 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-13T13:15:00Z
-Stopped at: Completed quick task 19: Implement lazy OpenRouter registration from KeyManager
+Last session: 2026-03-22T12:00:00Z
+Stopped at: Completed quick task 20: Remove hardcoded RAG model allowlist
 Resume file: None
 Next action: Ready for next quick task or phase completion.
 
@@ -109,3 +109,4 @@ Next action: Ready for next quick task or phase completion.
 | 17 | Remove AURA-CHAT Settings and Usage Pages | 2026-03-13 | b7f8c5b | [17-remove-aura-chat-settings-and-usage-page](./quick/17-remove-aura-chat-settings-and-usage-page/) |
 | 18 | Display dual system status (ANM + Chat) in settings page | 2026-03-13 | [system-status-dual] | [18-system-status-both-apps](./quick/system-status-both-apps/) |
 | 19 | Implement lazy OpenRouter registration from KeyManager | 2026-03-13 | a2431a6 | [18-implement-lazy-openrouter-registration-f](./quick/18-implement-lazy-openrouter-registration-f/) |
+| 20 | Remove hardcoded RAG model allowlist, make /config dynamic | 2026-03-22 | ed5062a | [260322-o9o-fix-hardcoded-rag-model-allowlist-suppor](./quick/260322-o9o-fix-hardcoded-rag-model-allowlist-suppor/) |
