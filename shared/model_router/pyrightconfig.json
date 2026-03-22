@@ -1,0 +1,9 @@
+{
+  "pythonVersion": "3.14",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none",
+  "extraPaths": [
+    "D:/Peter/AURA Twin Proj/AURA-PROJ/.venv/Lib/site-packages"
+  ]
+}

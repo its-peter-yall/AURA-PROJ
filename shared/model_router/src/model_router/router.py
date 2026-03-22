@@ -359,7 +359,7 @@ class ModelRouter:
         provider = await self._resolve_provider(resolved_request)
 
         total_text = ""
-        async for chunk in provider.stream(resolved_request):
+        async for chunk in provider.stream(resolved_request):  # type: ignore[reportGeneralTypeIssues]
             total_text += chunk.text
             yield chunk
 
@@ -423,7 +423,7 @@ class ModelRouter:
 
         total_output_text = ""
         total_thinking_text = ""
-        async for chunk in provider.stream(resolved_request):
+        async for chunk in provider.stream(resolved_request):  # type: ignore[reportGeneralTypeIssues]
             if chunk.type == "thinking":
                 total_thinking_text += chunk.text
             else:
