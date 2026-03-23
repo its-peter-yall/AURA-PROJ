@@ -40,7 +40,7 @@ x`x`
   4. When Redis recovers after a failure, SettingsStore values resume within 30 seconds (no 5-minute zombie-None cache)
   5. Unit tests cover all resolution paths: SettingsStore hit, env-var fallback, hardcoded default, Redis-down scenario
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 14-01-PLAN.md — Sentinel cache fix + resolve_use_case_config() utility + tests
@@ -111,7 +111,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation: Config + Allowlist + Cache | 0/2 | Planning complete | - |
+| 14. Foundation: Config + Allowlist + Cache | 1/2 | In Progress|  |
 | 15. Wire AURA-CHAT Consumers | 0/TBD | Not started | - |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 0/TBD | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |

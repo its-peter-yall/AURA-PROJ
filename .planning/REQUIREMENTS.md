@@ -26,8 +26,8 @@
 
 ### Fallback Behavior
 
-- [ ] **FB-01**: SettingsStore value is authoritative over env vars when SettingsStore is reachable (fix `AURA-NOTES-MANAGER/api/config.py` env var shadowing in `kg_processor.py`)
-- [ ] **FB-02**: Graceful degradation documented and verified — log warning on Redis down, fall back to env vars, never crash (verify `get_default_sync` exception handling across all consumers)
+- [x] **FB-01**: SettingsStore value is authoritative over env vars when SettingsStore is reachable (fix `AURA-NOTES-MANAGER/api/config.py` env var shadowing in `kg_processor.py`)
+- [x] **FB-02**: Graceful degradation documented and verified — log warning on Redis down, fall back to env vars, never crash (verify `get_default_sync` exception handling across all consumers)
 
 ## Future Requirements
 
@@ -61,8 +61,8 @@ Deferred to future milestones:
 | PP-06 | Phase 16 | Pending |
 | PP-07 | Phase 16 | Pending |
 | PP-08 | Phase 16 | Pending |
-| FB-01 | Phase 14 | Pending |
-| FB-02 | Phase 14 | Pending |
+| FB-01 | Phase 14 | Complete |
+| FB-02 | Phase 14 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 12 total
