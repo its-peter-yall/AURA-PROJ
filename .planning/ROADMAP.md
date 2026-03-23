@@ -63,7 +63,12 @@ Plans:
   4. Relationship extraction reads from SettingsStore with env var fallback, passes `{provider, model}` to ModelRouter, and logs which source it used
   5. Changing the provider for any use case in the settings page takes effect on the next LLM call without process restart
 
-**Plans:** TBD
+**Plans:** 3 plans in 2 waves
+
+Plans:
+- [ ] 15-01-PLAN.md — Shared infrastructure: provider propagation in VertexCompatModel + get_model() + OpenRouter JSON mode (Wave 1)
+- [ ] 15-02-PLAN.md — Wire entity extraction + relationship extraction to resolve_use_case_config() (Wave 2)
+- [ ] 15-03-PLAN.md — Wire gatekeeper + fix embeddings VERTEX_PROJECT check (Wave 2)
 
 ---
 
@@ -117,7 +122,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
-| 15. Wire AURA-CHAT Consumers | 0/TBD | Not started | - |
+| 15. Wire AURA-CHAT Consumers | 0/3 | Not started | - |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 0/3 | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
