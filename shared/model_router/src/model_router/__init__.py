@@ -31,6 +31,7 @@ from model_router.settings_store import (
     SettingsStore,
     clear_defaults_cache,
     get_default_sync,
+    resolve_use_case_config,
 )
 from model_router.types import (
     GenerateRequest,
@@ -68,6 +69,7 @@ __all__ = [
     "ProviderType",
     "RateLimitError",
     "reset_default_router",
+    "resolve_use_case_config",
     "SettingsStore",
     "StreamChunk",
     "UsageInfo",

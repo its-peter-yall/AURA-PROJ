@@ -118,6 +118,58 @@ def clear_defaults_cache() -> None:
     _defaults_cache.clear()
 
 
+_USE_CASE_DEFAULTS: dict[str, dict[str, str]] = {
+    "chat": {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"},
+    "embeddings": {"provider": "vertex_ai", "model": "text-embedding-004"},
+    "entity_extraction": {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"},
+    "summarization": {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"},
+    "gatekeeper": {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"},
+    "relationship_extraction": {
+        "provider": "vertex_ai",
+        "model": "gemini-2.5-flash-lite",
+    },
+}
+
+_USE_CASE_ENV_VARS: dict[str, tuple[str, str]] = {
+    "entity_extraction": ("LLM_ENTITY_EXTRACTION_MODEL", "vertex_ai"),
+    "summarization": ("LLM_SUMMARIZATION_MODEL", "vertex_ai"),
+    "relationship_extraction": ("LLM_RELATIONSHIP_MODEL", "vertex_ai"),
+}
+
+_GLOBAL_DEFAULT = {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"}
+
+
+def resolve_use_case_config(
+    use_case: str,
+    redis_url: str | None = None,
+    redis_client: Any = None,
+) -> dict[str, str]:
+    """Return {provider, model} for a use case with fallback chain.
+
+    Resolution order:
+      1. SettingsStore (Redis) — authoritative when reachable
+      2. Environment variable — per-use-case env override
+      3. Hardcoded default — always-available fallback
+
+    Never returns None.  Never raises on Redis failure.
+    """
+    # Step 1: SettingsStore
+    store_value = get_default_sync(use_case, redis_url, redis_client)
+    if store_value is not None:
+        return store_value
+
+    # Step 2: Env var
+    env_spec = _USE_CASE_ENV_VARS.get(use_case)
+    if env_spec:
+        env_var, provider = env_spec
+        env_model = os.getenv(env_var)
+        if env_model:
+            return {"provider": provider, "model": env_model}
+
+    # Step 3: Hardcoded default
+    return _USE_CASE_DEFAULTS.get(use_case, _GLOBAL_DEFAULT)
+
+
 class SettingsStore:
     """Read and write default model settings from Redis."""
 
