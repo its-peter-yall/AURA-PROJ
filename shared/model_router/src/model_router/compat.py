@@ -170,10 +170,11 @@ def _run_sync(coro: Any) -> T:
 class VertexCompatModel:
     """Legacy-looking model wrapper backed by the shared ModelRouter."""
 
-    def __init__(self, model_name: str) -> None:
+    def __init__(self, model_name: str, provider: str | None = None) -> None:
         normalized_model = _normalize_vertex_model_name(model_name)
         self._model_name = normalized_model
         self.model_name = normalized_model
+        self._provider = provider
         self._router: Any | None = None
 
     def _get_router(self) -> Any:
@@ -198,6 +199,8 @@ class VertexCompatModel:
             "contents": contents,
         }
         request_kwargs.update(_extract_generation_config(generation_config))
+        if self._provider is not None:
+            request_kwargs["provider"] = self._provider
         if safety_settings is not None:
             request_kwargs["safety_settings"] = safety_settings
         if system_instruction is not None:

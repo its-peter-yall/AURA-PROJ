@@ -407,7 +407,9 @@ def test_shim_enabled_returns_compat_model(
         context,
         should_raise=True,
     )
-    monkeypatch.setattr(compat_module, "VertexCompatModel", lambda name: sentinel)
+    monkeypatch.setattr(
+        compat_module, "VertexCompatModel", lambda name, provider=None: sentinel
+    )
 
     result = module.get_model("gemini-test")
 
