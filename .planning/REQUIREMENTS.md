@@ -12,10 +12,10 @@
 
 ### Provider Passthrough — AURA-CHAT
 
-- [ ] **PP-01**: Entity extractor passes explicit `provider` from SettingsStore to `GenerateRequest` (remove reliance on `/` heuristic in `AURA-CHAT/backend/llm_entity_extractor.py`)
-- [ ] **PP-02**: Gatekeeper routes through ModelRouter with explicit provider (remove OpenRouter blanket skip in `AURA-CHAT/backend/llm_gatekeeper.py:153-159`, handle JSON mode per-provider)
-- [ ] **PP-03**: Embeddings passes `provider` from SettingsStore to `router.embed()` consistently (`AURA-CHAT/backend/utils/embeddings.py`)
-- [ ] **PP-04**: Relationship extraction reads from SettingsStore with env var fallback, passes `provider` to ModelRouter (`AURA-CHAT/backend/`)
+- [x] **PP-01**: Entity extractor passes explicit `provider` from SettingsStore to `GenerateRequest` (remove reliance on `/` heuristic in `AURA-CHAT/backend/llm_entity_extractor.py`)
+- [x] **PP-02**: Gatekeeper routes through ModelRouter with explicit provider (remove OpenRouter blanket skip in `AURA-CHAT/backend/llm_gatekeeper.py:153-159`, handle JSON mode per-provider)
+- [x] **PP-03**: Embeddings passes `provider` from SettingsStore to `router.embed()` consistently (`AURA-CHAT/backend/utils/embeddings.py`)
+- [x] **PP-04**: Relationship extraction reads from SettingsStore with env var fallback, passes `provider` to ModelRouter (`AURA-CHAT/backend/`)
 
 ### Provider Passthrough — AURA-NOTES-MANAGER
 
@@ -53,10 +53,10 @@ Deferred to future milestones:
 |-------------|-------|--------|
 | API-01 | Phase 14 | Complete |
 | API-02 | Phase 14 | Complete |
-| PP-01 | Phase 15 | Pending |
-| PP-02 | Phase 15 | Pending |
-| PP-03 | Phase 15 | Pending |
-| PP-04 | Phase 15 | Pending |
+| PP-01 | Phase 15 | Complete |
+| PP-02 | Phase 15 | Complete |
+| PP-03 | Phase 15 | Complete |
+| PP-04 | Phase 15 | Complete |
 | PP-05 | Phase 16 | Complete |
 | PP-06 | Phase 16 | Complete |
 | PP-07 | Phase 16 | Complete |

@@ -26,17 +26,17 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 ## Current Position
 
 Phase: 17 (Frontend Cross-App Validation)
-Plan: 01
+Plan: 02
 Status: Completed
-Last activity: 2026-03-23 — Phase 17-01 complete: NOTES-MANAGER UseCase type expanded to 5 use cases (gatekeeper, relationship_extraction) with generation model type mapping
+Last activity: 2026-03-23 — Phase 17-02 complete: AURA-CHAT settings page with 5 use cases, admin route guard, sidebar nav, Axios API client
 
-Progress: [████████░░] 17% (1/6 plans — Plan 01 complete)
+Progress: [██████░░░░] 33% (2/6 plans — Plan 02 complete)
 
 ## Performance Metrics
 
-- Total plans completed: 27
+- Total plans completed: 28
 - Average duration: 9 min
-- Total execution time: 295 min
+- Total execution time: 320 min
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -48,6 +48,7 @@ Progress: [████████░░] 17% (1/6 plans — Plan 01 complete)
 | 13 | 3 | 31 min | 10 min |
 
 Recent metric entries:
+- Phase 17 P02 | 25 min | 4 tasks | 12 files
 - Phase 17 P01 | 2 min | 2 tasks | 2 files
 - Phase 14 P02 | 3 min | 4 tasks | 4 files
 - Phase 16 P03 | 28 min | 1 task | 1 file
@@ -79,6 +80,9 @@ Recent metric entries:
 - [Phase 16-02]: Use _run_sync from model_router.compat instead of asyncio.get_event_loop().run_until_complete() for Python 3.14 compatibility
 - [Phase 16-02]: Removed init-time get_default_sync() entirely from EmbeddingService.__init__ in favor of per-call resolve_use_case_config()
 - [Phase 16-02]: Removed _build_generation_config() helper — router.generate() accepts kwargs directly
+- [Phase 17-02]: AURA-CHAT settings page uses existing axios instance (lib/api.ts) instead of NOTES-MANAGER's fetchApi wrapper
+- [Phase 17-02]: Settings route placed OUTSIDE RoleProtectedRoute wrapper (which blocks admins) — AdminSettingsRoute guard used instead
+- [Phase 17-02]: Settings nav link in MainLayout hidden for non-admin users via role check
 - [Phase 17-01]: gatekeeper and relationship_extraction mapped to 'generation' model type in frontend (LLM text generation, not vector embeddings)
 
 ### Pending Todos
@@ -98,10 +102,10 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-23T11:37:43Z
-Stopped at: Phase 17 Plan 01 complete
-Resume file: .planning/phases/17-frontend-cross-app-validation/17-02-PLAN.md
-Next action: Execute Phase 17 Plan 02 or further plans
+Last session: 2026-03-23T12:15:00Z
+Stopped at: Phase 17 Plan 02 complete — AURA-CHAT settings page
+Resume file: .planning/phases/17-frontend-cross-app-validation/17-03-PLAN.md
+Next action: Continue Phase 17 — 4 more plans remaining
 
 ### Quick Tasks Completed
 
