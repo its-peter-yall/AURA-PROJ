@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
-status: completed
-stopped_at: Completed Phase 14-02 plan (expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction)
-last_updated: "2026-03-23T05:39:41.655Z"
-last_activity: "2026-03-23 — Phase 14-02 complete: expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction"
+status: in_progress
+stopped_at: Completed Phase 15-02 plan (wired entity extractor and relationship extraction to resolve_use_case_config())
+last_updated: "2026-03-23T07:10:20Z"
+last_activity: "2026-03-23 — Phase 15-02 complete: wired entity extractor and relationship extraction to resolve_use_case_config() with explicit provider routing"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
+  total_plans: 3
   completed_plans: 2
-  percent: 50
+  percent: 67
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 14 (Foundation — Config Resolver + Allowlist + Cache Fixes)
+Phase: 15 (Wire AURA-CHAT Consumers)
 Plan: 02
 Status: Completed
-Last activity: 2026-03-23 — Phase 14-02 complete: expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction
+Last activity: 2026-03-23 — Phase 15-02 complete: wired entity extractor and relationship extraction to resolve_use_case_config() with explicit provider routing
 
-Progress: [████░░░░░░] 50% (2/4 plans)
+Progress: [███████░░░] 67% (2/3 plans)
 
 ## Performance Metrics
 
@@ -90,10 +90,10 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-23T05:29:12.000Z
-Stopped at: Completed Phase 14-02 plan (expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction)
+Last session: 2026-03-23T07:32:43Z
+Stopped at: Completed Phase 15-01 plan (provider propagation to VertexCompatModel and OpenRouter JSON mode)
 Resume file: None
-Next action: `/gsd-execute-phase 14-03` to execute next plan in Phase 14
+Next action: `/gsd-execute-phase 15-02` to execute next plan in Phase 15
 
 ### Quick Tasks Completed
 
