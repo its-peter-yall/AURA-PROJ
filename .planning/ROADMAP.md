@@ -21,7 +21,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 - [x] **Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes** - Shared `resolve_use_case_config()` utility, expanded `ALLOWED_USE_CASES`, zombie-None cache fix, env-var fallback chain (completed 2026-03-23)
 - [x] **Phase 15: Wire AURA-CHAT Consumers** - Gatekeeper, entity extractor, embeddings, and relationship extraction all pass explicit `provider` from SettingsStore to ModelRouter (completed 2026-03-23)
 - [x] **Phase 16: Wire AURA-NOTES-MANAGER Consumers** - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config (completed 2026-03-23)
-- [ ] **Phase 17: Frontend + Cross-App Validation** - Settings page UI updated with new use cases, Playwright E2E tests for settings→behavior flow, cross-app config propagation verified
+- [x] **Phase 17: Frontend + Cross-App Validation** - Settings page UI updated with new use cases, Playwright E2E tests for settings→behavior flow, cross-app config propagation verified (completed 2026-03-23)
 
 ## Phase Details
 
@@ -111,7 +111,7 @@ Plans:
   4. Both applications pass their full test suites (unit + E2E) with SettingsStore wiring active
   5. No direct imports of `vertexai`, `google.generativeai`, or `openai` SDK exist outside `shared/model_router/` in either application (AST audit)
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 17-01-PLAN.md — NOTES-MANAGER use case expansion (UseCase type + USE_CASES + USE_CASE_MODEL_TYPES) (Wave 1)
@@ -129,7 +129,7 @@ Plans:
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 3/3 | Complete    | 2026-03-23 |
-| 17. Frontend + Cross-App Validation | 2/3 | In Progress|  |
+| 17. Frontend + Cross-App Validation | 2/3 | Complete    | 2026-03-23 |
 
 ---
 
