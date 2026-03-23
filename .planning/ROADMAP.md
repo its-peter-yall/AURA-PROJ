@@ -34,8 +34,8 @@ x`x`
 **Requirements:** API-01, API-02, FB-01, FB-02
 
 **Success Criteria** (what must be TRUE):
-  1. PUT `/settings/use-cases/gatekeeper` returns 200 instead of 400, and the configured provider/model appear on GET
-  2. PUT `/settings/use-cases/relationship_extraction` returns 200 in both AURA-CHAT and AURA-NOTES-MANAGER settings routers
+  1. PUT `/api/v1/settings/defaults/gatekeeper` returns 200 instead of 400, and the configured provider/model appear on GET
+  2. PUT `/api/v1/settings/defaults/relationship_extraction` returns 200 in both AURA-CHAT and AURA-NOTES-MANAGER settings routers
   3. `resolve_use_case_config("gatekeeper")` returns `{provider, model}` from SettingsStore when Redis is reachable, falling back to env vars when Redis is down, with a logged warning — never crashes
   4. When Redis recovers after a failure, SettingsStore values resume within 30 seconds (no 5-minute zombie-None cache)
   5. Unit tests cover all resolution paths: SettingsStore hit, env-var fallback, hardcoded default, Redis-down scenario
