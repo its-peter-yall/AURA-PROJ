@@ -19,7 +19,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 ## Phases
 
 - [x] **Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes** - Shared `resolve_use_case_config()` utility, expanded `ALLOWED_USE_CASES`, zombie-None cache fix, env-var fallback chain (completed 2026-03-23)
-- [ ] **Phase 15: Wire AURA-CHAT Consumers** - Gatekeeper, entity extractor, embeddings, and relationship extraction all pass explicit `provider` from SettingsStore to ModelRouter
+- [x] **Phase 15: Wire AURA-CHAT Consumers** - Gatekeeper, entity extractor, embeddings, and relationship extraction all pass explicit `provider` from SettingsStore to ModelRouter (completed 2026-03-23)
 - [ ] **Phase 16: Wire AURA-NOTES-MANAGER Consumers** - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config
 - [ ] **Phase 17: Frontend + Cross-App Validation** - Settings page UI updated with new use cases, Playwright E2E tests for settings→behavior flow, cross-app config propagation verified
 
@@ -68,7 +68,7 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Shared infrastructure: provider propagation in VertexCompatModel + get_model() + OpenRouter JSON mode (Wave 1)
 - [x] 15-02-PLAN.md — Wire entity extraction + relationship extraction to resolve_use_case_config() (Wave 2) ✅
-- [ ] 15-03-PLAN.md — Wire gatekeeper + fix embeddings VERTEX_PROJECT check (Wave 2)
+- [x] 15-03-PLAN.md — Wire gatekeeper + fix embeddings VERTEX_PROJECT check (Wave 2) ✅
 
 ---
 
@@ -122,7 +122,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
-| 15. Wire AURA-CHAT Consumers | 2/3 | In Progress | - |
+| 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 0/3 | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
