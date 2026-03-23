@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
-status: in_progress
+status: completed
 stopped_at: Completed Phase 16-01 plan (entity extraction consumer wiring for PP-05 and PP-06)
-last_updated: "2026-03-23T15:03:29Z"
-last_activity: "2026-03-23 — Phase 16-01 complete: entity extraction consumers wired to resolve_use_case_config at call-time"
+last_updated: "2026-03-23T09:55:09.182Z"
+last_activity: "2026-03-23 — Phase 16-01 complete: entity extraction consumers (PP-05, PP-06) wired to resolve_use_case_config at call-time with explicit provider routing"
 progress:
-  total_phases: 5
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 4
+  completed_phases: 3
+  total_plans: 8
+  completed_plans: 8
   percent: 100
 ---
 

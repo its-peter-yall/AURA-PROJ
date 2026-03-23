@@ -123,7 +123,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
-| 16. Wire AURA-NOTES-MANAGER Consumers | 3/3 | Complete   | 2026-03-23 |
+| 16. Wire AURA-NOTES-MANAGER Consumers | 3/3 | Complete    | 2026-03-23 |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
 ---
