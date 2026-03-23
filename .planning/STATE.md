@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 16-03 plan (consumer wiring integration tests for PP-05 through PP-08)
-last_updated: "2026-03-23T08:30:30Z"
-last_activity: "2026-03-23 — Phase 16-03 complete: 16 integration tests verifying PP-05 through PP-08 consumer wiring with SettingsStore and provider routing"
+stopped_at: Completed Phase 16-02 plan (embeddings + summarizer ModelRouter wiring)
+last_updated: "2026-03-23T14:38:37+05:30"
+last_activity: "2026-03-23 — Phase 16-02 complete: embeddings and summarizer routed through ModelRouter with call-time provider resolution"
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 ## Current Position
 
 Phase: 16 (Wire AURA-NOTES-MANAGER Consumers)
-Plan: 03
+Plan: 02
 Status: Completed
-Last activity: 2026-03-23 — Phase 16-03 complete: 16 integration tests verifying PP-05 through PP-08 consumer wiring with SettingsStore and provider routing
+Last activity: 2026-03-23 — Phase 16-02 complete: embeddings and summarizer routed through ModelRouter with call-time provider resolution
 
-Progress: [███████░░░] 33% (1/3 plans — Plan 03 complete, Plans 01/02 pending)
+Progress: [████████░░] 67% (2/3 plans — Plans 02/03 complete, Plan 01 pending)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [███████░░░] 33% (1/3 plans — Plan 03 complete, 
 Recent metric entries:
 - Phase 14 P02 | 3 min | 4 tasks | 4 files
 - Phase 16 P03 | 28 min | 1 task | 1 file
+- Phase 16 P02 | 20 min | 2 tasks | 3 files
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent metric entries:
 - [v1.2 scoping]: `resolve_use_case_config()` utility centralizes 3-step resolution chain (SettingsStore → env var → hardcoded default)
 - [v1.2 scoping]: Zombie-None cache fix with shorter error TTL (30s) before any consumer wiring
 - [v1.2 scoping]: `gatekeeper` and `relationship_extraction` added to ALLOWED_USE_CASES in both settings routers
+- [Phase 16-02]: Use _run_sync from model_router.compat instead of asyncio.get_event_loop().run_until_complete() for Python 3.14 compatibility
+- [Phase 16-02]: Removed init-time get_default_sync() entirely from EmbeddingService.__init__ in favor of per-call resolve_use_case_config()
+- [Phase 16-02]: Removed _build_generation_config() helper — router.generate() accepts kwargs directly
 
 ### Pending Todos
 
@@ -91,10 +95,10 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-23T08:30:30Z
-Stopped at: Completed Phase 16-03 plan (consumer wiring integration tests for PP-05 through PP-08)
+Last session: 2026-03-23T14:38:37+05:30
+Stopped at: Completed Phase 16-02 plan (embeddings + summarizer ModelRouter wiring)
 Resume file: None
-Next action: Phase 16 Plan 01 or 02 if pending, else Phase 17
+Next action: Phase 16 Plan 01 if pending, else Phase 17
 
 ### Quick Tasks Completed
 

@@ -92,7 +92,7 @@ Plans:
 Plans:
 - [x] 16-03-PLAN.md — Create integration test file for consumer wiring (PP-05 through PP-08) (Wave 1) ✅
 - [ ] 16-01-PLAN.md — Wire KG processor + entity extractor (PP-05, PP-06) (Wave 2)
-- [ ] 16-02-PLAN.md — Wire embeddings + summarizer (PP-07, PP-08) (Wave 2)
+- [x] 16-02-PLAN.md — Wire embeddings + summarizer (PP-07, PP-08) (Wave 2) ✅
 
 ---
 
@@ -123,7 +123,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
-| 16. Wire AURA-NOTES-MANAGER Consumers | 1/3 | In progress | - |
+| 16. Wire AURA-NOTES-MANAGER Consumers | 2/3 | In progress | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
 ---
