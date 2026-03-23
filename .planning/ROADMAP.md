@@ -90,9 +90,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Wire KG processor + entity extractor (PP-05, PP-06)
-- [ ] 16-02-PLAN.md — Wire embeddings + summarizer (PP-07, PP-08)
-- [ ] 16-03-PLAN.md — Integration tests for all consumers (PP-05 through PP-08)
+- [ ] 16-03-PLAN.md — Create integration test file for consumer wiring (PP-05 through PP-08) (Wave 1)
+- [ ] 16-01-PLAN.md — Wire KG processor + entity extractor (PP-05, PP-06) (Wave 2)
+- [ ] 16-02-PLAN.md — Wire embeddings + summarizer (PP-07, PP-08) (Wave 2)
 
 ---
 
