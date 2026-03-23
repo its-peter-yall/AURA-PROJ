@@ -470,7 +470,17 @@ def get_default_router() -> ModelRouter:
     """Return a process-wide router singleton built from environment config."""
     global _default_router
     if _default_router is None:
-        _default_router = ModelRouter(RouterConfig.from_env())
+        _km = None
+        try:
+            from model_router.key_manager import KeyManager
+            import redis.asyncio as aioredis
+            import os
+
+            _redis = aioredis.from_url(os.getenv("REDIS_URL", "redis://127.0.0.1:6379"))
+            _km = KeyManager(_redis)
+        except Exception:
+            logger.debug("KeyManager unavailable for default router", exc_info=True)
+        _default_router = ModelRouter(RouterConfig.from_env(), key_manager=_km)
     return _default_router
 
 
