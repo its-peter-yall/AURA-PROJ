@@ -369,6 +369,8 @@ class OpenRouterProvider(BaseProvider):
                 kwargs["temperature"] = request.temperature
             if request.max_output_tokens is not None:
                 kwargs["max_tokens"] = request.max_output_tokens
+            if getattr(request, "response_mime_type", None) == "application/json":
+                kwargs["response_format"] = {"type": "json_object"}
             if extra_body:
                 kwargs["extra_body"] = extra_body
 
