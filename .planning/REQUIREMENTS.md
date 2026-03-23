@@ -7,8 +7,8 @@
 
 ### API Configuration
 
-- [ ] **API-01**: Admin can configure gatekeeper model/provider via settings page (add `"gatekeeper"` to `ALLOWED_USE_CASES` in both settings routers + frontend type + UI)
-- [ ] **API-02**: Admin can configure relationship extraction model/provider via settings page (add `"relationship_extraction"` to `ALLOWED_USE_CASES` in both settings routers + frontend type + UI)
+- [x] **API-01**: Admin can configure gatekeeper model/provider via settings page (add `"gatekeeper"` to `ALLOWED_USE_CASES` in both settings routers + frontend type + UI)
+- [x] **API-02**: Admin can configure relationship extraction model/provider via settings page (add `"relationship_extraction"` to `ALLOWED_USE_CASES` in both settings routers + frontend type + UI)
 
 ### Provider Passthrough — AURA-CHAT
 
@@ -51,8 +51,8 @@ Deferred to future milestones:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Phase 14 | Pending |
-| API-02 | Phase 14 | Pending |
+| API-01 | Phase 14 | Complete |
+| API-02 | Phase 14 | Complete |
 | PP-01 | Phase 15 | Pending |
 | PP-02 | Phase 15 | Pending |
 | PP-03 | Phase 15 | Pending |

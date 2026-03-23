@@ -18,7 +18,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 
 ## Phases
 
-- [ ] **Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes** - Shared `resolve_use_case_config()` utility, expanded `ALLOWED_USE_CASES`, zombie-None cache fix, env-var fallback chain
+- [x] **Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes** - Shared `resolve_use_case_config()` utility, expanded `ALLOWED_USE_CASES`, zombie-None cache fix, env-var fallback chain (completed 2026-03-23)
 - [ ] **Phase 15: Wire AURA-CHAT Consumers** - Gatekeeper, entity extractor, embeddings, and relationship extraction all pass explicit `provider` from SettingsStore to ModelRouter
 - [ ] **Phase 16: Wire AURA-NOTES-MANAGER Consumers** - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config
 - [ ] **Phase 17: Frontend + Cross-App Validation** - Settings page UI updated with new use cases, Playwright E2E tests for settings→behavior flow, cross-app config propagation verified
@@ -40,7 +40,7 @@ x`x`
   4. When Redis recovers after a failure, SettingsStore values resume within 30 seconds (no 5-minute zombie-None cache)
   5. Unit tests cover all resolution paths: SettingsStore hit, env-var fallback, hardcoded default, Redis-down scenario
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 14-01-PLAN.md — Sentinel cache fix + resolve_use_case_config() utility + tests
@@ -111,7 +111,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation: Config + Allowlist + Cache | 1/2 | In Progress|  |
+| 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete   | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 0/TBD | Not started | - |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 0/TBD | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
