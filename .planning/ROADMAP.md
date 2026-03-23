@@ -111,7 +111,7 @@ Plans:
   4. Both applications pass their full test suites (unit + E2E) with SettingsStore wiring active
   5. No direct imports of `vertexai`, `google.generativeai`, or `openai` SDK exist outside `shared/model_router/` in either application (AST audit)
 
-**Plans:** 3 plans in 2 waves
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 17-01-PLAN.md — NOTES-MANAGER use case expansion (UseCase type + USE_CASES + USE_CASE_MODEL_TYPES) (Wave 1)
@@ -129,7 +129,7 @@ Plans:
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 3/3 | Complete    | 2026-03-23 |
-| 17. Frontend + Cross-App Validation | 0/3 | Not started | - |
+| 17. Frontend + Cross-App Validation | 1/3 | In Progress|  |
 
 ---
 

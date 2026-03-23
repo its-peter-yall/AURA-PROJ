@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
-status: completed
-stopped_at: Completed Phase 16-01 plan (entity extraction consumer wiring for PP-05 and PP-06)
-last_updated: "2026-03-23T09:55:09.182Z"
-last_activity: "2026-03-23 — Phase 16-01 complete: entity extraction consumers (PP-05, PP-06) wired to resolve_use_case_config at call-time with explicit provider routing"
+status: in-progress
+stopped_at: Phase 17 Plan 01 complete
+last_updated: "2026-03-23T11:37:43Z"
+last_activity: "2026-03-23 — Phase 17-01 complete: NOTES-MANAGER UseCase type expanded to 5 use cases (gatekeeper, relationship_extraction) with generation model type mapping"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 11
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State
@@ -25,18 +25,18 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 16 (Wire AURA-NOTES-MANAGER Consumers)
+Phase: 17 (Frontend Cross-App Validation)
 Plan: 01
 Status: Completed
-Last activity: 2026-03-23 — Phase 16-01 complete: entity extraction consumers (PP-05, PP-06) wired to resolve_use_case_config at call-time with explicit provider routing
+Last activity: 2026-03-23 — Phase 17-01 complete: NOTES-MANAGER UseCase type expanded to 5 use cases (gatekeeper, relationship_extraction) with generation model type mapping
 
-Progress: [██████████] 100% (3/3 plans — All plans complete)
+Progress: [████████░░] 17% (1/6 plans — Plan 01 complete)
 
 ## Performance Metrics
 
-- Total plans completed: 26
+- Total plans completed: 27
 - Average duration: 9 min
-- Total execution time: 293 min
+- Total execution time: 295 min
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -48,6 +48,7 @@ Progress: [██████████] 100% (3/3 plans — All plans complet
 | 13 | 3 | 31 min | 10 min |
 
 Recent metric entries:
+- Phase 17 P01 | 2 min | 2 tasks | 2 files
 - Phase 14 P02 | 3 min | 4 tasks | 4 files
 - Phase 16 P03 | 28 min | 1 task | 1 file
 - Phase 16 P02 | 20 min | 2 tasks | 3 files
@@ -78,6 +79,7 @@ Recent metric entries:
 - [Phase 16-02]: Use _run_sync from model_router.compat instead of asyncio.get_event_loop().run_until_complete() for Python 3.14 compatibility
 - [Phase 16-02]: Removed init-time get_default_sync() entirely from EmbeddingService.__init__ in favor of per-call resolve_use_case_config()
 - [Phase 16-02]: Removed _build_generation_config() helper — router.generate() accepts kwargs directly
+- [Phase 17-01]: gatekeeper and relationship_extraction mapped to 'generation' model type in frontend (LLM text generation, not vector embeddings)
 
 ### Pending Todos
 
@@ -96,10 +98,10 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-23T15:03:29Z
-Stopped at: Completed Phase 16-01 plan (entity extraction consumer wiring for PP-05 and PP-06)
-Resume file: None
-Next action: Phase 16 complete — all 3 plans done. Ready for Phase 17 or milestone closure.
+Last session: 2026-03-23T11:37:43Z
+Stopped at: Phase 17 Plan 01 complete
+Resume file: .planning/phases/17-frontend-cross-app-validation/17-02-PLAN.md
+Next action: Execute Phase 17 Plan 02 or further plans
 
 ### Quick Tasks Completed
 
