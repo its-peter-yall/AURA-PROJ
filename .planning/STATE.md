@@ -5,7 +5,7 @@ milestone_name: milestone
 status: completed
 stopped_at: Milestone v1.2 complete
 last_updated: "2026-03-23T16:01:31.000Z"
-last_activity: "2026-03-23 — Quick task 260323-tsy: OpenRouter API key wiring (4 tasks, 4 files)"
+last_activity: "2026-03-23 — Completed quick task 260323-tsy: Fix all OpenRouter API key wiring gaps"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,7 +28,7 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 Phase: — (no active milestone)
 Plan: —
 Status: Completed
-Last activity: 2026-03-23 — Milestone v1.2 archived
+Last activity: 2026-03-23 — Completed quick task 260323-tsy: Fix all OpenRouter API key wiring gaps
 
 Progress: [██████████] 100% (11/11 plans — all complete)
 
@@ -60,6 +60,12 @@ Progress: [██████████] 100% (11/11 plans — all complete)
 - Gatekeeper OpenRouter JSON mode support needs live API verification
 - Thinking-capable OpenRouter models undocumented — plan dynamic for v1.3
 - `AURA-CHAT/test_real_models.py` still builds direct Vertex AI REST requests
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260323-tsy | Fix all OpenRouter API key wiring gaps - settings→backend provider propagation | 2026-03-23 | 6ac6e3a | [260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s](./quick/260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s/) |
 
 ## Session Continuity
 
