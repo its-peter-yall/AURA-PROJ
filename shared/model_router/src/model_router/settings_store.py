@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 SETTINGS_KEY = "aura:model_router:settings"
 
-_DEFAULTS_CACHE_TTL = 300  # 5 minutes
+_DEFAULTS_CACHE_TTL = 300  # 5 minutes — for key-miss entries
+_ERROR_CACHE_TTL = 30  # 30 seconds — for error-sourced entries
+_SENTINEL_ERROR = object()  # Marks "Redis was unreachable"
 
 _defaults_cache: dict[str, dict] = {}
 
@@ -39,7 +41,10 @@ def _cache_is_valid(use_case: str) -> bool:
     entry = _defaults_cache.get(use_case)
     if entry is None:
         return False
-    return (time.time() - entry["_cached_at"]) < _DEFAULTS_CACHE_TTL
+    age = time.time() - entry["_cached_at"]
+    if entry["value"] is _SENTINEL_ERROR:
+        return age < _ERROR_CACHE_TTL
+    return age < _DEFAULTS_CACHE_TTL
 
 
 def get_default_sync(
@@ -65,7 +70,10 @@ def get_default_sync(
         configured, or ``None`` on any error or missing key.
     """
     if _cache_is_valid(use_case):
-        return _defaults_cache[use_case]["value"]
+        entry = _defaults_cache[use_case]
+        if entry["value"] is _SENTINEL_ERROR:
+            return None  # Error cached — return None, caller will fall back
+        return entry["value"]
 
     client_to_close = None
     try:
@@ -87,11 +95,15 @@ def get_default_sync(
         _defaults_cache[use_case] = {"value": parsed, "_cached_at": time.time()}
         return parsed
     except Exception:
-        logger.debug(
-            "Failed to read sync default for use_case=%s, returning None",
+        logger.warning(
+            "Redis unavailable for use_case=%s, falling back",
             use_case,
             exc_info=True,
         )
+        _defaults_cache[use_case] = {
+            "value": _SENTINEL_ERROR,
+            "_cached_at": time.time(),
+        }
         return None
     finally:
         if client_to_close is not None:

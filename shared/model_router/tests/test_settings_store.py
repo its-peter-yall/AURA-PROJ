@@ -101,3 +101,75 @@ async def test_overwrite_default(fake_redis) -> None:
         "provider": "openrouter",
         "model": "google/gemini-2.5-flash",
     }
+
+
+# ============================================================================
+# Sentinel cache fix tests (zombie-None problem)
+# ============================================================================
+
+from model_router.settings_store import (
+    _SENTINEL_ERROR,
+    _ERROR_CACHE_TTL,
+    _DEFAULTS_CACHE_TTL,
+    _defaults_cache,
+    clear_defaults_cache,
+)
+
+
+class TestZombieNoneCache:
+    """Tests for sentinel-based cache fix."""
+
+    def setup_method(self) -> None:
+        clear_defaults_cache()
+
+    def test_sentinel_cached_on_error(self) -> None:
+        """Redis error caches _SENTINEL_ERROR, not None."""
+        clear_defaults_cache()
+        from model_router.settings_store import get_default_sync
+
+        result = get_default_sync("chat", redis_url="redis://192.0.2.1:6379/0")
+        assert result is None
+        assert "chat" in _defaults_cache
+        assert _defaults_cache["chat"]["value"] is _SENTINEL_ERROR
+
+    def test_sentinel_expires_after_error_ttl(self) -> None:
+        """Sentinel entry expires after _ERROR_CACHE_TTL (30s)."""
+        import time
+
+        clear_defaults_cache()
+        _defaults_cache["chat"] = {
+            "value": _SENTINEL_ERROR,
+            "_cached_at": time.time() - (_ERROR_CACHE_TTL + 1),
+        }
+
+        from model_router.settings_store import _cache_is_valid
+
+        assert _cache_is_valid("chat") is False
+
+    def test_sentinel_still_valid_within_error_ttl(self) -> None:
+        """Sentinel entry is valid within _ERROR_CACHE_TTL."""
+        import time
+
+        clear_defaults_cache()
+        _defaults_cache["chat"] = {
+            "value": _SENTINEL_ERROR,
+            "_cached_at": time.time() - 10,  # 10s ago, within 30s TTL
+        }
+
+        from model_router.settings_store import _cache_is_valid
+
+        assert _cache_is_valid("chat") is True
+
+    def test_normal_cache_uses_longer_ttl(self) -> None:
+        """Normal (non-error) cached values use _DEFAULTS_CACHE_TTL (300s)."""
+        import time
+
+        clear_defaults_cache()
+        _defaults_cache["chat"] = {
+            "value": {"provider": "vertex_ai", "model": "gemini-2.5-flash"},
+            "_cached_at": time.time() - 100,  # 100s ago, within 300s
+        }
+
+        from model_router.settings_store import _cache_is_valid
+
+        assert _cache_is_valid("chat") is True
