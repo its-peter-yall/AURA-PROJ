@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 15-03 plan (wired gatekeeper to resolve_use_case_config and fixed embeddings VERTEX_PROJECT check)
-last_updated: "2026-03-23T13:54:00Z"
-last_activity: "2026-03-23 — Phase 15-03 complete: gatekeeper wired to resolve_use_case_config with explicit provider routing; embeddings VERTEX_PROJECT check now provider-aware"
+stopped_at: Completed Phase 16-03 plan (consumer wiring integration tests for PP-05 through PP-08)
+last_updated: "2026-03-23T08:30:30Z"
+last_activity: "2026-03-23 — Phase 16-03 complete: 16 integration tests verifying PP-05 through PP-08 consumer wiring with SettingsStore and provider routing"
 progress:
-  total_phases: 4
-  completed_phases: 1
+  total_phases: 5
+  completed_phases: 2
   total_plans: 3
-  completed_plans: 3
-  percent: 100
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -25,18 +25,18 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 
 ## Current Position
 
-Phase: 15 (Wire AURA-CHAT Consumers)
+Phase: 16 (Wire AURA-NOTES-MANAGER Consumers)
 Plan: 03
 Status: Completed
-Last activity: 2026-03-23 — Phase 15-03 complete: gatekeeper wired to resolve_use_case_config with explicit provider routing; embeddings VERTEX_PROJECT check now provider-aware
+Last activity: 2026-03-23 — Phase 16-03 complete: 16 integration tests verifying PP-05 through PP-08 consumer wiring with SettingsStore and provider routing
 
-Progress: [██████████] 100% (3/3 plans)
+Progress: [███████░░░] 33% (1/3 plans — Plan 03 complete, Plans 01/02 pending)
 
 ## Performance Metrics
 
-- Total plans completed: 24
+- Total plans completed: 25
 - Average duration: 9 min
-- Total execution time: 220 min
+- Total execution time: 248 min
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -48,9 +48,8 @@ Progress: [██████████] 100% (3/3 plans)
 | 13 | 3 | 31 min | 10 min |
 
 Recent metric entries:
-- Phase 13 P03 | 18 min | 2 tasks | 3 files
-- Phase 14 P01 | 15 min | 2 tasks | 2 files
 - Phase 14 P02 | 3 min | 4 tasks | 4 files
+- Phase 16 P03 | 28 min | 1 task | 1 file
 
 ## Accumulated Context
 
@@ -87,13 +86,15 @@ Recent metric entries:
 - [Phase 10]: `AURA-CHAT/test_real_models.py` still builds direct Vertex AI REST requests and needs gap-closure validation
 - [v1.2 Phase 15]: Gatekeeper OpenRouter JSON mode support needs live API verification — blanket skip may be unnecessary now
 - [v1.2 Phase 15]: Thinking-capable OpenRouter models undocumented — start with static list extension, plan dynamic for v1.3
+- [Phase 16]: Patch get_default_sync/get_default_router at import site (consumer module namespace) not definition site, because 'from x import y' creates local references unaffected by source-module patches
+- [Phase 16]: Mock _run_sync at import site (services.embeddings._run_sync) to avoid asyncio.run on MagicMock coroutines in Python 3.14+
 
 ## Session Continuity
 
-Last session: 2026-03-23T13:54:00Z
-Stopped at: Completed Phase 15-03 plan (gatekeeper + embeddings wiring)
+Last session: 2026-03-23T08:30:30Z
+Stopped at: Completed Phase 16-03 plan (consumer wiring integration tests for PP-05 through PP-08)
 Resume file: None
-Next action: Phase 16 or Phase 17 — Phase 15 complete
+Next action: Phase 16 Plan 01 or 02 if pending, else Phase 17
 
 ### Quick Tasks Completed
 
