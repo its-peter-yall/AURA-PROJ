@@ -11,44 +11,43 @@ AURA is a **module-centric learning platform** with interconnected knowledge gra
 
 Transform from document-centric to module-centric learning, enabling contextual study sessions with persistent history and cross-module concept discovery.
 
-## Current Milestone: v1.2 Settings Wiring E2E
+## Current State: v1.2 Shipped (2026-03-23)
 
-**Goal:** Wire SettingsStore end-to-end so every AI feature respects per-use-case model/provider configuration — no more hardcoded env vars or silent provider skips.
+**All 8 LLM consumers route through ModelRouter with SettingsStore config.** Every AI feature in both applications respects per-use-case model/provider configuration — no more hardcoded env vars or silent provider skips.
 
-**Target features:**
-- All use cases configurable via settings API (including gatekeeper, relationship_extraction)
-- KG processor, entity extraction, embeddings, gatekeeper all read from SettingsStore
-- Provider field explicitly passed through in all ModelRouter calls
-- Chat config fallback and thinking mode model list handle multi-provider gracefully
-
-### What's Built (v1.1)
+### What's Built
 
 | Component | Status | Details |
 |-----------|--------|---------|
 | Model Router | ✓ | Shared `shared/model_router/` package with ABC providers |
-| Vertex AI Provider | ✓ | Wrapped existing code, full compatibility |
-| OpenRouter Provider | ✓ | 200+ models, normalized SSE streaming |
+| Vertex AI Provider | ✓ | Full feature parity |
+| OpenRouter Provider | ✓ | 200+ models, normalized SSE streaming, JSON mode translation |
 | Thinking Mode | ✓ | Unified enable/budget across providers |
 | Cross-App Migration | ✓ | Both apps use router exclusively |
 | Admin Settings API | ✓ | Provider config, model cache, key management |
 | Provider Settings UI | ✓ | Hierarchical model picker, inline chat picker |
 | Usage Tracking | ✓ | Token/cost per request, Redis persistence |
 | Cost Dashboard | ✓ | Provider/model breakdown, date filters |
+| Settings Wiring (v1.2) | ✓ | `resolve_use_case_config()` + all 8 consumers wired |
 | Integration Tests | ✓ | 1100+ tests passing |
 
-### Technology Stack (v1.1 additions)
+### Technology Stack
 
 - **Model Router:** `shared/model_router/` (Python package)
+- **Config Resolution:** `resolve_use_case_config()` — SettingsStore → env var → hardcoded default
 - **LLM Providers:** Vertex AI, OpenRouter (200+ models), Ollama (stub)
+- **Settings Store:** Redis (30s error TTL for graceful degradation)
 - **Usage:** Recharts for dashboard visualization
 
-### Performance Achieved (v1.1)
+### Performance Achieved
 
 | Metric | Target | Achieved |
 |--------|--------|----------|
-| Router overhead | < 10ms | ✓ Verified |
+| Router overhead | < 10ms | ✓ ~5ms verified |
 | Provider switch | Seamless | ✓ No context loss |
 | Streaming | Normalized | ✓ Identical SSE format |
+| Config resolution | < 1ms | ✓ In-memory cache + Redis HGET |
+| Redis recovery | < 30s | ✓ 30s error TTL |
 
 ---
 
@@ -90,9 +89,24 @@ See the detailed requirement lists below.
 - ✓ USAGE-01: Token/cost tracking per request — v1.1
 - ✓ USAGE-02: Cost dashboard with filters — v1.1
 
-## Active Requirements (v1.2)
+### Validated Requirements (v1.2)
 
-*Defining requirements — see REQUIREMENTS.md for scoped list*
+- ✓ API-01: Admin can configure gatekeeper model/provider via settings page — v1.2
+- ✓ API-02: Admin can configure relationship extraction model/provider via settings page — v1.2
+- ✓ PP-01: Entity extractor passes explicit provider from SettingsStore — v1.2
+- ✓ PP-02: Gatekeeper routes through ModelRouter with explicit provider — v1.2
+- ✓ PP-03: Embeddings passes provider from SettingsStore to router.embed() — v1.2
+- ✓ PP-04: Relationship extraction reads from SettingsStore with env var fallback — v1.2
+- ✓ PP-05: KG processor reads from SettingsStore at runtime — v1.2
+- ✓ PP-06: Entity extractor passes explicit provider from SettingsStore — v1.2
+- ✓ PP-07: Embeddings passes provider from SettingsStore to router.embed() — v1.2
+- ✓ PP-08: Summarizer routes through ModelRouter — v1.2
+- ✓ FB-01: SettingsStore value authoritative over env vars — v1.2
+- ✓ FB-02: Graceful degradation on Redis down — v1.2
+
+## Active Requirements
+
+*No active milestone — run `/gsd-new-milestone` to start next cycle*
 
 ## Out of Scope
 
@@ -100,6 +114,8 @@ See the detailed requirement lists below.
 - Video chat (use external tools)
 - Real-time collaboration (async focus)
 - Third-party LMS integration (future consideration)
+
+## Key Decisions
 
 | Decision | Outcome | Status |
 |----------|---------|--------|
@@ -114,14 +130,19 @@ See the detailed requirement lists below.
 | Hybrid UI for provider selection | Settings page + inline selectors | ✓ Good |
 | Late-bind UsageTracker into ModelRouter | Redis-safe startup | ✓ Good |
 | Workspace-local test runners | Avoid monorepo discovery conflicts | ✓ Good |
+| resolve_use_case_config() for 3-step config | All 8 consumers wired consistently | ✓ Good |
+| 30s error TTL for Redis failures | Fast recovery, no zombie-None | ✓ Good |
+| Frontend settings outside RoleProtectedRoute | Admin access works despite role guard | ✓ Good |
 
 ## Context
 
-- **Total LOC:** ~135,000 (Python + TypeScript)
+- **Total LOC:** ~141,000 (Python + TypeScript)
 - **Timeline v1.0:** 46 days (Jan 19 → Mar 8, 2026)
 - **Timeline v1.1:** 5 days (Mar 10 → Mar 16, 2026)
-- **Commits:** 250+
+- **Timeline v1.2:** 1 day (Mar 23, 2026)
+- **Commits:** 280+
 - **Test Coverage:** >85% backend, >80% frontend
+- **Shipped Milestones:** 3 (v1.0, v1.1, v1.2)
 
 ## Constraints
 
@@ -131,4 +152,4 @@ See the detailed requirement lists below.
 - **Performance**: Abstraction layer overhead < 10ms per request
 
 ---
-*Last updated: 2026-03-23 after v1.2 milestone started (Settings Wiring E2E)*
+*Last updated: 2026-03-23 after v1.2 milestone (Settings Wiring E2E)*

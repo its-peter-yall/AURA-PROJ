@@ -118,3 +118,50 @@ AURA-CHAT & AURA-NOTES-MANAGER
 
 ---
 
+## v1.2 Settings Wiring E2E (Shipped: 2026-03-23)
+
+**Phases completed:** 4 phases, 11 plans
+**Requirements:** 12/12 satisfied
+**Timeline:** March 23, 2026 (1 day)
+
+**Code:** 43 files changed, 6,078 insertions, 81 deletions
+
+### Key Accomplishments
+
+1. **Shared Config Resolution** (Phase 14) - `resolve_use_case_config()` utility with 3-step fallback (SettingsStore → env var → hardcoded default), zombie-None cache fix (30s error TTL), `ALLOWED_USE_CASES` expanded in both apps
+
+2. **AURA-CHAT Consumer Wiring** (Phase 15) - Entity extractor, gatekeeper, embeddings, and relationship extraction all read from SettingsStore via `resolve_use_case_config()` and pass explicit `provider` to ModelRouter; OpenRouter blanket skip removed; VERTEX_PROJECT check made provider-aware
+
+3. **AURA-NOTES-MANAGER Consumer Wiring** (Phase 16) - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config; bare `except:pass` replaced with logged error handling; 16 integration tests
+
+4. **Frontend + Cross-App Validation** (Phase 17) - Both apps have settings pages with 5 use case rows, admin route guards, Playwright E2E test specs, AST import audit confirms no direct SDK imports outside `shared/model_router/`
+
+### Architecture Delivered
+
+```
+SettingsStore (Redis)
+└── resolve_use_case_config(use_case)
+    ├── Step 1: SettingsStore lookup (Redis HGET)
+    ├── Step 2: Env var fallback
+    └── Step 3: Hardcoded default
+
+AURA-CHAT Consumers:          AURA-NOTES-MANAGER Consumers:
+├── Entity Extractor          ├── KG Processor
+├── Gatekeeper                ├── Entity Extractor
+├── Embeddings                ├── Embeddings
+└── Relationship Extraction   └── Summarizer
+
+Frontend (both apps):
+├── /settings page (5 use case rows)
+├── Admin-only route guard
+└── Playwright E2E tests
+```
+
+### Files
+
+- [v1.2-ROADMAP.md](./milestones/v1.2-ROADMAP.md) - Full archived roadmap
+- [v1.2-REQUIREMENTS.md](./milestones/v1.2-REQUIREMENTS.md) - Requirements with outcomes
+- [v1.2-MILESTONE-AUDIT.md](./milestones/v1.2-MILESTONE-AUDIT.md) - Audit report (12/12 passed)
+
+---
+

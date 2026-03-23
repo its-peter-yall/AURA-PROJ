@@ -226,6 +226,101 @@ Provider-agnostic LLM architecture enabling both AURA applications to access Ver
 
 ---
 
+## Milestone: v1.2 — Settings Wiring E2E
+
+**Shipped:** 2026-03-23
+**Phases:** 4 | **Plans:** 11 | **Timeline:** 1 day
+
+---
+
+### What Was Built
+
+End-to-end SettingsStore wiring so every AI feature in both applications respects per-use-case model/provider configuration. Delivered shared `resolve_use_case_config()` utility, wired all 8 LLM consumers across both apps, expanded frontend settings UI, and validated with Playwright E2E tests.
+
+**Key Deliverables:**
+- `resolve_use_case_config()` — 3-step resolution (SettingsStore → env var → hardcoded default)
+- Zombie-None cache fix — 30s error TTL for rapid Redis recovery
+- `ALLOWED_USE_CASES` expansion — gatekeeper + relationship_extraction in both apps
+- AURA-CHAT consumer wiring — entity extractor, gatekeeper, embeddings, relationship extraction
+- AURA-NOTES-MANAGER consumer wiring — KG processor, entity extractor, embeddings, summarizer
+- Frontend settings pages — 5 use case rows, admin guards, E2E test specs
+- AST import audit — no direct SDK imports outside `shared/model_router/`
+
+---
+
+### What Worked
+
+**1. Single-day milestone execution**
+- 4 phases completed in 1 day (29 commits)
+- Phases 15 and 16 ran in parallel (independent consumers)
+- Tight scope kept momentum without scope creep
+
+**2. Utility-first architecture**
+- `resolve_use_case_config()` centralised 3-step resolution in one function
+- All 8 consumers reused the same utility — no per-consumer logic
+- Consistent fallback behavior across entire codebase
+
+**3. Sentinel cache pattern**
+- `_SENTINEL_ERROR` cached on Redis failure with 30s TTL
+- Differentiated TTL for errors (30s) vs misses (300s)
+- 5-minute zombie-None problem eliminated
+
+**4. Retroactive verification workflow**
+- Phase 15 VERIFICATION.md created from SUMMARY.md evidence
+- Integration checker spawned for cross-phase wiring verification
+- Audit passed with 12/12 requirements satisfied
+
+---
+
+### What Was Inefficient
+
+**1. Documentation lag**
+- Phase 15 VERIFICATION.md never written during execution
+- Required retroactive creation from SUMMARY.md files
+- VALIDATION.md files remain in draft status (3 of 4 phases)
+
+**2. Dead code left behind**
+- `llm_entity_extractor.py` `_extract_partial_json` has unreachable code after `return {}`
+- Typical of rapid execution — no cleanup pass
+
+---
+
+### Patterns Established
+
+1. **Retroactive verification from SUMMARY.md:** When execution is fast, verification docs can be created from SUMMARY evidence
+2. **Parallel phase execution:** Phases 15 and 16 ran independently with no conflicts
+3. **Config resolution abstraction:** Single utility replaces 8 separate consumer implementations
+4. **Graceful Redis degradation:** 30s error TTL + fallback chain prevents crashes
+
+---
+
+### Key Lessons
+
+1. **Utility functions pay off at scale** — One `resolve_use_case_config()` replaced 8 different consumer implementations with consistent behavior
+
+2. **Cache TTL matters for resilience** — 30s error TTL vs 5-minute default made Redis recovery 10x faster
+
+3. **Parallel phases work when consumers are independent** — Phases 15 (CHAT) and 16 (NOTES) had no shared dependencies
+
+4. **Documentation lags execution in rapid milestones** — Verification files should be written during execution, not retroactively
+
+---
+
+### Cost Observations
+
+- **Timeline:** 1 day (Mar 23)
+- **Commits:** 29 commits
+- **LOC added:** ~6K (43 files changed)
+- **Files modified:** 43
+
+**Efficiency notes:**
+- 4 phases in 1 day = 1 phase/hour average
+- Phase 14 (foundation) was 2 hours
+- Phase 17 (validation) was 1 hour
+- No quick tasks — focused execution
+
+---
+
 ## Cross-Milestone Trends
 
 ### Code Growth
@@ -234,6 +329,7 @@ Provider-agnostic LLM architecture enabling both AURA applications to access Ver
 |-----------|-----|-------|--------|------|
 | v1.0 | 121K | 310 | 7 | 46 |
 | v1.1 | 135K | +80 | 6 | 6 |
+| v1.2 | 141K | +43 | 4 | 1 |
 
 ### Test Coverage
 
@@ -241,28 +337,31 @@ Provider-agnostic LLM architecture enabling both AURA applications to access Ver
 |-----------|------------|-----------|----------|
 | v1.0 | 210+ | 65+ | 85% backend, 80% frontend |
 | v1.1 | 1100+ | 65+ | 85% backend, 80% frontend |
+| v1.2 | 1100+ | 6+ (settings) | 85% backend, 80% frontend |
 
 ### Technical Debt Status
 
-| Item | v1.0 | v1.1 |
-|------|------|------|
-| Split backend directories | Open | Open |
-| React version alignment | Open | Still aligned wrong |
-| Hardcoded workflow paths | Open | Open |
-| Documentation sync | Manual | Manual |
-| Direct SDK imports | N/A | ✓ Closed (AST audit) |
+| Item | v1.0 | v1.1 | v1.2 |
+|------|------|------|------|
+| Split backend directories | Open | Open | Open |
+| React version alignment | Open | Still aligned wrong | Still aligned wrong |
+| Hardcoded workflow paths | Open | Open | Open |
+| Documentation sync | Manual | Manual | Manual |
+| Direct SDK imports | N/A | ✓ Closed (AST audit) | ✓ Closed |
+| Settings wiring | Not started | Partial | ✓ Complete |
 
 ### What's Next
 
-Define v1.2 scope via `/gsd-new-milestone`
+Define v1.3 scope via `/gsd-new-milestone`
 
 Potential areas:
-- Budget management (spending limits, alerts)
+- Dynamic thinking mode model list from provider metadata
 - Provider fallback (auto-switch on rate limits)
+- Settings health indicator in UI
 - Ollama local models (full implementation)
-- Performance optimization (caching strategies)
 - Production monitoring (Prometheus/Grafana)
+- Cost alerts and budget management
 
 ---
 
-*Retrospective updated: 2026-03-16 after v1.1 milestone*
+*Retrospective updated: 2026-03-23 after v1.2 milestone*
