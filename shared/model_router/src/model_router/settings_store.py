@@ -161,9 +161,16 @@ def resolve_use_case_config(
     # Step 2: Env var
     env_spec = _USE_CASE_ENV_VARS.get(use_case)
     if env_spec:
-        env_var, provider = env_spec
+        env_var, default_provider = env_spec
         env_model = os.getenv(env_var)
         if env_model:
+            # Detect provider from model name
+            # (e.g., "openai/gpt-4o" -> provider="openai")
+            if "/" in env_model:
+                detected_provider, _ = env_model.split("/", 1)
+                provider = detected_provider
+            else:
+                provider = default_provider
             return {"provider": provider, "model": env_model}
 
     # Step 3: Hardcoded default
