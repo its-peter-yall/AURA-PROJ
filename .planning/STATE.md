@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: milestone
 status: completed
 stopped_at: Milestone v1.2 complete
-last_updated: "2026-03-23T18:55:00.000Z"
-last_activity: "2026-03-23 — Milestone v1.2 archived: 4 phases, 11 plans, 12/12 requirements satisfied"
+last_updated: "2026-03-23T16:01:31.000Z"
+last_activity: "2026-03-23 — Quick task 260323-tsy: OpenRouter API key wiring (4 tasks, 4 files)"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -48,6 +48,7 @@ Progress: [██████████] 100% (11/11 plans — all complete)
 - [v1.2 scoping]: Zombie-None cache fix with 30s error TTL
 - [v1.2 scoping]: `gatekeeper` and `relationship_extraction` added to ALLOWED_USE_CASES
 - [Phase 17-02]: AURA-CHAT settings page uses existing axios instance, placed OUTSIDE RoleProtectedRoute
+- [Quick 260323-tsy]: Inline KeyManager import in get_default_router() for lazy OpenRouter registration
 
 ### Pending Todos
 
@@ -62,7 +63,7 @@ Progress: [██████████] 100% (11/11 plans — all complete)
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:55:00Z
-Stopped at: Milestone v1.2 complete — archived
+Last session: 2026-03-23T16:01:31Z
+Stopped at: Quick task 260323-tsy complete — OpenRouter provider wiring fixed
 Resume file: (none — no active milestone)
 Next action: `/gsd-new-milestone` to start next cycle
