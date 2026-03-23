@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: Settings Wiring E2E
-status: active
-stopped_at: "Roadmap created — ready for Phase 14 planning"
-last_updated: "2026-03-23T00:00:00.000Z"
-last_activity: "2026-03-23 — v1.2 roadmap created: 4 phases, 12 requirements mapped"
+milestone_name: milestone
+status: completed
+stopped_at: Completed Phase 14-02 plan (expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction)
+last_updated: "2026-03-23T05:39:41.655Z"
+last_activity: "2026-03-23 — Phase 14-02 complete: expanded ALLOWED_USE_CASES with gatekeeper and relationship_extraction"
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
