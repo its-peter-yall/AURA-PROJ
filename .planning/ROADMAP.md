@@ -82,7 +82,12 @@ Plans:
   4. Summarizer routes through ModelRouter instead of direct Vertex SDK calls, and bare `except: pass` blocks are replaced with logged error handling
   5. Integration tests verify each consumer falls back to env vars gracefully when Redis is unreachable
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Wire KG processor + entity extractor (PP-05, PP-06)
+- [ ] 16-02-PLAN.md — Wire embeddings + summarizer (PP-07, PP-08)
+- [ ] 16-03-PLAN.md — Integration tests for all consumers (PP-05 through PP-08)
 
 ---
 
@@ -113,7 +118,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 0/TBD | Not started | - |
-| 16. Wire AURA-NOTES-MANAGER Consumers | 0/TBD | Not started | - |
+| 16. Wire AURA-NOTES-MANAGER Consumers | 0/3 | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
 ---
