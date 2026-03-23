@@ -173,3 +173,85 @@ class TestZombieNoneCache:
         from model_router.settings_store import _cache_is_valid
 
         assert _cache_is_valid("chat") is True
+
+
+# ============================================================================
+# resolve_use_case_config tests
+# ============================================================================
+
+from model_router.settings_store import (
+    _SENTINEL_ERROR,
+    _ERROR_CACHE_TTL,
+    _DEFAULTS_CACHE_TTL,
+    _defaults_cache,
+    clear_defaults_cache,
+    resolve_use_case_config,
+)
+
+
+class TestResolveUseCaseConfig:
+    """Tests for resolve_use_case_config() resolution chain."""
+
+    def setup_method(self) -> None:
+        clear_defaults_cache()
+
+    def test_settings_store_hit(self) -> None:
+        """Returns value from SettingsStore when configured."""
+        clear_defaults_cache()
+        # Pre-populate the sync cache directly (simulates SettingsStore hit)
+        import time
+
+        _defaults_cache["gatekeeper"] = {
+            "value": {"provider": "openrouter", "model": "google/gemini-2.5-flash"},
+            "_cached_at": time.time(),
+        }
+
+        result = resolve_use_case_config("gatekeeper")
+        assert result == {"provider": "openrouter", "model": "google/gemini-2.5-flash"}
+
+    def test_env_var_fallback(self, monkeypatch_env) -> None:
+        """Falls back to env var when SettingsStore returns None."""
+        monkeypatch_env.setenv("LLM_ENTITY_EXTRACTION_MODEL", "gemini-exp-1121")
+        clear_defaults_cache()
+
+        result = resolve_use_case_config("entity_extraction")
+        assert result == {"provider": "vertex_ai", "model": "gemini-exp-1121"}
+
+    def test_hardcoded_default(self) -> None:
+        """Returns hardcoded default when store and env are empty."""
+        clear_defaults_cache()
+
+        result = resolve_use_case_config("chat")
+        assert result == {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"}
+
+    def test_unknown_use_case_returns_global_default(self) -> None:
+        """Returns global default for unrecognized use cases."""
+        clear_defaults_cache()
+
+        result = resolve_use_case_config("totally_unknown")
+        assert result == {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"}
+
+    def test_redis_down_returns_default(self) -> None:
+        """Never crashes on Redis failure — returns hardcoded default."""
+        clear_defaults_cache()
+
+        # Use a bad Redis URL to trigger connection error
+        result = resolve_use_case_config(
+            "chat",
+            redis_url="redis://192.0.2.1:6379/0",  # TEST-NET, unroutable
+        )
+        assert result == {"provider": "vertex_ai", "model": "gemini-2.5-flash-lite"}
+
+    def test_store_overrides_env_var(self) -> None:
+        """SettingsStore value is authoritative over env vars (FB-01)."""
+        clear_defaults_cache()
+        # Pre-populate cache directly (simulates SettingsStore value taking precedence)
+        import time
+
+        _defaults_cache["entity_extraction"] = {
+            "value": {"provider": "openrouter", "model": "store-model"},
+            "_cached_at": time.time(),
+        }
+
+        result = resolve_use_case_config("entity_extraction")
+        assert result == {"provider": "openrouter", "model": "store-model"}
