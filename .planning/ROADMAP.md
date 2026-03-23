@@ -20,7 +20,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 
 - [x] **Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes** - Shared `resolve_use_case_config()` utility, expanded `ALLOWED_USE_CASES`, zombie-None cache fix, env-var fallback chain (completed 2026-03-23)
 - [x] **Phase 15: Wire AURA-CHAT Consumers** - Gatekeeper, entity extractor, embeddings, and relationship extraction all pass explicit `provider` from SettingsStore to ModelRouter (completed 2026-03-23)
-- [ ] **Phase 16: Wire AURA-NOTES-MANAGER Consumers** - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config
+- [x] **Phase 16: Wire AURA-NOTES-MANAGER Consumers** - KG processor, entity extractor, embeddings, and summarizer all route through ModelRouter with SettingsStore config (completed 2026-03-23)
 - [ ] **Phase 17: Frontend + Cross-App Validation** - Settings page UI updated with new use cases, Playwright E2E tests for settings→behavior flow, cross-app config propagation verified
 
 ## Phase Details
@@ -87,7 +87,7 @@ Plans:
   4. Summarizer routes through ModelRouter instead of direct Vertex SDK calls, and bare `except: pass` blocks are replaced with logged error handling
   5. Integration tests verify each consumer falls back to env vars gracefully when Redis is unreachable
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 16-03-PLAN.md — Create integration test file for consumer wiring (PP-05 through PP-08) (Wave 1) ✅
@@ -123,7 +123,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Foundation: Config + Allowlist + Cache | 2/2 | Complete    | 2026-03-23 |
 | 15. Wire AURA-CHAT Consumers | 3/3 | Complete    | 2026-03-23 |
-| 16. Wire AURA-NOTES-MANAGER Consumers | 2/3 | In progress | - |
+| 16. Wire AURA-NOTES-MANAGER Consumers | 3/3 | Complete   | 2026-03-23 |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
 
 ---

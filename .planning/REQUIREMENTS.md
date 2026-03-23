@@ -19,8 +19,8 @@
 
 ### Provider Passthrough — AURA-NOTES-MANAGER
 
-- [ ] **PP-05**: KG processor reads from SettingsStore at runtime (replace `LLM_ENTITY_EXTRACTION_MODEL` env var constant with `resolve_use_case_config("entity_extraction")` in `AURA-NOTES-MANAGER/api/kg_processor.py`)
-- [ ] **PP-06**: Entity extractor passes explicit `provider` from SettingsStore (`AURA-NOTES-MANAGER/services/llm_entity_extractor.py`)
+- [x] **PP-05**: KG processor reads from SettingsStore at runtime (replace `LLM_ENTITY_EXTRACTION_MODEL` env var constant with `resolve_use_case_config("entity_extraction")` in `AURA-NOTES-MANAGER/api/kg_processor.py`)
+- [x] **PP-06**: Entity extractor passes explicit `provider` from SettingsStore (`AURA-NOTES-MANAGER/services/llm_entity_extractor.py`)
 - [x] **PP-07**: Embeddings passes `provider` from SettingsStore to `router.embed()` (`AURA-NOTES-MANAGER/services/embeddings.py`)
 - [x] **PP-08**: Summarizer routes through ModelRouter instead of direct Vertex SDK calls (`AURA-NOTES-MANAGER/services/summarizer.py`)
 
@@ -57,8 +57,8 @@ Deferred to future milestones:
 | PP-02 | Phase 15 | Pending |
 | PP-03 | Phase 15 | Pending |
 | PP-04 | Phase 15 | Pending |
-| PP-05 | Phase 16 | Pending |
-| PP-06 | Phase 16 | Pending |
+| PP-05 | Phase 16 | Complete |
+| PP-06 | Phase 16 | Complete |
 | PP-07 | Phase 16 | Complete |
 | PP-08 | Phase 16 | Complete |
 | FB-01 | Phase 14 | Complete |

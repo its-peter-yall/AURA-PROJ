@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed Phase 16-02 plan (embeddings + summarizer ModelRouter wiring)
-last_updated: "2026-03-23T14:38:37+05:30"
-last_activity: "2026-03-23 — Phase 16-02 complete: embeddings and summarizer routed through ModelRouter with call-time provider resolution"
+stopped_at: Completed Phase 16-01 plan (entity extraction consumer wiring for PP-05 and PP-06)
+last_updated: "2026-03-23T15:03:29Z"
+last_activity: "2026-03-23 — Phase 16-01 complete: entity extraction consumers wired to resolve_use_case_config at call-time"
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 ## Current Position
 
 Phase: 16 (Wire AURA-NOTES-MANAGER Consumers)
-Plan: 02
+Plan: 01
 Status: Completed
-Last activity: 2026-03-23 — Phase 16-02 complete: embeddings and summarizer routed through ModelRouter with call-time provider resolution
+Last activity: 2026-03-23 — Phase 16-01 complete: entity extraction consumers (PP-05, PP-06) wired to resolve_use_case_config at call-time with explicit provider routing
 
-Progress: [████████░░] 67% (2/3 plans — Plans 02/03 complete, Plan 01 pending)
+Progress: [██████████] 100% (3/3 plans — All plans complete)
 
 ## Performance Metrics
 
-- Total plans completed: 25
+- Total plans completed: 26
 - Average duration: 9 min
-- Total execution time: 248 min
+- Total execution time: 293 min
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -51,6 +51,7 @@ Recent metric entries:
 - Phase 14 P02 | 3 min | 4 tasks | 4 files
 - Phase 16 P03 | 28 min | 1 task | 1 file
 - Phase 16 P02 | 20 min | 2 tasks | 3 files
+- Phase 16 P01 | 45 min | 2 tasks | 4 files
 
 ## Accumulated Context
 
@@ -95,10 +96,10 @@ Recent metric entries:
 
 ## Session Continuity
 
-Last session: 2026-03-23T14:38:37+05:30
-Stopped at: Completed Phase 16-02 plan (embeddings + summarizer ModelRouter wiring)
+Last session: 2026-03-23T15:03:29Z
+Stopped at: Completed Phase 16-01 plan (entity extraction consumer wiring for PP-05 and PP-06)
 Resume file: None
-Next action: Phase 16 Plan 01 if pending, else Phase 17
+Next action: Phase 16 complete — all 3 plans done. Ready for Phase 17 or milestone closure.
 
 ### Quick Tasks Completed
 
