@@ -26,7 +26,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 ## Phase Details
 
 ### Phase 14: Foundation — Config Resolver + Allowlist + Cache Fixes
-
+x`x`
 **Goal:** All use cases are configurable via the settings API, and a shared config resolution utility provides `{provider, model}` to every consumer with a reliable fallback chain
 
 **Depends on:** Nothing (first phase of v1.2; v1.1 complete)
@@ -40,7 +40,11 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
   4. When Redis recovers after a failure, SettingsStore values resume within 30 seconds (no 5-minute zombie-None cache)
   5. Unit tests cover all resolution paths: SettingsStore hit, env-var fallback, hardcoded default, Redis-down scenario
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Sentinel cache fix + resolve_use_case_config() utility + tests
+- [ ] 14-02-PLAN.md — ALLOWED_USE_CASES expansion in both routers + router tests
 
 ---
 
@@ -107,7 +111,7 @@ AURA v1.2 wires SettingsStore end-to-end so every AI feature in both application
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation: Config + Allowlist + Cache | 0/TBD | Not started | - |
+| 14. Foundation: Config + Allowlist + Cache | 0/2 | Planning complete | - |
 | 15. Wire AURA-CHAT Consumers | 0/TBD | Not started | - |
 | 16. Wire AURA-NOTES-MANAGER Consumers | 0/TBD | Not started | - |
 | 17. Frontend + Cross-App Validation | 0/TBD | Not started | - |
