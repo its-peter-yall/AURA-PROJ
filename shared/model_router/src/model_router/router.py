@@ -284,7 +284,29 @@ class ModelRouter:
     ) -> list[ModelInfo]:
         """List available models from one or all registered providers."""
         if provider is not None:
-            resolved_provider = self.get_provider(provider)
+            try:
+                resolved_provider = self.get_provider(provider)
+            except ModelUnavailableError as err:
+                # Only attempt lazy registration for OpenRouter with a valid provider type
+                # Check if the error was due to invalid provider string (ValueError as cause)
+                # vs unregistered provider (no ValueError cause)
+                is_valid_provider_type = not isinstance(err.__cause__, ValueError)
+                if is_valid_provider_type:
+                    # Attempt lazy registration for OpenRouter if key exists in KeyManager
+                    try:
+                        resolved_type = _coerce_provider_type(provider)
+                    except ValueError:
+                        raise err
+                    if resolved_type is ProviderType.OPENROUTER:
+                        await self._maybe_lazy_register_openrouter()
+                        resolved_provider = self._providers.get(ProviderType.OPENROUTER)
+                        if resolved_provider is not None:
+                            return await resolved_provider.list_models()
+                        raise ModelUnavailableError(
+                            f"OpenRouter provider unavailable after lazy registration attempt. "
+                            f"Check that OPENROUTER_API_KEY is set or API key is stored in KeyManager."
+                        ) from err
+                raise err
             return await resolved_provider.list_models()
 
         all_models: list[ModelInfo] = []
