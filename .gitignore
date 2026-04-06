@@ -287,3 +287,6 @@ documentations/
 
 # Claude Code settings
 .claude/
+
+# AI tool working directories
+.kilo/

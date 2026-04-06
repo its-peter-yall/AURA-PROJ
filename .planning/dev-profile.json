@@ -1,0 +1,142 @@
+<analysis>
+{
+  "profile_version": "1.0",
+  "analyzed_at": "2026-04-03T00:00:00Z",
+  "project_context": {
+    "name": "AURA-PROJ",
+    "description": "Dual-application monorepo: AURA-CHAT (student RAG chat) + AURA-NOTES-MANAGER (staff hierarchy/notes)",
+    "technologies": ["Python 3.10+", "React 18/19", "TypeScript 5.6-5.9", "FastAPI", "Neo4j", "Redis", "Firebase"],
+    "total_commits": 285,
+    "total_loc": "~141,000",
+    "active_period": "2026-01-19 to 2026-03-23 (64 days)",
+    "milestones_shipped": 3,
+    "quick_tasks_completed": 19
+  },
+  "message_threshold": "insufficient_direct_messages",
+  "analysis_method": "artifact_and_commit_analysis",
+  "note": "No direct chat/session messages were available in the session log format. This profile was constructed from 47+ planning documents (PLAN.md, SUMMARY.md, VERIFICATION.md), 3 milestone retrospectives, STATE.md decisions, debug logs, 285 git commits, and architecture docs. Confidence levels reflect artifact-based inference rather than conversational evidence.",
+  "dimensions": {
+    "planning_style": {
+      "rating": 9,
+      "scale": "1 (fully emergent/ad-hoc) to 10 (highly structured/formal)",
+      "confidence": "HIGH",
+      "evidence_count": 28,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Elaborate phase-level planning with dependencies / **Example:** \"Phase 8: Shared Package Foundation + Vertex AI Migration ... Strangler Fig pattern mandatory -- wrap existing code first, verify tests, then migrate callers incrementally. Budget 2-3x normal estimation.\" -- project: AURA-PROJ",
+        "**Signal:** Every task has PLAN.md with verification steps / **Example:** \"<tasks><task type='auto'><name>Task 1: Wire KeyManager into get_default_router() singleton</name><files>...</files><action>...</action><verify>...</verify><done>...</done></task></tasks>\" -- project: AURA-PROJ",
+        "**Signal:** STATE.md tracks progress, decisions, blockers / **Example:** \"Decisions: [v1.1 scoping]: Shared package at project root, not LiteLLM or LangChain ... Pending Todos: Phase 10 follow-up: migrate or remove test_real_models.py\" -- project: AURA-PROJ"
+      ],
+      "summary": "The developer uses an extremely structured planning methodology with GSD (Get Shit Done) workflow. Every milestone has a ROADMAP.md, every phase has PLAN.md files with objectives, tasks, verification steps, and success criteria. STATE.md tracks decisions, pending todos, and blockers. Quick tasks also get full PLAN.md + SUMMARY.md treatment. The v1.0 milestone took 46 days with 7 phases and 28 plans; v1.2 was compressed to 1 day with 4 phases, showing planning efficiency improves over time.",
+      "claude_instruction": "Continue the structured GSD planning approach -- create PLAN.md with objectives, tasks, verification steps, and success criteria before implementation. Use STATE.md to track decisions and blockers. Keep planning overhead proportional to task complexity: full ROADMAP for milestones, single PLAN.md for quick tasks."
+    },
+    "risk_tolerance": {
+      "rating": 4,
+      "scale": "1 (very conservative/play-it-safe) to 10 (highly adventurous/experimental)",
+      "confidence": "HIGH",
+      "evidence_count": 18,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Uses Strangler Fig for migrations, compatibility shims / **Example:** \"Strangler Fig pattern mandatory -- wrap existing code first, verify tests, then migrate callers incrementally. Budget 2-3x normal estimation.\" -- project: AURA-PROJ (v1.1 Phase 8)",
+        "**Signal:** Graceful fallbacks everywhere, try/except patterns / **Example:** \"Wrapped in try/except so the singleton still works without Redis or AURA_MASTER_KEY. If KeyManager creation fails, log at debug level and continue with key_manager=None.\" -- project: AURA-PROJ",
+        "**Signal:** AST-based import compliance audit before migration / **Example:** \"AST-based import compliance audit ... Worker-context verification for Celery/ARQ background tasks. Prevented quiet regressions in background jobs.\" -- project: AURA-PROJ"
+      ],
+      "summary": "Risk-averse by design. Uses Strangler Fig migration patterns, compatibility shims, AST-based compliance audits, and graceful fallbacks throughout. Budgets 2-3x for high-risk phases. However, this isn't paralysis -- the developer takes calculated risks (shared package at project root, OpenRouter integration with 200+ models) but mitigates them with extensive verification. The v1.2 milestone achieved in 1 day shows confidence growing as the safety net proves reliable.",
+      "claude_instruction": "When making changes, prefer incremental approaches with compatibility shims and graceful fallbacks. Always include try/except error handling with debug-level logging. Use compatibility shims for migrations and verify with existing test suites before changing behavior. For high-risk changes, budget extra time for verification and propose automated compliance checks."
+    },
+    "quality_focus": {
+      "rating": 8,
+      "scale": "1 (ship-fast/iterate-later) to 10 (thorough/perfectionist)",
+      "confidence": "HIGH",
+      "evidence_count": 24,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** 1100+ tests maintained across milestones / **Example:** \"210+ unit tests (85% backend coverage), 65+ E2E tests with Playwright, performance benchmarks (pytest-benchmark), load testing (Locust), Docker Compose deployment (8 services)\" -- project: AURA-PROJ",
+        "**Signal:** Verification docs created even for quick tasks / **Example:** \"After all 4 tasks: 1. Run python -m pytest AURA-CHAT/tests/ -x -q to ensure no regressions 2. Verify semantic_router.py — grep confirms no get_model() calls\" -- project: AURA-PROJ",
+        "**Signal:** Acknowledges documentation lag as inefficiency / **Example:** \"Phase 15 VERIFICATION.md never written during execution. Required retroactive creation from SUMMARY.md. VALIDATION.md files remain in draft status (3 of 4 phases).\" -- project: AURA-PROJ"
+      ],
+      "summary": "Strong quality focus with measurable targets: >85% backend coverage, >80% frontend coverage, performance targets with specific latency numbers. Maintains 1100+ tests across 3 milestones. However, there's a practical streak -- the retrospective openly acknowledges documentation lag and dead code left behind as inefficiencies. The developer values quality but recognizes the trade-off with velocity (v1.2 in 1 day vs v1.0 in 46 days). Tests are written alongside or before code, never skipped.",
+      "claude_instruction": "Maintain the >85% backend / >80% frontend coverage targets. Write tests before or with code, not after. Run pytest and type-checking before declaring tasks complete. Include performance verification (latency targets) for API endpoints. Acknowledge when documentation verification lags behind execution and flag it in summaries."
+    },
+    "communication_style": {
+      "rating": 7,
+      "scale": "1 (terse/minimal) to 10 (comprehensive/verbose)",
+      "confidence": "MEDIUM",
+      "evidence_count": 15,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Detailed PLAN.md with code snippets / **Example:** \"Changes to set_model() (line 177): Change signature from def set_model(self, model_name: Optional[str]) -> str: to def set_model(self, model_name: Optional[str], provider: Optional[str] = None) -> str:\" -- project: AURA-PROJ",
+        "**Signal:** Rich retrospective sections with 'What Worked' and 'What Was Inefficient' / **Example:** \"What Worked: 1. Feature-based frontend architecture ... What Was Inefficient: 1. Split backend in AURA-CHAT ... 2. Dual frontend versions\" -- project: AURA-PROJ",
+        "**Signal:** YAML frontmatter on all planning docs / **Example:** \"phase: quick-260323, plan: 01, type: execute, wave: 1, depends_on: [], files_modified: [...]\" -- project: AURA-PROJ"
+      ],
+      "summary": "Communication is structured and comprehensive through documentation rather than conversational messages. Every plan includes YAML frontmatter, objectives, code snippets, verification steps, and success criteria. Retrospectives are detailed with cross-milestone trend tables. The developer communicates through artifacts rather than ad-hoc messages -- the planning docs serve as the primary communication channel. Style is technical and precise, with concrete numbers (46 days, 121K LOC, 1100+ tests).",
+      "claude_instruction": "Provide structured documentation with YAML frontmatter, clear objectives, and concrete verification criteria. Use tables and metrics to communicate status. When summarizing changes, include specific file paths, line numbers, and before/after code snippets. Write retrospectives with 'What Worked' and 'What Was Inefficient' sections."
+    },
+    "delegation_tendency": {
+      "rating": 6,
+      "scale": "1 (fully delegates/hands-off) to 10 (does everything hands-on)",
+      "confidence": "MEDIUM",
+      "evidence_count": 10,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Uses sub-agent references in planning docs / **Example:** \"Consult Oracle for: architecture decisions, 2+ failed fix attempts, complex debugging. Delegate visual work: Always use frontend-ui-ux-engineer agent for styling/layout changes.\" -- project: AURA-PROJ (AGENTS.md)",
+        "**Signal:** Autonomous task markers in plans / **Example:** \"autonomous: true\" in PLAN.md frontmatter, with task types marked as 'auto' -- project: AURA-PROJ",
+        "**Signal:** Detailed execution context references / **Example:** \"@~/.config/opencode/get-shit-done/workflows/execute-plan.md @~/.config/opencode/get-shit-done/templates/summary.md\" -- project: AURA-PROJ"
+      ],
+      "summary": "The developer uses a hybrid delegation model. Planning docs explicitly define delegation guidelines (frontend-ui-ux-engineer for visual work, librarian for docs, oracle for architecture), and plans mark tasks as 'autonomous: true' indicating trust in automated execution. However, the plans themselves are extremely prescriptive -- they include exact code changes, file paths, and line numbers. This suggests the developer delegates execution but tightly controls the plan. The AGENTS.md document establishes clear delegation boundaries but the developer remains the architect.",
+      "claude_instruction": "Execute autonomously when tasks are marked 'autonomous: true' in the plan, but follow the plan's code-level specifications precisely. Delegate UI/visual work to frontend-ui-ux-engineer, architecture decisions to oracle, and documentation to document-writer. For debugging after 2+ failed attempts, escalate to oracle. Always verify with diagnostics before declaring complete."
+    },
+    "tool_adoption": {
+      "rating": 8,
+      "scale": "1 (resists new tools/legacy-first) to 10 (early adopter/cutting-edge)",
+      "confidence": "HIGH",
+      "evidence_count": 16,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** React 19 and Vite 7 adoption / **Example:** \"React ^19.2.0, React-DOM ^19.2.0, Vite ^7.2.4, TypeScript ~5.9.3\" -- project: AURA-CHAT client",
+        "**Signal:** Tailwind CSS v4 migration / **Example:** \"Configure Tailwind CSS v4 for AURA-NOTES-MANAGER frontend with a custom theme matching the existing Cyber Yellow design system\" -- project: AURA-PROJ (quick task 13)",
+        "**Signal:** GSD workflow, ARQ, Zustand, Reagraph WebGL / **Example:** \"reagraph ^4.30.7 (WebGL) ... arq (async Redis queue) ... zustand for state\" -- project: AURA-PROJ"
+      ],
+      "summary": "Strong early adopter. Uses React 19 (latest), Vite 7 (latest), Tailwind CSS v4 (migrated via quick task), WebGL-based graph visualization (Reagraph), ARQ for async task queues, Zustand for state management. The developer doesn't adopt for novelty -- each tool choice is documented with rationale in AGENTS.md and planning docs. OpenRouter integration added 200+ models access. GSD workflow adoption shows willingness to adopt process tools alongside technical ones. However, React version alignment between apps (18 vs 19) is noted as unresolved tech debt, showing adoption isn't always synchronized.",
+      "claude_instruction": "Stay current with framework versions -- prefer latest stable React, Vite, and TypeScript for new features. When adopting new libraries, research-first: web-search official documentation before implementing. Document technology choices in AGENTS.md with rationale. Track version drift between projects and plan alignment milestones."
+    },
+    "debugging_approach": {
+      "rating": 9,
+      "scale": "1 (trial-and-error/guess) to 10 (systematic/methodical)",
+      "confidence": "HIGH",
+      "evidence_count": 14,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Debug log with hypothesis elimination / **Example:** \"Eliminated: hypothesis: New user missing in Firestore causes /auth/sync 401. evidence: In auth.py, missing user path raises 403 at the not user_doc.exists branch, not 401.\" -- project: AURA-PROJ (debug log)",
+        "**Signal:** Evidence timeline with timestamps / **Example:** \"timestamp: 2026-02-23T18:08:00.000Z, checked: AURA-CHAT/server/routers/auth.py, found: /auth/sync performs verify_firebase_token() first, then checks Firestore\" -- project: AURA-PROJ",
+        "**Signal:** Root cause documentation with fix and verification / **Example:** \"root_cause: AURA-CHAT auth reused firebase_admin._apps[0] ... fix: Isolated auth Firebase initialization to a named app (aura-auth) ... verification: pytest passed (5/5)\" -- project: AURA-PROJ"
+      ],
+      "summary": "Exceptionally systematic debugging. The debug log from 2026-02-23 demonstrates hypothesis-driven debugging: listing symptoms, eliminating hypotheses with evidence (including timestamps and file references), building an evidence trail, documenting root cause, implementing targeted fix, and verifying with regression tests. The developer uses grep/AST audits to verify code properties before and after changes. Plans include 'verify clean' checks (e.g., confirming semantic_router.py has no get_model() calls). Quick task 18 includes a 'Problem Statement' and 'Flow to Fix' section before any code changes.",
+      "claude_instruction": "When debugging, use a systematic approach: document the symptom, list hypotheses with evidence for elimination, check relevant code files with timestamps, identify root cause, implement a targeted fix, and write a regression test. Use grep/AST audits to verify code properties. Before modifying code, audit the call chain to understand all affected paths. Always verify with targeted tests, not just smoke tests."
+    },
+    "architecture_preference": {
+      "rating": 7,
+      "scale": "1 (pure pragmatism/whatever-works) to 10 (idealistic/pure-architecture)",
+      "confidence": "HIGH",
+      "evidence_count": 20,
+      "cross_project_consistent": true,
+      "evidence_quotes": [
+        "**Signal:** Strangler Fig over rewrite, compatibility shims / **Example:** \"Strangler Fig migration pattern ... Compatibility shims allowed gradual migration without breaking existing code. Legacy imports preserved while delegating to new router internally.\" -- project: AURA-PROJ",
+        "**Signal:** Acknowledges tech debt but defers / **Example:** \"Split backend directories: Open ... React version alignment: Still aligned wrong ... Documentation sync: Manual\" -- project: AURA-PROJ (RETROSPECTIVE.md)",
+        "**Signal:** Shared package with clean boundaries / **Example:** \"shared/model_router/ package with Provider ABC and unified error hierarchy ... Clean separation from app-specific code.\" -- project: AURA-PROJ"
+      ],
+      "summary": "Leans pragmatic with idealistic aspirations. The developer builds clean architectures (shared model_router with Provider ABC, feature-based frontend, 3-step config resolution) but accepts pragmatism when needed (split backend directories persist across 3 milestones, React 18/19 drift unaligned, documentation sync remains manual). Uses Strangler Fig pattern rather than big-bang rewrites. The resolve_use_case_config() utility is elegant and idealistic, but the 'zombie-None cache fix' with sentinel error pattern is pragmatic problem-solving. Overall: designs idealistically but executes pragmatically, deferring cleanups until they become blocking issues.",
+      "claude_instruction": "Design clean architectures with clear boundaries (shared packages, feature-based organization, provider abstractions) but use pragmatic migration strategies (Strangler Fig, compatibility shims) rather than big-bang rewrites. Track known tech debt in RETROSPECTIVE.md and address it when it becomes a blocker. Prefer utility functions and centralized config resolution over scattered implementations."
+    }
+  },
+  "overall_summary": "This developer operates with a highly structured GSD workflow across a complex dual-application monorepo. They plan meticulously (9/10), debug systematically (9/10), and maintain strong quality standards (8/10) while adopting modern tools early (8/10). Their risk tolerance is conservative (4/10) -- using Strangler Fig migrations, compatibility shims, and extensive verification. Communication is documentation-rich (7/10), delegation is balanced between autonomous execution and tight architectural control (6/10), and architecture preference blends idealistic design with pragmatic execution (7/10). Key patterns: PLAN.md + SUMMARY.md for every task, 1100+ maintained tests, AST-based compliance audits, 3-step config resolution, and comprehensive retrospectives. The velocity acceleration from v1.0 (46 days) to v1.2 (1 day) demonstrates growing confidence in the established patterns.",
+  "recommendations": [
+    "Batch quick tasks between milestone phases to reduce context switching (9 quick tasks interrupted v1.1 flow)",
+    "Plan documentation writing during execution, not retroactively (verification docs lag in v1.2)",
+    "Schedule a tech debt cleanup milestone for split backend directories and React version alignment",
+    "Consider consolidating dual frontend versions to reduce component copy-paste overhead",
+    "Continue the resolve_use_case_config() pattern -- one utility replacing 8 implementations proved highly effective"
+  ],
+  "sensitive_excluded": []
+}
+</analysis>
