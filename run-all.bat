@@ -1,11 +1,26 @@
 @echo off
 echo Starting AURA Platform...
 
+echo Stopping any process on port 6379...
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :6379 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a 2>nul
+)
+
 echo Restarting Redis (WSL) on port 6379...
-wsl sudo service redis-server restart
+REM Start Redis directly in WSL (no sudo needed for redis-server)
+wsl -d Ubuntu -- bash -c "pkill redis-server 2>/dev/null; redis-server --daemonize yes --port 6379" 2>nul || wsl -- bash -c "pkill redis-server 2>/dev/null; redis-server --daemonize yes --port 6379" 2>nul
 
 echo Waiting for Redis to be ready...
-timeout /t 3 /nobreak >nul
+
+REM Verify Redis is running (max 10 attempts)
+for /L %%i in (1,1,10) do (
+    wsl -d Ubuntu -- bash -c "redis-cli ping" 2>nul | findstr /C:"PONG" >nul
+    if not errorlevel 1 goto :redis_ready
+    timeout /t 1 /nobreak >nul
+)
+:redis_ready
+
+echo Redis started successfully!
 
 REM Use 127.0.0.1 for Redis connection
 set REDIS_HOST=127.0.0.1
