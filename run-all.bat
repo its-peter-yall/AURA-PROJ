@@ -13,14 +13,18 @@ wsl -d Ubuntu -- bash -c "pkill redis-server 2>/dev/null; redis-server --daemoni
 echo Waiting for Redis to be ready...
 
 REM Verify Redis is running (max 10 attempts)
+set redis_failed=1
 for /L %%i in (1,1,10) do (
     wsl -d Ubuntu -- bash -c "redis-cli ping" 2>nul | findstr /C:"PONG" >nul
-    if not errorlevel 1 goto :redis_ready
+    if not errorlevel 1 set redis_failed=0 & goto :redis_ready
     timeout /t 1 /nobreak >nul
 )
 :redis_ready
-
-echo Redis started successfully!
+if %redis_failed%==0 (
+    echo Redis started successfully!
+) else (
+    echo ERROR: Redis failed to start after 10 attempts. Check WSL and Redis installation.
+)
 
 REM Use 127.0.0.1 for Redis connection
 set REDIS_HOST=127.0.0.1
