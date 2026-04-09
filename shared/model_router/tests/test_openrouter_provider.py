@@ -190,6 +190,54 @@ async def test_list_models_returns_curated_models() -> None:
 
 
 @pytest.mark.asyncio
+async def test_list_models_marks_thinking_capability_in_test_mode() -> None:
+    provider = OpenRouterProvider(make_config())
+
+    models = await provider.list_models()
+    by_name = {model.name: model for model in models}
+
+    assert by_name["anthropic/claude-sonnet-4"].thinking_supported is True
+    assert by_name["google/gemini-2.5-flash"].thinking_supported is False
+
+
+@pytest.mark.asyncio
+async def test_list_models_marks_thinking_capability_for_live_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = OpenRouterProvider(make_config())
+    monkeypatch.setattr(provider, "_test_mode", False)
+
+    def handler(*, url: str, headers: dict[str, str]) -> httpx.Response:
+        assert url.endswith("/models")
+        assert headers["Authorization"] == "Bearer test-key"
+        request = httpx.Request("GET", url)
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "data": [
+                    {"id": "anthropic/claude-sonnet-4", "name": "Claude"},
+                    {"id": "google/gemini-2.5-flash", "name": "Gemini"},
+                    {"id": "qwen/qwen-2.5-72b-instruct", "name": "Qwen"},
+                ]
+            },
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: FakeAsyncClient(handler, **kwargs),
+    )
+
+    models = await provider.list_models()
+    by_name = {model.name: model for model in models}
+
+    assert by_name["anthropic/claude-sonnet-4"].thinking_supported is True
+    assert by_name["google/gemini-2.5-flash"].thinking_supported is False
+    assert by_name["qwen/qwen-2.5-72b-instruct"].thinking_supported is False
+
+
+@pytest.mark.asyncio
 async def test_health_check_passes() -> None:
     provider = OpenRouterProvider(make_config())
 

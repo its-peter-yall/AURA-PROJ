@@ -57,36 +57,43 @@ _TEST_MODELS = [
         name="anthropic/claude-sonnet-4",
         provider=ProviderType.OPENROUTER,
         display_name="Claude Sonnet 4",
+        thinking_supported=True,
     ),
     ModelInfo(
         name="google/gemini-2.5-flash",
         provider=ProviderType.OPENROUTER,
         display_name="Gemini 2.5 Flash",
+        thinking_supported=False,
     ),
     ModelInfo(
         name="openai/gpt-4.1-mini",
         provider=ProviderType.OPENROUTER,
         display_name="GPT-4.1 Mini",
+        thinking_supported=False,
     ),
     ModelInfo(
         name="deepseek/deepseek-r1",
         provider=ProviderType.OPENROUTER,
         display_name="DeepSeek R1",
+        thinking_supported=False,
     ),
     ModelInfo(
         name="meta-llama/llama-3.3-70b-instruct",
         provider=ProviderType.OPENROUTER,
         display_name="Llama 3.3 70B Instruct",
+        thinking_supported=False,
     ),
     ModelInfo(
         name="mistralai/mistral-large",
         provider=ProviderType.OPENROUTER,
         display_name="Mistral Large",
+        thinking_supported=False,
     ),
     ModelInfo(
         name="qwen/qwen-2.5-72b-instruct",
         provider=ProviderType.OPENROUTER,
         display_name="Qwen 2.5 72B Instruct",
+        thinking_supported=False,
     ),
 ]
 
@@ -108,6 +115,14 @@ _EMBEDDING_TEST_MODELS = [
 _OPENROUTER_EMBEDDING_PREFIXES = [
     "openai/text-embedding",
 ]
+
+
+def _supports_thinking(model_name: str) -> bool:
+    """Return True when the model can use OpenRouter reasoning params."""
+    normalized = model_name.lower()
+    if "claude" in normalized or "anthropic" in normalized:
+        return True
+    return False
 
 
 def _is_test_mode() -> bool:
@@ -494,6 +509,7 @@ class OpenRouterProvider(BaseProvider):
                     display_name=(
                         display_name if isinstance(display_name, str) else None
                     ),
+                    thinking_supported=_supports_thinking(name),
                 )
             )
         return models

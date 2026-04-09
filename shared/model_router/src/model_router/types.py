@@ -83,6 +83,7 @@ class ModelInfo(BaseModel):
     provider: ProviderType
     display_name: str | None = None
     model_type: Literal["generation", "embedding"] = "generation"
+    thinking_supported: bool = False
 
 
 class UsageRecord(BaseModel):
