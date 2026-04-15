@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Completed 26-canonical-orchestration-seams-03-PLAN.md
-last_updated: "2026-04-07T05:13:36.134Z"
-last_activity: "2026-04-09 - Completed quick task 260409-m79: Implement option 3 for thinking toggle states with OpenRouter model capabilities"
+last_updated: "2026-04-14T17:27:53.703Z"
+last_activity: "2026-04-15 - Completed quick task 260415-vkb: Fix SettingsPage model dropdown - models not visible and page refreshes when switching tabs"
 progress:
   total_phases: 0
   completed_phases: 0
@@ -69,6 +69,8 @@ Progress: [██████████] 100% (11/11 plans — all complete)
 | 260404-ke6 | Wire RAGEngine to SettingsStore - chat use case provider propagation | 2026-04-04 | - | [260404-ke6-wire-aura-chat-ragengine-to-read-user-mo](./quick/260404-ke6-wire-aura-chat-ragengine-to-read-user-mo/) |
 | 260323-tsy | Fix all OpenRouter API key wiring gaps - settings→backend provider propagation | 2026-03-23 | 6ac6e3a | [260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s](./quick/260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s/) |
 | 260409-m79 | Implement option 3 for thinking toggle states with OpenRouter model capabilities | 2026-04-09 | 1cd32e4 | [260409-m79-implement-option-3-for-thinking-toggle-s](./quick/260409-m79-implement-option-3-for-thinking-toggle-s/) |
+| 260414-vw8 | As an administrator, I want the 'Chat Model' I select in the Settings Page to be the only option available to users in the Chat Page dropdown, so I can strictly control which AI models are used for chat interactions. | 2026-04-14 | 77a0349 | [260414-vw8-as-an-administrator-i-want-the-chat-mode](./quick/260414-vw8-as-an-administrator-i-want-the-chat-mode/) |
+| 260415-vkb | Fix SettingsPage model dropdown - models not visible and page refreshes when switching tabs | 2026-04-15 | 688303c | [260415-vkb-fix-settingspage-model-dropdown](./quick/260415-vkb-fix-settingspage-model-dropdown/) |
 | Phase 26-canonical-orchestration-seams P03 | 45min | 2 tasks | 2 files |
 
 ## Session Continuity
