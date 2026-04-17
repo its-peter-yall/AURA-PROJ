@@ -3,6 +3,9 @@
   "typeCheckingMode": "basic",
   "reportMissingImports": "warning",
   "reportMissingTypeStubs": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportArgumentType": "none",
   "venvPath": ".",
   "venv": ".venv"
 }

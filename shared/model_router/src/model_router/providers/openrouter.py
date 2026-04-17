@@ -63,7 +63,7 @@ _TEST_MODELS = [
         name="google/gemini-2.5-flash",
         provider=ProviderType.OPENROUTER,
         display_name="Gemini 2.5 Flash",
-        thinking_supported=False,
+        thinking_supported=True,
     ),
     ModelInfo(
         name="openai/gpt-4.1-mini",
@@ -75,7 +75,7 @@ _TEST_MODELS = [
         name="deepseek/deepseek-r1",
         provider=ProviderType.OPENROUTER,
         display_name="DeepSeek R1",
-        thinking_supported=False,
+        thinking_supported=True,
     ),
     ModelInfo(
         name="meta-llama/llama-3.3-70b-instruct",
@@ -116,12 +116,40 @@ _OPENROUTER_EMBEDDING_PREFIXES = [
     "openai/text-embedding",
 ]
 
+_REASONING_PARAMETER_NAMES = {
+    "reasoning",
+    "include_reasoning",
+    "reasoning_effort",
+}
 
-def _supports_thinking(model_name: str) -> bool:
-    """Return True when the model can use OpenRouter reasoning params."""
+
+def _supports_thinking(
+    model_name: str,
+    supported_parameters: list[Any] | None = None,
+) -> bool:
+    """Return True when a model supports or exposes reasoning output."""
     normalized = model_name.lower()
+
+    normalized_params = {
+        str(param).strip().lower()
+        for param in (supported_parameters or [])
+        if isinstance(param, str) and str(param).strip()
+    }
+    if normalized_params.intersection(_REASONING_PARAMETER_NAMES):
+        return True
+
+    if "deepseek" in normalized and "r1" in normalized:
+        return True
+
     if "claude" in normalized or "anthropic" in normalized:
         return True
+
+    if normalized.startswith("google/") and "gemini" in normalized:
+        return True
+
+    if ":thinking" in normalized:
+        return True
+
     return False
 
 
@@ -509,7 +537,10 @@ class OpenRouterProvider(BaseProvider):
                     display_name=(
                         display_name if isinstance(display_name, str) else None
                     ),
-                    thinking_supported=_supports_thinking(name),
+                    thinking_supported=_supports_thinking(
+                        name,
+                        item.get("supported_parameters"),
+                    ),
                 )
             )
         return models
@@ -606,8 +637,10 @@ class OpenRouterEmbeddingProvider(BaseEmbeddingProvider):
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as http_client:
+                # OpenRouter does not have a separate /models/embeddings endpoint.
+                # All models are returned from /models.
                 response = await http_client.get(
-                    f"{self._config.base_url.rstrip('/')}/models/embeddings",
+                    f"{self._config.base_url.rstrip('/')}/models",
                     headers=_build_headers(self._config),
                 )
                 response.raise_for_status()
@@ -620,6 +653,8 @@ class OpenRouterEmbeddingProvider(BaseEmbeddingProvider):
             name = item.get("id", "")
             if not isinstance(name, str):
                 continue
+            
+            # Filter for models that start with our known embedding prefixes
             if not any(
                 name.startswith(prefix) for prefix in _OPENROUTER_EMBEDDING_PREFIXES
             ):

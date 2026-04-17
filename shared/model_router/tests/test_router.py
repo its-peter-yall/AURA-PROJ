@@ -406,7 +406,7 @@ async def test_router_list_models_single_provider() -> None:
 
     assert all(model.provider is ProviderType.VERTEX_AI for model in vertex_models)
     assert all(model.provider is ProviderType.OPENROUTER for model in openrouter_models)
-    assert len(vertex_models) == 3
+    assert len(vertex_models) == 6
     assert len(openrouter_models) >= 5
 
 

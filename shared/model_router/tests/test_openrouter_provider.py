@@ -197,7 +197,8 @@ async def test_list_models_marks_thinking_capability_in_test_mode() -> None:
     by_name = {model.name: model for model in models}
 
     assert by_name["anthropic/claude-sonnet-4"].thinking_supported is True
-    assert by_name["google/gemini-2.5-flash"].thinking_supported is False
+    assert by_name["google/gemini-2.5-flash"].thinking_supported is True
+    assert by_name["deepseek/deepseek-r1"].thinking_supported is True
 
 
 @pytest.mark.asyncio
@@ -216,8 +217,20 @@ async def test_list_models_marks_thinking_capability_for_live_payload(
             request=request,
             json={
                 "data": [
-                    {"id": "anthropic/claude-sonnet-4", "name": "Claude"},
-                    {"id": "google/gemini-2.5-flash", "name": "Gemini"},
+                    {
+                        "id": "anthropic/claude-sonnet-4",
+                        "name": "Claude",
+                        "supported_parameters": ["reasoning"],
+                    },
+                    {
+                        "id": "google/gemini-2.5-flash",
+                        "name": "Gemini",
+                        "supported_parameters": ["include_reasoning"],
+                    },
+                    {
+                        "id": "deepseek/deepseek-r1",
+                        "name": "DeepSeek R1",
+                    },
                     {"id": "qwen/qwen-2.5-72b-instruct", "name": "Qwen"},
                 ]
             },
@@ -233,7 +246,8 @@ async def test_list_models_marks_thinking_capability_for_live_payload(
     by_name = {model.name: model for model in models}
 
     assert by_name["anthropic/claude-sonnet-4"].thinking_supported is True
-    assert by_name["google/gemini-2.5-flash"].thinking_supported is False
+    assert by_name["google/gemini-2.5-flash"].thinking_supported is True
+    assert by_name["deepseek/deepseek-r1"].thinking_supported is True
     assert by_name["qwen/qwen-2.5-72b-instruct"].thinking_supported is False
 
 

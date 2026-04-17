@@ -51,11 +51,13 @@ _GEMINI_MODELS = [
         name="gemini-2.5-flash",
         provider=ProviderType.VERTEX_AI,
         display_name="Gemini 2.5 Flash",
+        thinking_supported=True,
     ),
     ModelInfo(
         name="gemini-2.5-pro",
         provider=ProviderType.VERTEX_AI,
         display_name="Gemini 2.5 Pro",
+        thinking_supported=True,
     ),
 ]
 
