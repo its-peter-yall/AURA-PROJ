@@ -42,15 +42,7 @@ from model_router.types import (
     UsageInfo,
 )
 
-_OPENROUTER_CURATED_PREFIXES = [
-    "anthropic/",
-    "google/",
-    "openai/",
-    "deepseek/",
-    "meta-llama/",
-    "mistralai/",
-    "qwen/",
-]
+_OPENROUTER_EXCLUDED_PREFIXES: list[str] = []
 
 _TEST_MODELS = [
     ModelInfo(
@@ -524,8 +516,8 @@ class OpenRouterProvider(BaseProvider):
             name = item.get("id", "")
             if not isinstance(name, str):
                 continue
-            if not any(
-                name.startswith(prefix) for prefix in _OPENROUTER_CURATED_PREFIXES
+            if any(
+                name.startswith(prefix) for prefix in _OPENROUTER_EXCLUDED_PREFIXES
             ):
                 continue
 

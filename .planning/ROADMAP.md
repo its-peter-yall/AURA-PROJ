@@ -84,6 +84,16 @@ Available roadmaps for future work:
 - [MILESTONES.md](./MILESTONES.md) - Milestone history
 - [milestones/](./milestones/) - Archived roadmaps and requirements
 
+### Phase 1: Multi-model chat configuration - allow 1-5 models with default selection in settings, and update chat page to use default
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 0
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 1 to break down)
+
 ---
 
 *Last updated: 2026-03-23 after v1.2 milestone*
