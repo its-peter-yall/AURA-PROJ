@@ -229,3 +229,74 @@ class SettingsStore:
         if raw_value is None:
             return None
         return json.loads(_decode_redis_text(raw_value))
+
+    async def get_chat_models_config(self) -> dict[str, Any] | None:
+        """Return the multi-model chat configuration.
+
+        Reads the "chat" key from Redis and returns the multi-model format
+        if present. If the legacy single-model format is stored, converts
+        it to the new format on-the-fly.
+
+        Returns:
+            Multi-model config dict with "models" array and "default_index",
+            or None if no chat configuration exists.
+        """
+        raw_value = await self._redis.hget(SETTINGS_KEY, "chat")
+        if raw_value is None:
+            return None
+
+        parsed = json.loads(_decode_redis_text(raw_value))
+
+        if "models" in parsed:
+            return parsed
+
+        return {
+            "provider": parsed.get("provider", "vertex_ai"),
+            "model": parsed.get("model", "gemini-2.5-flash-lite"),
+            "models": [
+                {
+                    "provider": parsed.get("provider", "vertex_ai"),
+                    "model": parsed.get("model", "gemini-2.5-flash-lite"),
+                },
+            ],
+            "default_index": 0,
+        }
+
+    async def set_chat_models(
+        self,
+        models: list[dict[str, str]],
+        default_index: int = 0,
+    ) -> None:
+        """Set the multi-model chat configuration.
+
+        Validates and stores 1-5 model entries with a default_index.
+        The payload includes backward-compatible provider/model fields
+        aliased from the default model entry.
+
+        Args:
+            models: List of model entries, each with "provider" and "model" keys.
+            default_index: Index of the default model in the list.
+
+        Raises:
+            ValueError: If validation fails (empty list, >5 models, invalid index, missing keys).
+        """
+        if not models:
+            raise ValueError("At least one model must be configured")
+        if len(models) > 5:
+            raise ValueError("Maximum 5 models allowed")
+        if not (0 <= default_index < len(models)):
+            raise ValueError("default_index out of range")
+
+        for model_entry in models:
+            if "provider" not in model_entry or "model" not in model_entry:
+                raise ValueError("Each model must have 'provider' and 'model' keys")
+
+        payload = {
+            "models": models,
+            "default_index": default_index,
+            "provider": models[default_index]["provider"],
+            "model": models[default_index]["model"],
+        }
+
+        await self._redis.hset(SETTINGS_KEY, "chat", json.dumps(payload))
+        _defaults_cache.pop("chat", None)

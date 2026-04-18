@@ -185,3 +185,32 @@ async def test_set_chat_models_backward_compat_get_default(fake_redis) -> None:
     assert default is not None
     assert default["provider"] == "openrouter"
     assert default["model"] == "openai/gpt-4o-mini"
+
+
+@pytest.mark.asyncio
+async def test_set_chat_models_does_not_break_get_defaults(fake_redis) -> None:
+    """Setting multi-model chat config does not break get_defaults() for other use cases.
+
+    Regression test: set_chat_models writes to the 'chat' key, but get_defaults()
+    must still return all configured use cases including non-chat ones like
+    'embeddings'. This ensures backward compatibility for systems that call
+    get_defaults() to enumerate all settings.
+    """
+    store = SettingsStore(fake_redis)
+
+    await store.set_chat_models(
+        [
+            {"provider": "openrouter", "model": "openai/gpt-4o-mini"},
+            {"provider": "vertex_ai", "model": "gemini-2.5-flash"},
+        ],
+        default_index=0,
+    )
+
+    await store.set_default("embeddings", "vertex_ai", "text-embedding-004")
+
+    defaults = await store.get_defaults()
+    assert "chat" in defaults
+    assert "embeddings" in defaults
+    assert defaults["chat"]["provider"] == "openrouter"
+    assert defaults["chat"]["model"] == "openai/gpt-4o-mini"
+    assert defaults["embeddings"] == {"provider": "vertex_ai", "model": "text-embedding-004"}
