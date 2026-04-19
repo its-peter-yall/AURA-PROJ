@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 from model_router.types import ProviderType, UsageInfo, UsageRecord
 
@@ -35,17 +35,32 @@ class UsageTracker:
     via ZRANGEBYSCORE.
 
     Args:
-        redis_client: Async Redis-compatible client with sorted set
-                      methods (zadd, zrangebyscore, zcard).
+        redis_client_or_factory: Async Redis-compatible client, or a
+            callable that returns one. Using a factory avoids event
+            loop mismatch when the client is created in a different
+            loop than the one handling requests.
     """
 
-    def __init__(self, redis_client: Any) -> None:
-        """Store the injected async Redis client.
+    def __init__(
+        self,
+        redis_client_or_factory: Any | Callable[[], Any],
+    ) -> None:
+        """Store the injected async Redis client or factory.
 
         Args:
-            redis_client: Async Redis-compatible client.
+            redis_client_or_factory: Async Redis-compatible client or
+                a zero-arg callable returning one.
         """
-        self._redis = redis_client
+        self._redis_or_factory = redis_client_or_factory
+
+    def _get_redis(self) -> Any:
+        """Return a Redis client valid for the current event loop."""
+        client = (
+            self._redis_or_factory()
+            if callable(self._redis_or_factory)
+            else self._redis_or_factory
+        )
+        return client
 
     async def record(
         self,
@@ -88,11 +103,12 @@ class UsageTracker:
         score = record.timestamp.timestamp()
         payload = record.model_dump_json()
 
-        await self._redis.zadd(USAGE_KEY, {payload: score})
+        redis = self._get_redis()
+        await redis.zadd(USAGE_KEY, {payload: score})
 
         if session_id:
             session_key = f"{USAGE_SESSION_PREFIX}{session_id}"
-            await self._redis.zadd(session_key, {payload: score})
+            await redis.zadd(session_key, {payload: score})
 
     async def get_records(
         self,
@@ -113,7 +129,7 @@ class UsageTracker:
         start_score = start_date.timestamp()
         end_score = end_date.timestamp()
 
-        raw_entries = await self._redis.zrangebyscore(
+        raw_entries = await self._get_redis().zrangebyscore(
             USAGE_KEY, start_score, end_score
         )
 
@@ -143,7 +159,7 @@ class UsageTracker:
         """
         session_key = f"{USAGE_SESSION_PREFIX}{session_id}"
 
-        raw_entries = await self._redis.zrangebyscore(
+        raw_entries = await self._get_redis().zrangebyscore(
             session_key, float("-inf"), float("+inf")
         )
 
