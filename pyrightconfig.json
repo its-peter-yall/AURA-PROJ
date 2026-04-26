@@ -7,5 +7,10 @@
   "reportAttributeAccessIssue": "none",
   "reportArgumentType": "none",
   "venvPath": ".",
-  "venv": ".venv"
+  "venv": ".venv",
+  "extraPaths": [
+    "AURA-CHAT",
+    "AURA-NOTES-MANAGER",
+    "shared/model_router/src"
+  ]
 }

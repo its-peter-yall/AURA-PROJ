@@ -485,7 +485,7 @@ class OpenRouterProvider(BaseProvider):
                 close_fn = getattr(stream, "close", None)
                 if callable(close_fn):
                     try:
-                        close_fn()
+                        await close_fn()
                     except Exception:
                         pass
                 aclose_fn = getattr(stream, "aclose", None)
