@@ -1,4 +1,4 @@
-# AURA - Academic Understanding & Research Assistant
+# AURA - Academic Universal Research Assistant
 
 > **Version:** 2.0 (Module-Centric Architecture)
 > **Last Updated:** April 2026
