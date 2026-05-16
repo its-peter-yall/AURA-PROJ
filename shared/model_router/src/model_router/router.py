@@ -381,20 +381,26 @@ class ModelRouter:
         provider = await self._resolve_provider(resolved_request)
 
         total_text = ""
+        real_usage: UsageInfo | None = None
         async for chunk in provider.stream(resolved_request):  # type: ignore[reportGeneralTypeIssues]
             total_text += chunk.text
+            if chunk.usage is not None:
+                real_usage = chunk.usage
             yield chunk
 
         if self._usage_tracker and self._cost_calculator:
             try:
                 provider_type = self._determine_provider_type(resolved_request)
-                # Estimate tokens from character count (~4 chars/token)
-                est_output = max(len(total_text) // 4, 1)
-                est_input = max(len(str(resolved_request.contents)) // 4, 1)
-                usage = UsageInfo(
-                    input_tokens=est_input,
-                    output_tokens=est_output,
-                )
+                if real_usage is not None:
+                    usage = real_usage
+                else:
+                    # Estimate tokens from character count (~4 chars/token)
+                    est_output = max(len(total_text) // 4, 1)
+                    est_input = max(len(str(resolved_request.contents)) // 4, 1)
+                    usage = UsageInfo(
+                        input_tokens=est_input,
+                        output_tokens=est_output,
+                    )
                 cost = self._cost_calculator.estimate(
                     usage,
                     resolved_request.model,
@@ -445,21 +451,27 @@ class ModelRouter:
 
         total_output_text = ""
         total_thinking_text = ""
+        real_usage: UsageInfo | None = None
         async for chunk in provider.stream(resolved_request):  # type: ignore[reportGeneralTypeIssues]
             if chunk.type == "thinking":
                 total_thinking_text += chunk.text
             else:
                 total_output_text += chunk.text
+            if chunk.usage is not None:
+                real_usage = chunk.usage
             yield chunk
 
-        est_input = max(len(str(resolved_request.contents)) // 4, 1)
-        est_output = max(len(total_output_text) // 4, 1)
-        est_thinking = max(len(total_thinking_text) // 4, 0)
-        usage = UsageInfo(
-            input_tokens=est_input,
-            output_tokens=est_output,
-            thinking_tokens=est_thinking,
-        )
+        if real_usage is not None:
+            usage = real_usage
+        else:
+            est_input = max(len(str(resolved_request.contents)) // 4, 1)
+            est_output = max(len(total_output_text) // 4, 1)
+            est_thinking = max(len(total_thinking_text) // 4, 0)
+            usage = UsageInfo(
+                input_tokens=est_input,
+                output_tokens=est_output,
+                thinking_tokens=est_thinking,
+            )
 
         if usage_out is not None:
             usage_out.append(usage)
