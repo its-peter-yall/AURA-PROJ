@@ -74,6 +74,7 @@ class StreamChunk(BaseModel):
 
     type: Literal["thinking", "content"]
     text: str
+    usage: UsageInfo | None = None
 
 
 class ModelInfo(BaseModel):
