@@ -11,8 +11,12 @@
 
 """Tests for UsageRecord, GenerateRequest metadata, and CostCalculator."""
 
+import sys
+import types
+
 import pytest
 
+from model_router.config import OpenRouterConfig
 from model_router.types import (
     GenerateRequest,
     ProviderType,
@@ -309,3 +313,178 @@ class TestCostCalculatorOpenRouter:
         # output: (500 + 300)/1M * 15.00 = 0.012
         # total: 0.015
         assert cost == pytest.approx(0.015, abs=1e-7)
+
+
+class TestCostCalculatorOpenRouterPricingFetch:
+    """Async OpenRouter pricing fetch and cache population tests."""
+
+    @staticmethod
+    def _patch_httpx_module(
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        payload: dict[str, object] | None = None,
+        error: Exception | None = None,
+    ) -> None:
+        """Patch the lazily imported httpx module for pricing fetch tests."""
+
+        class FakeResponse:
+            def __init__(self, response_payload: dict[str, object]) -> None:
+                self._payload = response_payload
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict[str, object]:
+                return self._payload
+
+        class FakeAsyncClient:
+            def __init__(self, timeout: float) -> None:
+                self.timeout = timeout
+
+            async def __aenter__(self) -> "FakeAsyncClient":
+                return self
+
+            async def __aexit__(
+                self,
+                exc_type: object,
+                exc: object,
+                tb: object,
+            ) -> bool:
+                return False
+
+            async def get(self, url: str, headers: dict[str, str]) -> FakeResponse:
+                del url, headers
+                if error is not None:
+                    raise error
+                return FakeResponse(payload or {"data": []})
+
+        fake_httpx = types.SimpleNamespace(
+            AsyncClient=FakeAsyncClient,
+            HTTPError=RuntimeError,
+        )
+        monkeypatch.setitem(sys.modules, "httpx", fake_httpx)
+
+    @pytest.mark.asyncio
+    async def test_populate_openrouter_pricing_success(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """populate_openrouter_pricing caches valid per-token pricing entries."""
+        calc = CostCalculator()
+        self._patch_httpx_module(
+            monkeypatch,
+            payload={
+                "data": [
+                    {
+                        "id": "anthropic/claude-sonnet-4",
+                        "pricing": {
+                            "prompt": "0.000003",
+                            "completion": "0.000015",
+                        },
+                    },
+                    {
+                        "id": "google/gemini-2.5-flash",
+                        "pricing": {
+                            "prompt": "0.00000015",
+                            "completion": "0.0000006",
+                        },
+                    },
+                ],
+            },
+        )
+
+        await calc.populate_openrouter_pricing(
+            OpenRouterConfig(api_key="test-key", base_url="https://unit.test/api/v1")
+        )
+
+        assert calc._openrouter_pricing["anthropic/claude-sonnet-4"] == {
+            "input": 3.0,
+            "output": 15.0,
+        }
+        assert calc._openrouter_pricing["google/gemini-2.5-flash"] == {
+            "input": 0.15,
+            "output": 0.6,
+        }
+
+    @pytest.mark.asyncio
+    async def test_populate_openrouter_pricing_skips_non_numeric(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """populate_openrouter_pricing ignores invalid numeric pricing values."""
+        calc = CostCalculator()
+        self._patch_httpx_module(
+            monkeypatch,
+            payload={
+                "data": [
+                    {
+                        "id": "valid/model",
+                        "pricing": {
+                            "prompt": "0.000001",
+                            "completion": "0.000002",
+                        },
+                    },
+                    {
+                        "id": "invalid/model",
+                        "pricing": {
+                            "prompt": "not-a-number",
+                            "completion": "0.000004",
+                        },
+                    },
+                ],
+            },
+        )
+
+        await calc.populate_openrouter_pricing(OpenRouterConfig(api_key="test-key"))
+
+        assert "valid/model" in calc._openrouter_pricing
+        assert "invalid/model" not in calc._openrouter_pricing
+
+    @pytest.mark.asyncio
+    async def test_populate_openrouter_pricing_handles_failure(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """populate_openrouter_pricing swallows HTTP errors gracefully."""
+        calc = CostCalculator()
+
+        class FakeHTTPError(Exception):
+            """HTTP error type used by the fake httpx module."""
+
+        self._patch_httpx_module(
+            monkeypatch,
+            error=FakeHTTPError("network down"),
+        )
+
+        await calc.populate_openrouter_pricing(OpenRouterConfig(api_key="test-key"))
+
+        assert calc._openrouter_pricing == {}
+
+    @pytest.mark.asyncio
+    async def test_estimate_openrouter_with_populated_cache(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """estimate() uses cached pricing populated from async fetch."""
+        calc = CostCalculator()
+        self._patch_httpx_module(
+            monkeypatch,
+            payload={
+                "data": [
+                    {
+                        "id": "openai/gpt-4.1-mini",
+                        "pricing": {
+                            "prompt": "0.000001",
+                            "completion": "0.000003",
+                        },
+                    }
+                ]
+            },
+        )
+
+        await calc.populate_openrouter_pricing(OpenRouterConfig(api_key="test-key"))
+        usage = UsageInfo(input_tokens=1000, output_tokens=200)
+
+        cost = calc.estimate(usage, "openai/gpt-4.1-mini", ProviderType.OPENROUTER)
+
+        assert cost > 0.0

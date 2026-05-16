@@ -268,8 +268,8 @@ async def test_both_providers_yield_same_chunk_schema() -> None:
         chunk async for chunk in openrouter_provider.stream(openrouter_request)
     ][0]
 
-    assert set(vertex_chunk.model_dump().keys()) == {'type', 'text'}
-    assert set(openrouter_chunk.model_dump().keys()) == {'type', 'text'}
+    assert set(vertex_chunk.model_dump().keys()) == {'type', 'text', 'usage'}
+    assert set(openrouter_chunk.model_dump().keys()) == {'type', 'text', 'usage'}
     assert type(vertex_chunk) is type(openrouter_chunk)
 
 

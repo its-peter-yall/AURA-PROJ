@@ -15,12 +15,20 @@ import pytest
 from model_router import ModelRouter, get_default_router, reset_default_router
 from model_router.config import OpenRouterConfig, RouterConfig, VertexAIConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
+from model_router.providers.base import BaseProvider
 from model_router.providers.openrouter import OpenRouterProvider
 from model_router.providers.vertex_ai import (
     VertexAIEmbeddingProvider,
     VertexAIProvider,
 )
-from model_router.types import GenerateRequest, ProviderType, UsageInfo
+from model_router.types import (
+    GenerateRequest,
+    GenerateResponse,
+    ModelInfo,
+    ProviderType,
+    StreamChunk,
+    UsageInfo,
+)
 
 
 def make_config() -> RouterConfig:
@@ -45,6 +53,36 @@ def make_manual_router() -> ModelRouter:
         VertexAIEmbeddingProvider(provider_config),
     )
     return router
+
+
+class MockStreamProvider(BaseProvider):
+    """Minimal provider for deterministic stream usage tests."""
+
+    def __init__(self, chunks: list[StreamChunk]) -> None:
+        self._chunks = chunks
+
+    async def generate(self, request: GenerateRequest) -> GenerateResponse:
+        return GenerateResponse(
+            text="",
+            model_used=request.model,
+            provider=ProviderType.VERTEX_AI,
+        )
+
+    async def stream(self, request: GenerateRequest):
+        del request
+        for chunk in self._chunks:
+            yield chunk
+
+    async def list_models(self) -> list[ModelInfo]:
+        return [
+            ModelInfo(
+                name="mock-model",
+                provider=ProviderType.VERTEX_AI,
+            )
+        ]
+
+    async def health_check(self) -> bool:
+        return True
 
 
 @pytest.fixture(autouse=True)
@@ -269,6 +307,121 @@ async def test_router_stream_delegates_to_openrouter() -> None:
     assert len(chunks) == 1
     assert chunks[0].type == "content"
     assert chunks[0].text == "Test-mode stream output."
+
+
+@pytest.mark.asyncio
+async def test_stream_uses_real_usage_from_chunk() -> None:
+    """stream() records usage from provider usage chunk when available."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    router = ModelRouter(RouterConfig(test_mode=False))
+    router.register_provider(
+        ProviderType.VERTEX_AI,
+        MockStreamProvider(
+            [
+                StreamChunk(type="content", text="hello world"),
+                StreamChunk(
+                    type="content",
+                    text="",
+                    usage=UsageInfo(input_tokens=100, output_tokens=50),
+                ),
+            ]
+        ),
+    )
+
+    mock_tracker = MagicMock()
+    mock_tracker.record = AsyncMock()
+    mock_calculator = MagicMock()
+    mock_calculator.estimate = MagicMock(return_value=0.001)
+    router.set_usage_tracking(mock_tracker, mock_calculator)
+
+    _ = [
+        chunk
+        async for chunk in router.stream(
+            model="gemini-2.0-flash",
+            contents="short prompt",
+        )
+    ]
+
+    assert mock_tracker.record.await_count == 1
+    recorded_usage = mock_tracker.record.await_args.kwargs["usage"]
+    assert recorded_usage.input_tokens == 100
+    assert recorded_usage.output_tokens == 50
+
+
+@pytest.mark.asyncio
+async def test_stream_with_usage_uses_real_usage() -> None:
+    """stream_with_usage() exposes provider usage chunk values."""
+    router = ModelRouter(RouterConfig(test_mode=False))
+    router.register_provider(
+        ProviderType.VERTEX_AI,
+        MockStreamProvider(
+            [
+                StreamChunk(type="thinking", text="intermediate"),
+                StreamChunk(type="content", text="done"),
+                StreamChunk(
+                    type="content",
+                    text="",
+                    usage=UsageInfo(
+                        input_tokens=100,
+                        output_tokens=50,
+                        thinking_tokens=12,
+                    ),
+                ),
+            ]
+        ),
+    )
+
+    usage_data: list[UsageInfo] = []
+    _ = [
+        chunk
+        async for chunk in router.stream_with_usage(
+            model="gemini-2.0-flash",
+            contents="prompt",
+            usage_out=usage_data,
+        )
+    ]
+
+    assert len(usage_data) == 1
+    usage = usage_data[0]
+    assert usage.input_tokens == 100
+    assert usage.output_tokens == 50
+    assert usage.thinking_tokens == 12
+
+
+@pytest.mark.asyncio
+async def test_stream_falls_back_to_estimation_without_usage() -> None:
+    """stream() falls back to char-count estimation when usage is missing."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    router = ModelRouter(RouterConfig(test_mode=False))
+    router.register_provider(
+        ProviderType.VERTEX_AI,
+        MockStreamProvider(
+            [
+                StreamChunk(type="content", text="abcdefgh"),
+            ]
+        ),
+    )
+
+    mock_tracker = MagicMock()
+    mock_tracker.record = AsyncMock()
+    mock_calculator = MagicMock()
+    mock_calculator.estimate = MagicMock(return_value=0.001)
+    router.set_usage_tracking(mock_tracker, mock_calculator)
+
+    _ = [
+        chunk
+        async for chunk in router.stream(
+            model="gemini-2.0-flash",
+            contents="abcdefghijkl",
+        )
+    ]
+
+    assert mock_tracker.record.await_count == 1
+    recorded_usage = mock_tracker.record.await_args.kwargs["usage"]
+    assert recorded_usage.input_tokens == 3
+    assert recorded_usage.output_tokens == 2
 
 
 @pytest.mark.asyncio
