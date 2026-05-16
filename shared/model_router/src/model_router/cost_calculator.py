@@ -13,7 +13,17 @@
 
 from __future__ import annotations
 
+import logging
+import math
+from typing import TYPE_CHECKING
+
 from model_router.types import ProviderType, UsageInfo
+
+if TYPE_CHECKING:
+    from model_router.config import OpenRouterConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class CostCalculator:
@@ -107,6 +117,65 @@ class CostCalculator:
         total_output_tokens = usage.output_tokens + usage.thinking_tokens
         output_cost = (total_output_tokens / 1_000_000) * pricing.get("output", 0.0)
         return round(input_cost + output_cost, 6)
+
+    async def populate_openrouter_pricing(
+        self,
+        config: OpenRouterConfig,
+    ) -> None:
+        """Fetch and cache OpenRouter model pricing from the models endpoint.
+
+        Args:
+            config: OpenRouter provider configuration.
+        """
+        import httpx
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as http_client:
+                response = await http_client.get(
+                    f"{config.base_url.rstrip('/')}/models",
+                    headers={"Authorization": f"Bearer {config.api_key}"},
+                )
+                response.raise_for_status()
+
+            payload = response.json().get("data", [])
+            priced_models = 0
+            for item in payload:
+                if not isinstance(item, dict):
+                    continue
+
+                model_id = item.get("id")
+                pricing = item.get("pricing")
+                if not isinstance(model_id, str) or not isinstance(pricing, dict):
+                    continue
+
+                prompt_price = pricing.get("prompt")
+                completion_price = pricing.get("completion")
+                try:
+                    input_per_million = float(prompt_price) * 1_000_000
+                    output_per_million = float(completion_price) * 1_000_000
+                except (TypeError, ValueError):
+                    continue
+
+                if (
+                    not math.isfinite(input_per_million)
+                    or not math.isfinite(output_per_million)
+                    or input_per_million < 0
+                    or output_per_million < 0
+                ):
+                    continue
+
+                self._openrouter_pricing[model_id] = {
+                    "input": input_per_million,
+                    "output": output_per_million,
+                }
+                priced_models += 1
+
+            logger.info("Cached OpenRouter pricing for %d models", priced_models)
+        except Exception as error:  # noqa: BLE001
+            logger.warning(
+                "Failed to populate OpenRouter pricing cache: %s",
+                error,
+            )
 
     def update_openrouter_pricing(
         self,
