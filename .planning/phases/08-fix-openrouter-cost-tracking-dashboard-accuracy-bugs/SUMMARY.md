@@ -1,115 +1,120 @@
 ---
 phase: 08-fix-openrouter-cost-tracking-dashboard-accuracy-bugs
-plan: "03"
+plan: 01
 subsystem: api
-tags: [fastapi, usage-tracking, datetime, pytest]
+tags: [openrouter, cost-tracking, streaming, pytest]
 
-requires:
-  - phase: 08-fix-openrouter-cost-tracking-dashboard-accuracy-bugs
-    provides: openrouter-cost-tracking-dashboard-bug-context
+requires: []
 provides:
-  - Inclusive end-of-day handling for date-only end_date filters in both apps
-  - Cross-app regression tests for usage router date range parsing
-affects: [usage-dashboard, cost-analytics, date-range-filtering]
+  - Async OpenRouter pricing cache population in CostCalculator
+  - StreamChunk usage propagation from provider to router
+  - Router usage tracking now prefers real streaming usage over char-based estimates
+  - Regression tests for pricing fetch and stream usage behavior
+affects: [usage-dashboard, model-router, cost-estimation]
 
 tech-stack:
   added: []
-  patterns: ["Date-only end_date converted to inclusive end-of-day (23:59:59.999999)"]
+  patterns:
+    - "Prefer provider-emitted usage data over heuristic token estimation"
+    - "Keep char-count estimation as fallback for missing usage"
 
 key-files:
-  created:
-    - AURA-CHAT/tests/api/test_usage_date_range.py
-    - AURA-NOTES-MANAGER/api/tests/test_usage_date_range.py
+  created: []
   modified:
-    - AURA-CHAT/server/routers/usage.py
-    - AURA-NOTES-MANAGER/api/routers/usage.py
+    - shared/model_router/src/model_router/cost_calculator.py
+    - shared/model_router/src/model_router/types.py
+    - shared/model_router/src/model_router/providers/openrouter.py
+    - shared/model_router/src/model_router/router.py
+    - shared/model_router/tests/test_cost_calculator.py
+    - shared/model_router/tests/test_router.py
+    - shared/model_router/tests/test_streaming.py
 
 key-decisions:
-  - "Apply identical _parse_date_range behavior in both usage routers."
-  - "Keep end-of-day adjustment scoped to explicitly provided end_date only."
-  - "Add import fallback logic in NOTES date-range tests to avoid package side-effect import failures in root-level pytest runs."
+  - "Added lazy httpx import inside populate_openrouter_pricing to avoid hard dependency at import time"
+  - "OpenRouter stream emits final empty content chunk carrying UsageInfo to avoid UI text impact"
+  - "Retained len(text)//4 estimation as fallback when stream usage is unavailable"
 
 patterns-established:
-  - "For usage analytics filters, date-only end_date values are treated as inclusive full-day boundaries."
-  - "Cross-app parity: shared date parsing behavior should be mirrored and tested in both apps."
+  - "Provider stream usage propagation: attach usage to final StreamChunk and consume in router"
+  - "Pricing cache hydration: parse per-token strings into per-1M-token floats with validation"
 
-requirements-completed: [BUG-03]
+requirements-completed: [BUG-01, BUG-02, BUG-04]
 
-duration: 22 min
+duration: 6 min
 completed: 2026-05-16
 ---
 
-# Phase 08 Plan 03: Fix Date Range Filters Summary
+# Phase 08 Plan 01: Shared Package — Pricing Cache + Streaming Usage Summary
 
-**Date-only usage end_date filters now include full-day data in both AURA-CHAT and AURA-NOTES-MANAGER, with parity tests protecting default, midnight, and explicit-time behaviors.**
+**OpenRouter pricing now hydrates asynchronously from /models, and streaming token usage is captured from real provider chunks instead of relying on character-count estimation.**
 
 ## Performance
 
-- **Duration:** 22 min
-- **Started:** 2026-05-16T14:37:00Z
-- **Completed:** 2026-05-16T14:59:00Z
-- **Tasks:** 4
-- **Files modified:** 5
+- **Duration:** 6 min
+- **Started:** 2026-05-16T09:09:27Z
+- **Completed:** 2026-05-16T09:15:04Z
+- **Tasks:** 5
+- **Files modified:** 7
 
 ## Accomplishments
-- Updated `_parse_date_range` in both usage routers to convert explicitly provided midnight `end_date` values to `23:59:59.999999` UTC.
-- Preserved existing behavior for `end_date=None` defaults and explicit non-midnight times.
-- Added 5 dedicated date-range unit tests per app to validate default windows, date-only end behavior, explicit-time behavior, and start-date non-adjustment.
+- Added `CostCalculator.populate_openrouter_pricing()` with resilient parsing, validation, and logging.
+- Extended `StreamChunk` with optional `usage` and wired OpenRouter provider streaming to emit final usage chunk.
+- Updated router `stream()` and `stream_with_usage()` to prefer real usage and keep fallback estimation.
+- Added targeted tests for pricing fetch success/failure/invalid data and stream usage propagation.
 
 ## Task Commits
 
 Each task was committed atomically:
 
-1. **Task 1: Fix _parse_date_range in AURA-CHAT usage router** - `3baecc9` (fix)
-2. **Task 2: Fix _parse_date_range in AURA-NOTES-MANAGER usage router** - `94a846f` (fix)
-3. **Task 3: Write date range unit tests for AURA-CHAT** - `a6f65e4` (test)
-4. **Task 4: Write date range unit tests for AURA-NOTES-MANAGER** - `18aef53` (test)
-
-**Plan metadata:** this SUMMARY.md commit (docs)
+1. **Task 1: Add async pricing fetch method to CostCalculator** - `8f257d6` (feat)
+2. **Task 2: Add usage field to StreamChunk** - `fb1dbd6` (feat)
+3. **Task 3: Capture OpenRouter streaming usage in provider stream method** - `9e09250` (feat)
+4. **Task 4: Update router stream/stream_with_usage to use real usage data** - `80617ea` (fix)
+5. **Task 5: Write tests for pricing fetch and streaming usage extraction** - `ba01a64` (test)
 
 ## Files Created/Modified
-- `AURA-CHAT/server/routers/usage.py` - Added explicit end-of-day normalization for date-only `end_date`.
-- `AURA-NOTES-MANAGER/api/routers/usage.py` - Applied matching end-of-day normalization logic.
-- `AURA-CHAT/tests/api/test_usage_date_range.py` - Added 5 unit tests covering date range parsing behavior.
-- `AURA-NOTES-MANAGER/api/tests/test_usage_date_range.py` - Added 5 parallel unit tests with robust import fallback.
-- `.planning/phases/08-fix-openrouter-cost-tracking-dashboard-accuracy-bugs/SUMMARY.md` - Plan execution summary.
-
-## Verification
-- `python -m pytest AURA-CHAT/tests/ -k usage -x` (run via venv python): **PASS**
-- `python -m pytest AURA-CHAT/tests/api/test_usage_date_range.py -v`: **PASS (5/5)**
-- `python -m pytest AURA-NOTES-MANAGER/api/tests/test_usage_date_range.py -v`: **PASS (5/5)**
+- `shared/model_router/src/model_router/cost_calculator.py` - Added async pricing cache population method.
+- `shared/model_router/src/model_router/types.py` - Added optional `usage` on `StreamChunk`.
+- `shared/model_router/src/model_router/providers/openrouter.py` - Included streaming usage capture and final usage chunk yield.
+- `shared/model_router/src/model_router/router.py` - Consumes real chunk usage in `stream()` and `stream_with_usage()`.
+- `shared/model_router/tests/test_cost_calculator.py` - Added 4 pricing fetch/cache tests.
+- `shared/model_router/tests/test_router.py` - Added 3 stream real-usage/fallback behavior tests.
+- `shared/model_router/tests/test_streaming.py` - Updated schema assertion for new `StreamChunk.usage` field.
 
 ## Decisions Made
-- Kept the end-of-day adjustment inside the `end_date is not None` path so default `now` timestamps are untouched.
-- Ensured both routers use functionally identical `_parse_date_range` implementations.
-- Added a direct-module fallback import in NOTES tests to keep root-level pytest execution stable despite package-level router side-effect imports.
+- Use `httpx.AsyncClient(timeout=15.0)` in pricing fetch with lazy import and broad failure safety (warning + continue).
+- Emit usage-only terminal stream chunk with empty text to preserve display output.
+- Keep existing estimation logic unchanged as fallback to preserve robustness on interrupted or non-usage streams.
 
 ## Deviations from Plan
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] NOTES test import path triggered package side-effect dependency failures**
-- **Found during:** Task 4 (Write date range unit tests for AURA-NOTES-MANAGER)
-- **Issue:** Root-level pytest import of `api.routers.usage` triggered `api.routers.__init__` side-effect imports, failing on unavailable service modules in test context.
-- **Fix:** Added resilient fallback loader in `test_usage_date_range.py` that preserves required try/except import pattern and loads `usage.py` directly when package imports fail.
-- **Files modified:** `AURA-NOTES-MANAGER/api/tests/test_usage_date_range.py`
-- **Verification:** `python -m pytest AURA-NOTES-MANAGER/api/tests/test_usage_date_range.py -v` passed (5/5).
-- **Committed in:** `18aef53`
+**1. [Rule 1 - Regression Fix] Updated streaming schema expectation for StreamChunk**
+- **Found during:** Task 5 verification (`pytest shared/model_router/tests/ -v`)
+- **Issue:** Existing streaming schema test expected only `type`/`text`, but `StreamChunk` now intentionally includes optional `usage`.
+- **Fix:** Updated `test_both_providers_yield_same_chunk_schema` to expect `usage` key as part of normalized chunk schema.
+- **Files modified:** `shared/model_router/tests/test_streaming.py`
+- **Verification:** Re-ran full suite; regression resolved.
+- **Committed in:** `ba01a64`
 
 ---
 
-**Total deviations:** 1 auto-fixed (1 blocking)
-**Impact on plan:** No scope creep; deviation was required to satisfy requested root-level test invocation.
+**Total deviations:** 1 auto-fixed (1 regression fix)
+**Impact on plan:** No scope creep; change was required to keep existing tests aligned with planned type contract update.
 
 ## Issues Encountered
-None
+- Full suite still has **2 pre-existing failing tests** in `shared/model_router/tests/test_compat.py`:
+  - `test_shim_enabled_returns_compat_model[context0]`
+  - `test_shim_import_failure_fallback[context0]`
+- These failures are outside the files/tasks in this plan and were not modified here.
 
 ## User Setup Required
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- Plan 08-03 is complete and verified with both requested test commands.
-- Ready for the next pending plan in Phase 08.
+- Core pricing + streaming usage accuracy fixes are complete and validated for cost calculator/router paths.
+- Ready for next plan in Phase 08.
 
 ---
 *Phase: 08-fix-openrouter-cost-tracking-dashboard-accuracy-bugs*
