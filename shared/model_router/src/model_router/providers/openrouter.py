@@ -444,6 +444,7 @@ class OpenRouterProvider(BaseProvider):
 
         client = self._get_client()
         stream: Any = None
+        last_usage: Any = None
         try:
             extra_body = _build_thinking_params(
                 request.model,
@@ -453,6 +454,7 @@ class OpenRouterProvider(BaseProvider):
                 "model": request.model,
                 "messages": _build_messages(request),
                 "stream": True,
+                "stream_options": {"include_usage": True},
             }
             if request.temperature is not None:
                 kwargs["temperature"] = request.temperature
@@ -463,19 +465,42 @@ class OpenRouterProvider(BaseProvider):
 
             stream = await client.chat.completions.create(**kwargs)
             async for chunk in stream:
-                if not getattr(chunk, "choices", None):
-                    continue
-                delta = chunk.choices[0].delta
-                reasoning = getattr(delta, "reasoning_content", None)
-                if not reasoning:
-                    reasoning = getattr(delta, "reasoning", None)
-                reasoning_text = _coerce_text_value(reasoning)
-                if reasoning_text:
-                    yield StreamChunk(type="thinking", text=reasoning_text)
+                if getattr(chunk, "choices", None):
+                    delta = chunk.choices[0].delta
+                    reasoning = getattr(delta, "reasoning_content", None)
+                    if not reasoning:
+                        reasoning = getattr(delta, "reasoning", None)
+                    reasoning_text = _coerce_text_value(reasoning)
+                    if reasoning_text:
+                        yield StreamChunk(type="thinking", text=reasoning_text)
 
-                content_text = _coerce_text_value(getattr(delta, "content", None))
-                if content_text:
-                    yield StreamChunk(type="content", text=content_text)
+                    content_text = _coerce_text_value(
+                        getattr(delta, "content", None)
+                    )
+                    if content_text:
+                        yield StreamChunk(type="content", text=content_text)
+
+                usage = getattr(chunk, "usage", None)
+                if usage is not None:
+                    last_usage = usage
+
+            if last_usage is not None:
+                yield StreamChunk(
+                    type="content",
+                    text="",
+                    usage=UsageInfo(
+                        input_tokens=int(
+                            getattr(last_usage, "prompt_tokens", 0) or 0
+                        ),
+                        output_tokens=int(
+                            getattr(last_usage, "completion_tokens", 0)
+                            or 0
+                        ),
+                        thinking_tokens=int(
+                            getattr(last_usage, "reasoning_tokens", 0) or 0
+                        ),
+                    ),
+                )
         except ModelRouterError:
             raise
         except Exception as error:
