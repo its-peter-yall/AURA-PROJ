@@ -42,6 +42,13 @@ class CostCalculator:
         "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
     }
 
+    # Static General Compute pricing (USD per 1M tokens, as of 2026-05)
+    _GC_PRICING: dict[str, dict[str, float]] = {
+        "minimax-m2.7": {"input": 0.40, "output": 2.34},
+        "deepseek-v3.2": {"input": 3.00, "output": 4.50},
+        "deepseek-v3.1": {"input": 3.00, "output": 4.50},
+    }
+
     def __init__(self) -> None:
         """Initialize with empty OpenRouter pricing cache."""
         self._openrouter_pricing: dict[str, dict[str, float]] = {}
@@ -69,6 +76,8 @@ class CostCalculator:
             return self._estimate_vertex(usage, model)
         if provider == ProviderType.OPENROUTER:
             return self._estimate_openrouter(usage, model)
+        if provider == ProviderType.GENERAL_COMPUTE:
+            return self._estimate_general_compute(usage, model)
         return 0.0
 
     def _estimate_vertex(self, usage: UsageInfo, model: str) -> float:
@@ -114,6 +123,29 @@ class CostCalculator:
         pricing = self._openrouter_pricing.get(model, {})
         input_cost = (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
         # Thinking tokens priced at output rate (industry standard)
+        total_output_tokens = usage.output_tokens + usage.thinking_tokens
+        output_cost = (total_output_tokens / 1_000_000) * pricing.get("output", 0.0)
+        return round(input_cost + output_cost, 6)
+
+    def _estimate_general_compute(self, usage: UsageInfo, model: str) -> float:
+        """Compute General Compute cost from static pricing table.
+
+        Args:
+            usage: Token counts from the generation response.
+            model: Model identifier.
+
+        Returns:
+            Estimated cost in USD rounded to 6 decimals.
+        """
+        pricing = self._GC_PRICING.get(model)
+        if pricing is None:
+            for key, val in self._GC_PRICING.items():
+                if model.startswith(key):
+                    pricing = val
+                    break
+        if pricing is None:
+            return 0.0
+        input_cost = (usage.input_tokens / 1_000_000) * pricing.get("input", 0.0)
         total_output_tokens = usage.output_tokens + usage.thinking_tokens
         output_cost = (total_output_tokens / 1_000_000) * pricing.get("output", 0.0)
         return round(input_cost + output_cost, 6)
