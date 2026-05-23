@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, AsyncGenerator
 
-from model_router.config import OpenRouterConfig, RouterConfig
+from model_router.config import GeneralComputeConfig, OpenRouterConfig, RouterConfig
 from model_router.errors import ModelRouterError, ModelUnavailableError
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
 from model_router.providers.vertex_ai import (
@@ -94,6 +94,12 @@ class ModelRouter:
                 OpenRouterEmbeddingProvider(self._config.openrouter),
             )
 
+        if self._should_auto_register_generalcompute():
+            from model_router.providers.general_compute import GeneralComputeProvider
+
+            gc_provider = GeneralComputeProvider(self._config.general_compute)
+            self.register_provider(ProviderType.GENERAL_COMPUTE, gc_provider)
+
     def _should_auto_register_vertex(self) -> bool:
         """Return True when config should bootstrap the Vertex AI providers."""
         return self._config.test_mode or bool(self._config.vertex_ai.project_id)
@@ -101,6 +107,10 @@ class ModelRouter:
     def _should_auto_register_openrouter(self) -> bool:
         """Return True when config should bootstrap the OpenRouter provider."""
         return self._config.test_mode or bool(self._config.openrouter.api_key)
+
+    def _should_auto_register_generalcompute(self) -> bool:
+        """Return True when config should bootstrap the General Compute provider."""
+        return self._config.test_mode or bool(self._config.general_compute.api_key)
 
     async def _maybe_lazy_register_openrouter(self) -> None:
         """Lazily register OpenRouter provider if key exists in KeyManager.
@@ -143,6 +153,34 @@ class ModelRouter:
         except Exception:
             logger.warning(
                 "Failed to lazy register OpenRouter provider",
+                exc_info=True,
+            )
+
+    async def _maybe_lazy_register_generalcompute(self) -> None:
+        """Lazily register General Compute provider if key exists in KeyManager.
+
+        This enables UI-stored API keys to work without GENERALCOMPUTE_API_KEY
+        env var at router initialization. Called when a general_compute request
+        comes in but the provider is not yet registered.
+        """
+        if ProviderType.GENERAL_COMPUTE in self._providers:
+            return
+
+        if self._key_manager is None:
+            return
+
+        try:
+            api_key = await self._key_manager.get_key("general_compute")
+            if api_key:
+                from model_router.providers.general_compute import GeneralComputeProvider
+
+                gc_config = GeneralComputeConfig(api_key=api_key)
+                provider = GeneralComputeProvider(gc_config)
+                self.register_provider(ProviderType.GENERAL_COMPUTE, provider)
+                logger.info("Lazy registered General Compute provider from KeyManager")
+        except Exception:
+            logger.warning(
+                "Failed to lazy register General Compute provider",
                 exc_info=True,
             )
 
@@ -225,6 +263,12 @@ class ModelRouter:
             # Re-check after lazy registration attempt
             provider = self._providers.get(resolved_type)
 
+        # Attempt lazy General Compute registration if needed
+        if provider is None and resolved_type is ProviderType.GENERAL_COMPUTE:
+            await self._maybe_lazy_register_generalcompute()
+            # Re-check after lazy registration attempt
+            provider = self._providers.get(resolved_type)
+
         if provider is None:
             raise ModelUnavailableError(
                 f"No provider registered for {resolved_type.value}",
@@ -292,6 +336,13 @@ class ModelRouter:
                 and resolved_type is ProviderType.OPENROUTER
             ):
                 await self._maybe_lazy_register_openrouter()
+
+            # Attempt lazy General Compute registration if needed
+            if (
+                resolved_type not in self._providers
+                and resolved_type is ProviderType.GENERAL_COMPUTE
+            ):
+                await self._maybe_lazy_register_generalcompute()
 
             gen_provider = self._providers.get(resolved_type)
             embed_provider = self._embedding_providers.get(resolved_type)
