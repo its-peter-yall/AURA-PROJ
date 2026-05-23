@@ -76,12 +76,31 @@ class OpenRouterConfig(BaseModel):
         )
 
 
+class GeneralComputeConfig(BaseModel):
+    """Configuration for the General Compute provider."""
+
+    api_key: str = ""
+    base_url: str = "https://api.generalcompute.com/v1"
+
+    @classmethod
+    def from_env(cls) -> "GeneralComputeConfig":
+        """Build General Compute config from environment variables."""
+        return cls(
+            api_key=os.getenv("GENERALCOMPUTE_API_KEY", ""),
+            base_url=os.getenv(
+                "GENERALCOMPUTE_BASE_URL",
+                "https://api.generalcompute.com/v1",
+            ),
+        )
+
+
 class RouterConfig(BaseModel):
     """Top-level router configuration."""
 
     default_provider: ProviderType = ProviderType.VERTEX_AI
     vertex_ai: VertexAIConfig = Field(default_factory=VertexAIConfig)
     openrouter: OpenRouterConfig = Field(default_factory=OpenRouterConfig)
+    general_compute: GeneralComputeConfig = Field(default_factory=GeneralComputeConfig)
     test_mode: bool = False
 
     @classmethod
@@ -91,5 +110,6 @@ class RouterConfig(BaseModel):
             default_provider=ProviderType.VERTEX_AI,
             vertex_ai=VertexAIConfig.from_env(),
             openrouter=OpenRouterConfig.from_env(),
+            general_compute=GeneralComputeConfig.from_env(),
             test_mode=_env_flag("AURA_TEST_MODE"),
         )
