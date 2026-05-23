@@ -50,6 +50,7 @@
 | 1-7 | v1.0 | 28/28 | Complete | 2026-03-08 |
 | 8-13 | v1.1 | 23/23 | Complete | 2026-03-16 |
 | 14-17 | v1.2 | 11/11 | Complete | 2026-03-23 |
+| 9 | v1.3 | 4/4 | Complete | 2026-05-23 |
 
 ---
 
@@ -96,14 +97,17 @@ Plans:
 
 ### Phase 9: I want to add another provider in the settings page along with openrouter. https://docs.generalcompute.com/quickstart 'General Compute' will be the name of the provider. I need to create support for general compute provider in the existing project
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Support General Compute provider in shared model_router and settings backend/frontends alongside OpenRouter.
+**Requirements**: P9-01, P9-02, P9-03, P9-04, P9-05, P9-06, P9-07, P9-08, P9-09
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 9 to break down)
+- [x] Plan 09-01a: General Compute Provider — Core Implementation (shipped 2026-05-23)
+- [x] Plan 09-01b: General Compute Provider — Pricing, Exports & Tests (shipped 2026-05-23)
+- [x] Plan 09-02: General Compute Key Validation — Both Settings Routers (shipped 2026-05-23)
+- [x] Plan 09-03: General Compute Provider — Frontend Settings UI (Both Apps) (shipped 2026-05-23)
 
 ---
 
-*Last updated: 2026-03-23 after v1.2 milestone*
+*Last updated: 2026-05-23 after Phase 9 completion*

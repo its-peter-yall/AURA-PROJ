@@ -1,46 +1,45 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Settings Wiring E2E
-status: executing
-stopped_at: Phase 09 UI-SPEC approved
-last_updated: "2026-05-23T09:17:24.485Z"
+milestone: v1.3
+milestone_name: General Compute Integration
+status: completed
+stopped_at: Phase 09 complete
+last_updated: "2026-05-23T12:55:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 15
-  completed_plans: 5
-  percent: 0
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 19
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
+See: [PROJECT.md](./PROJECT.md) (updated 2026-05-23)
 
-**Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access
-**Current focus:** Phase 08 — COMPLETE
+**Core value:** Module-centric learning with persistent study sessions and multi-provider LLM access (Vertex AI, OpenRouter, General Compute)
+**Current focus:** Phase 09 — COMPLETE
 
 ## Current Position
 
-Phase: 08 — Fix OpenRouter Cost Tracking & Dashboard Accuracy Bugs
-Status: Ready to execute
-
+Phase: 09 — General Compute Integration
+Status: Completed
 Progress: [██████████] 100% (4/4 plans — all complete)
 
 ## Performance Metrics
 
-- Total plans completed: 67 (v1.0: 28, v1.1: 23, v1.2: 11)
+- Total plans completed: 71 (v1.0: 28, v1.1: 23, v1.2: 11, v1.3: 9)
 - Average duration: 9 min
-- Total execution time: ~380 min
+- Total execution time: ~415 min
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 
 - Phase 1 added: Multi-model chat configuration - allow 1-5 models with default selection in settings, and update chat page to use default
-- Phase 9 added: Add General Compute provider support in settings page alongside OpenRouter
+- Phase 9 added: Add General Compute provider support in settings page alongside OpenRouter (Completed 2026-05-23)
 
 ### Decisions
 
@@ -51,6 +50,7 @@ Progress: [██████████] 100% (4/4 plans — all complete)
 - [v1.2 scoping]: `gatekeeper` and `relationship_extraction` added to ALLOWED_USE_CASES
 - [Phase 17-02]: AURA-CHAT settings page uses existing axios instance, placed OUTSIDE RoleProtectedRoute
 - [Quick 260323-tsy]: Inline KeyManager import in get_default_router() for lazy OpenRouter registration
+- [Phase 09]: Added General Compute provider to the settings page, backend routing, cost calculator, key validation, and settings frontends.
 
 ### Pending Todos
 
@@ -62,22 +62,9 @@ Progress: [██████████] 100% (4/4 plans — all complete)
 - Thinking-capable OpenRouter models undocumented — plan dynamic for v1.3
 - `AURA-CHAT/test_real_models.py` still builds direct Vertex AI REST requests
 
-### Quick Tasks Completed
+### Session Continuity
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260406-m50 | Fix code review findings in router.py and run-all.bat ensuring no new issues | 2026-04-06 | 8f5ff3e | [260406-m50-fix-code-review-findings-in-router-py-an](./quick/260406-m50-fix-code-review-findings-in-router-py-an/) |
-| 260404-ke6 | Wire RAGEngine to SettingsStore - chat use case provider propagation | 2026-04-04 | - | [260404-ke6-wire-aura-chat-ragengine-to-read-user-mo](./quick/260404-ke6-wire-aura-chat-ragengine-to-read-user-mo/) |
-| 260323-tsy | Fix all OpenRouter API key wiring gaps - settings→backend provider propagation | 2026-03-23 | 6ac6e3a | [260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s](./quick/260323-tsy-fix-all-openrouter-api-key-wiring-gaps-s/) |
-| 260409-m79 | Implement option 3 for thinking toggle states with OpenRouter model capabilities | 2026-04-09 | 1cd32e4 | [260409-m79-implement-option-3-for-thinking-toggle-s](./quick/260409-m79-implement-option-3-for-thinking-toggle-s/) |
-| 260414-vw8 | As an administrator, I want the 'Chat Model' I select in the Settings Page to be the only option available to users in the Chat Page dropdown, so I can strictly control which AI models are used for chat interactions. | 2026-04-14 | 77a0349 | [260414-vw8-as-an-administrator-i-want-the-chat-mode](./quick/260414-vw8-as-an-administrator-i-want-the-chat-mode/) |
-| 260415-vkb | Fix SettingsPage model dropdown - models not visible and page refreshes when switching tabs | 2026-04-15 | 688303c | [260415-vkb-fix-settingspage-model-dropdown](./quick/260415-vkb-fix-settingspage-model-dropdown/) |
-| 260415-w80 | Fix Settings page model dropdown showing no models and stop unwanted refresh when revisiting tab | 2026-04-15 | 1132626 | [260415-w80-fix-settings-page-model-dropdown-showing](./quick/260415-w80-fix-settings-page-model-dropdown-showing/) |
-| Phase 26-canonical-orchestration-seams P03 | 45min | 2 tasks | 2 files |
-
-## Session Continuity
-
-Last session: 2026-05-23T08:55:28.444Z
-Stopped at: Phase 09 UI-SPEC approved
-Resume file: .planning/phases/09-i-want-to-add-another-provider-in-the-settings-page-along-wi/09-UI-SPEC.md
-Next action: `/gsd-new-milestone` to start next cycle
+Last session: 2026-05-23T12:55:00.000Z
+Stopped at: Phase 09 completed
+Resume file: None
+Next action: Plan next milestone / phase
