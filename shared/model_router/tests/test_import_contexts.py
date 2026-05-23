@@ -68,7 +68,8 @@ def test_import_all_public_api() -> None:
     command = (
         'from model_router import '
         'AuthenticationError, BaseEmbeddingProvider, BaseProvider, '
-        'ContentPolicyError, EmbeddingDimensionError, GenerateRequest, '
+        'ContentPolicyError, EmbeddingDimensionError, GeneralComputeConfig, '
+        'GeneralComputeProvider, GenerateRequest, '
         'GenerateResponse, ModelInfo, ModelRouter, ModelRouterError, '
         'ModelUnavailableError, ProviderTimeoutError, ProviderType, '
         'RateLimitError, StreamChunk, UsageInfo, VertexCompatModel, '
