@@ -23,6 +23,7 @@ class ProviderType(str, Enum):
     VERTEX_AI = "vertex_ai"
     OPENROUTER = "openrouter"
     OLLAMA = "ollama"
+    GENERAL_COMPUTE = "general_compute"
 
 
 class UsageInfo(BaseModel):
