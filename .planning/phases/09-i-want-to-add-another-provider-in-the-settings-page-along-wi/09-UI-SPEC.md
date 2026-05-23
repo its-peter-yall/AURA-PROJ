@@ -48,9 +48,9 @@ Exceptions: none
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 | 1.5 |
-| Label | 12px | 500 | 1.2 |
+| Label | 12px | 400 | 1.2 |
 | Heading | 16px | 600 | 1.2 |
-| Display | 24px | 700 | 1.2 |
+| Display | 24px | 600 | 1.2 |
 
 ---
 
@@ -77,6 +77,18 @@ Accent reserved for: Active selected provider cards, Primary action buttons.
 | Empty state body | Configure an API key to access General Compute models. |
 | Error state | Validation failed. Please check your API key. |
 | Destructive confirmation | Remove Key: Are you sure you want to remove this API key? |
+
+---
+
+## Visual Hierarchy
+
+| Priority | Element | Treatment |
+|----------|---------|-----------|
+| Primary | "General Compute" provider card with "Save Key" CTA | Accent color (bg-cyber-yellow-400) on CTA button, elevated shadow on provider card |
+| Secondary | Active provider selection indicator | Accent border or checkmark icon on selected provider card |
+| Tertiary | API key input field | Standard form field with focus ring, placeholder text |
+
+The eye flow: Provider card (accent CTA) → Active indicator → Configuration form.
 
 ---
 
