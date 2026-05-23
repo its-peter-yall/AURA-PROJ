@@ -11,7 +11,7 @@
 """Public package exports for the AURA model router."""
 
 from model_router.compat import VertexCompatModel
-from model_router.config import OpenRouterConfig
+from model_router.config import GeneralComputeConfig, OpenRouterConfig
 from model_router.cache import ModelCache, get_cached_models
 from model_router.cost_calculator import CostCalculator
 from model_router.errors import (
@@ -25,6 +25,7 @@ from model_router.errors import (
 )
 from model_router.key_manager import KeyManager
 from model_router.providers.base import BaseEmbeddingProvider, BaseProvider
+from model_router.providers.general_compute import GeneralComputeProvider
 from model_router.providers.openrouter import OpenRouterProvider
 from model_router.router import ModelRouter, get_default_router, reset_default_router
 from model_router.settings_store import (
@@ -53,6 +54,8 @@ __all__ = [
     "clear_defaults_cache",
     "ContentPolicyError",
     "EmbeddingDimensionError",
+    "GeneralComputeConfig",
+    "GeneralComputeProvider",
     "GenerateRequest",
     "GenerateResponse",
     "get_default_router",
