@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: Ready for next phase
-stopped_at: Phase 08 complete — all 4 plans executed
-last_updated: "2026-05-17T00:00:00.000Z"
-last_activity: 2026-05-17
+milestone_name: Settings Wiring E2E
+status: executing
+stopped_at: Phase 09 UI-SPEC approved
+last_updated: "2026-05-23T09:17:24.485Z"
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 15
+  completed_plans: 5
+  percent: 0
 ---
 
 # Project State
@@ -26,7 +25,7 @@ See: [PROJECT.md](./PROJECT.md) (updated 2026-03-23)
 ## Current Position
 
 Phase: 08 — Fix OpenRouter Cost Tracking & Dashboard Accuracy Bugs
-Status: Ready for next phase
+Status: Ready to execute
 
 Progress: [██████████] 100% (4/4 plans — all complete)
 
@@ -41,6 +40,7 @@ Progress: [██████████] 100% (4/4 plans — all complete)
 ### Roadmap Evolution
 
 - Phase 1 added: Multi-model chat configuration - allow 1-5 models with default selection in settings, and update chat page to use default
+- Phase 9 added: Add General Compute provider support in settings page alongside OpenRouter
 
 ### Decisions
 
@@ -77,7 +77,7 @@ Progress: [██████████] 100% (4/4 plans — all complete)
 
 ## Session Continuity
 
-Last session: 2026-04-23T18:22:46.836Z
-Stopped at: Phase 32 UI-SPEC approved
-Resume file: .planning/phases/32-frontend-citation-ux/32-UI-SPEC.md
+Last session: 2026-05-23T08:55:28.444Z
+Stopped at: Phase 09 UI-SPEC approved
+Resume file: .planning/phases/09-i-want-to-add-another-provider-in-the-settings-page-along-wi/09-UI-SPEC.md
 Next action: `/gsd-new-milestone` to start next cycle

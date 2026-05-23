@@ -94,6 +94,16 @@ Available roadmaps for future work:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 1 to break down)
 
+### Phase 9: I want to add another provider in the settings page along with openrouter. https://docs.generalcompute.com/quickstart 'General Compute' will be the name of the provider. I need to create support for general compute provider in the existing project
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 9 to break down)
+
 ---
 
 *Last updated: 2026-03-23 after v1.2 milestone*
